@@ -2,7 +2,7 @@
 Basic HTTP Command Interface
 """
 
-import deuce
+import deuceclient
 
 
 class Command(object):
@@ -20,7 +20,7 @@ class Command(object):
         self.body = {}
         self.headers = {}
         self.headers['X-Deuce-User-Agent'] = 'Deuce-Client/{0:}'.format(
-            deuce.version())
+            deuceclient.version())
         self.headers['User-Agent'] = self.headers['X-Deuce-User-Agent']
         self.uri = ''
         self.apihost = apihost
