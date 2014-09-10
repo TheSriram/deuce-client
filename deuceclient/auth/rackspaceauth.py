@@ -3,7 +3,7 @@ Deuce Rackspace Authentication API
 """
 import logging
 
-import deuceclient.auth
+import deuceclient.auth.openstackclient
 
 
 def get_identity_apihost(datacenter):
@@ -16,7 +16,8 @@ def get_identity_apihost(datacenter):
             'Unknown Data Center: {0:}'.format(datacenter))
 
 
-class RackspaceAuthentication(deuceclient.auth.OpenStackAuthentication):
+class RackspaceAuthentication(
+        deuceclient.auth.openstackclient.OpenStackAuthentication):
     """Rackspace Identity Authentication Support
 
     Only difference between this and OpenStackAuthentication is that this

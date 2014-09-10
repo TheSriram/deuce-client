@@ -6,10 +6,9 @@ import logging
 import keystoneclient.client
 
 import deuceclient.auth
-import deuceclient.auth.auth
 
 
-class OpenStackAuthentication(deuceclient.auth.auth.AuthenticationBase):
+class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
     """OpenStack Keystone Authentication Support
 
     Basic OpenStack Keystone Support for Token management
