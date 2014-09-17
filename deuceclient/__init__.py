@@ -2,7 +2,7 @@
 Deuce Client API
 """
 
-__DEUCE_VERSION__ = {
+__DEUCECLIENT_VERSION__ = {
     'major': 0,
     'minor': 1
 }
@@ -10,5 +10,5 @@ __DEUCE_VERSION__ = {
 
 def version():
     """Return the Deuce Client Version"""
-    return '{0:}.{1:}'.format(__DEUCE_VERSION__['major'],
-                              __DEUCE_VERSION__['minor'])
+    return '{0:}.{1:}'.format(__DEUCECLIENT_VERSION__['major'],
+                              __DEUCECLIENT_VERSION__['minor'])

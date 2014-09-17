@@ -6,6 +6,8 @@ import json
 import requests
 import logging
 
+from deuceclient.common.command import Command
+
 
 class DeuceVault(Command):
     """

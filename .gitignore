@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+AUTHORS
+ChangeLog
+
 # C extensions
 *.so
 
@@ -40,6 +43,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
+cover/
 .tox/
 .coverage
 .cache
@@ -58,3 +62,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Vim
+*.swp

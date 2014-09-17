@@ -14,60 +14,66 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
     Basic OpenStack Keystone Support for Token management
     """
 
-    def __init__(self, userid, usertype,
-                 credentials, auth_method,
-                 datacenter, auth_url):
-        super().__init__(userid, credentials, usertype, auth_method,
-                       datacenter)
+    def __init__(self, userid=None, usertype=None,
+                 credentials=None, auth_method=None,
+                 datacenter=None, auth_url=None):
+        if auth_url is None:
+            raise deuceclient.auth.AuthenticationError(
+                'Required Parameter, auth_url, not specified.')
 
-        self.__catalog['auth_url'] = auth_url
+        super().__init__(userid=userid, usertype=usertype,
+                         credentials=credentials, auth_method=auth_method,
+                         datacenter=datacenter, auth_url=auth_url)
 
-        self.__client = self.__get_client()
+        self.__client = None
         self.__access = None
 
-    def __get_client(self):
+    def get_client(self):
         """Retrieve the OpenStack Keystone Client
         """
 
         auth_args = {
-            'auth_url': self.__catalog['auth_url']
+            'auth_url': self.authurl
         }
 
         # Extract the User Information
-        if self.__catalog['usertype'] in ('user_name', 'user_id'):
-            auth_args['username'] = self.__catalog['user']
+        if self.usertype in ('user_name', 'user_id'):
+            auth_args['username'] = self.userid
 
-        elif self.__catalog['usertype'] == 'tenant_name':
-            auth_args['tenant_name'] = self.__catalog['user']
+        elif self.usertype == 'tenant_name':
+            auth_args['tenant_name'] = self.userid
 
-        elif self.__catalog['usertype'] == 'tenant_id':
-            auth_args['tenant_id'] = self.__catalog['user']
+        elif self.usertype == 'tenant_id':
+            auth_args['tenant_id'] = self.userid
 
         else:
-            raise AuthenticationError(
+            raise deuceclient.auth.AuthenticationError(
                 'Invalid usertype ({0:}) for OpenStackAuthentication'
-                .format(self.__catalog['usertype']))
+                .format(self.usertype))
 
         # Extract the User's Credential Information
-        if self.__catalog['auth_method'] in ('apikey', 'password'):
-            auth_args['password'] = self.__catalog['credentials']
+        if self.authmethod in ('apikey', 'password'):
+            auth_args['password'] = self.credentials
 
-        elif self.__catalog['auth_method'] == 'token':
-            auth_args['token'] = self.__catalog['credentials']
+        elif self.authmethod == 'token':
+            auth_args['token'] = self.credentials
 
         else:
-            raise AuthenticationError(
+            raise deuceclient.auth.AuthenticationError(
                 'Invalid auth_method ({0:}) for OpenStackAuthentication'
-                .format(self.__catalog['auth_method']))
+                .format(self.authmethod))
 
-        return keystoneclient.client.Client(*auth_args)
+        return keystoneclient.client.Client(**auth_args)
 
     def GetToken(self, retry=5):
         """Retrieve a token from OpenStack Keystone
         """
+        if self.__client is None:
+            self.__client = self.get_client()
+
         try:
-            self.__access = self.__client.get_rawtoken_from_idenitity(
-                auth_url=self.__catalog['auth_url'])
+            self.__access = self.__client.get_raw_token_from_identity_service(
+                auth_url=self.authurl)
             return self.__access.auth_token
 
         except:

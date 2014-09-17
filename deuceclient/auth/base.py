@@ -8,8 +8,6 @@ import logging
 import datetime
 import time
 
-from deuceclient.common.command import Command
-
 
 # TODO: Add a base Auth class
 # TODO: Convert below to use KeystoneClient
@@ -26,19 +24,19 @@ class AuthExpirationError(AuthenticationError):
     pass
 
 
-class AuthenticationBase(object, metaclass=abc.ABCMeta):
+class AuthenticationBase(object):
     """
     Authentication Interface Class
     """
+    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, userid, usertype,
-                 credentials, auth_method,
-                 datacenter, auth_url=None):
+    def __init__(self, userid=None, usertype=None,
+                 credentials=None, auth_method=None,
+                 datacenter=None, auth_url=None):
         """
         :param userid:  string - User Identifier, e.g username, userid, etc.)
         :param usertype: string - Type of User Identifier
-                         values: user_id, user_name, userid, tenant_name,
-                                 tenant_id
+                         values: user_id, user_name, tenant_name, tenant_id
         :param credentials: string - User Credentials for Authentication
                                      e.g. password
         :param auth_method: string - Type of User Credentials
@@ -48,12 +46,29 @@ class AuthenticationBase(object, metaclass=abc.ABCMeta):
         :param datacenter: string - Datacenter to autheniticate in
                                     e.g. identity.rackspace.com
         """
+        if userid is None:
+            raise AuthenticationError(
+                'Required Parameter, userid, not specified.')
+
+        if usertype is None:
+            raise AuthenticationError(
+                'Required Parameter, usertype, not specified.')
+
+        if credentials is None:
+            raise AuthenticationError(
+                'Required Parameter, credentials, not specified.')
+
+        if auth_method is None:
+            raise AuthenticationError(
+                'Required Parameter, auth_method, not specified.')
+
         self.__catalog = {}
         self.__catalog['user'] = userid
-        self.__catalog['credentials'] = credentials
         self.__catalog['usertype'] = usertype
-        self.__catalog['auth_method'] = method
+        self.__catalog['credentials'] = credentials
+        self.__catalog['auth_method'] = auth_method
         self.__catalog['datacenter'] = datacenter
+        self.__catalog['auth_url'] = auth_url
 
     @property
     def userid(self):
@@ -62,16 +77,16 @@ class AuthenticationBase(object, metaclass=abc.ABCMeta):
         return self.__catalog['user']
 
     @property
-    def credentials(self):
-        """Return the User Crentidals used for authentication
-        """
-        return self.__catalog['credentials']
-
-    @property
     def usertype(self):
         """Return the type of user credentials used for authencation
         """
         return self.__catalog['usertype']
+
+    @property
+    def credentials(self):
+        """Return the User Crentidals used for authentication
+        """
+        return self.__catalog['credentials']
 
     @property
     def authmethod(self):
@@ -84,6 +99,12 @@ class AuthenticationBase(object, metaclass=abc.ABCMeta):
         """Return the Datacenter (region) authentication was performed against
         """
         return self.__catalog['datacenter']
+
+    @property
+    def authurl(self):
+        """Return the Authentication URL used for authentication
+        """
+        return self.__catalog['auth_url']
 
     @abc.abstractmethod
     def GetToken(self, retry=5):

@@ -3,7 +3,8 @@ Deuce Rackspace Authentication API
 """
 import logging
 
-import deuceclient.auth.openstackclient
+import deuceclient.auth
+import deuceclient.auth.openstackauth
 
 
 def get_identity_apihost(datacenter):
@@ -12,28 +13,33 @@ def get_identity_apihost(datacenter):
     elif datacenter in ('hkg', 'syd'):
         return'{0:}.identity.api.rackspacecloud.com'.format(datacenter)
     else:
-        raise AuthenticationError(
+        raise deuceclient.auth.AuthenticationError(
             'Unknown Data Center: {0:}'.format(datacenter))
 
 
 class RackspaceAuthentication(
-        deuceclient.auth.openstackclient.OpenStackAuthentication):
+        deuceclient.auth.openstackauth.OpenStackAuthentication):
     """Rackspace Identity Authentication Support
 
     Only difference between this and OpenStackAuthentication is that this
     can know the servers without one being specified.
     """
 
-    def __init__(self, userid, usertype,
-                 credentials, auth_method,
-                 datacenter, auth_url=None):
+    def __init__(self, userid=None, usertype=None,
+                 credentials=None, auth_method=None,
+                 datacenter=None, auth_url=None):
 
         # If an authentication url is not provided then create one using
         # Rackspace's Identity Service for the specified datacenter
         if auth_url is None:
+            if datacenter is None:
+                raise deuceclient.auth.AuthenticationError(
+                    'Required Parameter, datacenter, not specified.')
+
             auth_url = get_identity_apihost(datacenter)
             log = logging.getLogger(__name__)
             log.debug('No AuthURL specified. Using {0:}'.format(auth_url))
 
-        super().__init__(userid, credentials, usertype, auth_method,
-                       datacenter)
+        super().__init__(userid=userid, usertype=usertype,
+                         credentials=credentials, auth_method=auth_method,
+                         datacenter=datacenter, auth_url=auth_url)
