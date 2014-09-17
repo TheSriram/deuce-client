@@ -151,7 +151,7 @@ def main():
                             required=True,
                             help='JSON file containing username and API Key')
     arg_parser.add_argument('--url',
-                            default='126.0.0.1:8080',
+                            default='127.0.0.1:8080',
                             type=str,
                             required=False,
                             help="Network Address for the Deuce Server."
