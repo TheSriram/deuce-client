@@ -118,6 +118,10 @@ class AuthenticationBase(object):
     @abc.abstractmethod
     def IsExpired(self, fuzz=0):
         """Has the token expired
+
+        :param fuzz: integer - number of seconds to add to the current time
+                               to determine if it the authentication will
+                               expire in a given time frame
         """
         raise NotImplementedError()
 
