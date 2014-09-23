@@ -128,6 +128,48 @@ class FakeClient(object):
 class OpenStackAuthTest(TestCase,
                         deuceclient.tests.test_auth.AuthenticationBaseTest):
 
+    keystone_discovery_version_data = [
+        {
+            "id": "v1.0",
+            "links": [
+                {
+                    "href": "https://identity.api.rackspacecloud.com/"
+                    "v1.0",
+                    "rel": "self"
+                }
+            ],
+            "status": "DEPRECATED",
+            "updated": "2011-07-19T22:30:00Z"
+        },
+        {
+            "id": "v1.1",
+            "links": [
+                {
+                    "href": "http://docs.rackspacecloud.com/"
+                    "auth/api/v1.1/auth.wadl",
+                    "rel": "describedby",
+                    "type": "application/vnd.sun.wadl+xml"
+                }
+            ],
+            "status": "CURRENT",
+            "updated": "2012-01-19T22:30:00.25Z"
+        },
+        {
+            "id": "v2.0",
+            "links": [
+                {
+                    "href":
+                        "http://docs.rackspacecloud.com/"
+                        "auth/api/v2.0/auth.wadl",
+                    "rel": "describedby",
+                    "type": "application/vnd.sun.wadl+xml"
+                }
+            ],
+            "status": "CURRENT",
+            "updated": "2012-01-19T22:30:00.25Z"
+        }
+    ]
+
     def create_authengine(self, userid=None, usertype=None,
                           credentials=None, auth_method=None,
                           datacenter=None, auth_url=None):
@@ -331,54 +373,11 @@ class OpenStackAuthTest(TestCase,
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
-                # mock.patch(mok_ky_discovery_init) as keystone_discovery, \
-                # mock.patch(mok_ky_discover_client) as keystone_find_client:
 
             keystone_auth_mock.return_value = True
-            # keystone_discovery.return_value = None
-            # keystone_find_client.return_value = True
 
-            keystone_discover_ver.return_value = [
-                {
-                    "id": "v1.0",
-                    "links": [
-                        {
-                            "href": "https://identity.api.rackspacecloud.com/"
-                            "v1.0",
-                            "rel": "self"
-                        }
-                    ],
-                    "status": "DEPRECATED",
-                    "updated": "2011-07-19T22:30:00Z"
-                },
-                {
-                    "id": "v1.1",
-                    "links": [
-                        {
-                            "href": "http://docs.rackspacecloud.com/"
-                            "auth/api/v1.1/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                },
-                {
-                    "id": "v2.0",
-                    "links": [
-                        {
-                            "href":
-                                "http://docs.rackspacecloud.com/"
-                                "auth/api/v2.0/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                }
-            ]
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
 
             FakeAccess.raise_until = 4
@@ -417,11 +416,6 @@ class OpenStackAuthTest(TestCase,
         mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
             .format(mok_ky_v2_client)
 
-        # mok_ky_session = '{0:}.session'.format(mok_ky_base)
-        # mok_ky_session_obj = '{0:}.Session'.format(mok_ky_session)
-        # mok_ky_session_construct = '{0:}.construct'\
-        #    .format(mok_ky_session_obj)
-
         mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
         mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
         mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
@@ -435,54 +429,11 @@ class OpenStackAuthTest(TestCase,
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
-                # mock.patch(mok_ky_discovery_init) as keystone_discovery, \
-                # mock.patch(mok_ky_discover_client) as keystone_find_client:
 
             keystone_auth_mock.return_value = True
-            # keystone_discovery.return_value = None
-            # keystone_find_client.return_value = True
 
-            keystone_discover_ver.return_value = [
-                {
-                    "id": "v1.0",
-                    "links": [
-                        {
-                            "href": "https://identity.api.rackspacecloud.com/"
-                            "v1.0",
-                            "rel": "self"
-                        }
-                    ],
-                    "status": "DEPRECATED",
-                    "updated": "2011-07-19T22:30:00Z"
-                },
-                {
-                    "id": "v1.1",
-                    "links": [
-                        {
-                            "href": "http://docs.rackspacecloud.com/"
-                            "auth/api/v1.1/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                },
-                {
-                    "id": "v2.0",
-                    "links": [
-                        {
-                            "href":
-                                "http://docs.rackspacecloud.com/"
-                                "auth/api/v2.0/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                }
-            ]
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
 
             FakeAccess.raise_until = 4
@@ -538,11 +489,6 @@ class OpenStackAuthTest(TestCase,
         mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
             .format(mok_ky_v2_client)
 
-        # mok_ky_session = '{0:}.session'.format(mok_ky_base)
-        # mok_ky_session_obj = '{0:}.Session'.format(mok_ky_session)
-        # mok_ky_session_construct = '{0:}.construct'\
-        #    .format(mok_ky_session_obj)
-
         mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
         mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
         mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
@@ -556,54 +502,11 @@ class OpenStackAuthTest(TestCase,
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
-                # mock.patch(mok_ky_discovery_init) as keystone_discovery, \
-                # mock.patch(mok_ky_discover_client) as keystone_find_client:
 
             keystone_auth_mock.return_value = True
-            # keystone_discovery.return_value = None
-            # keystone_find_client.return_value = True
 
-            keystone_discover_ver.return_value = [
-                {
-                    "id": "v1.0",
-                    "links": [
-                        {
-                            "href": "https://identity.api.rackspacecloud.com/"
-                            "v1.0",
-                            "rel": "self"
-                        }
-                    ],
-                    "status": "DEPRECATED",
-                    "updated": "2011-07-19T22:30:00Z"
-                },
-                {
-                    "id": "v1.1",
-                    "links": [
-                        {
-                            "href": "http://docs.rackspacecloud.com/"
-                            "auth/api/v1.1/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                },
-                {
-                    "id": "v2.0",
-                    "links": [
-                        {
-                            "href":
-                                "http://docs.rackspacecloud.com/"
-                                "auth/api/v2.0/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                }
-            ]
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
 
             FakeAccess.raise_until = 4
@@ -751,47 +654,8 @@ class OpenStackAuthTest(TestCase,
 
             keystone_auth_mock.return_value = True
 
-            keystone_discover_ver.return_value = [
-                {
-                    "id": "v1.0",
-                    "links": [
-                        {
-                            "href": "https://identity.api.rackspacecloud.com/"
-                            "v1.0",
-                            "rel": "self"
-                        }
-                    ],
-                    "status": "DEPRECATED",
-                    "updated": "2011-07-19T22:30:00Z"
-                },
-                {
-                    "id": "v1.1",
-                    "links": [
-                        {
-                            "href": "http://docs.rackspacecloud.com/"
-                            "auth/api/v1.1/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                },
-                {
-                    "id": "v2.0",
-                    "links": [
-                        {
-                            "href":
-                                "http://docs.rackspacecloud.com/"
-                                "auth/api/v2.0/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                }
-            ]
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
 
             FakeAccess.raise_until = 0
@@ -835,11 +699,6 @@ class OpenStackAuthTest(TestCase,
         mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
             .format(mok_ky_v2_client)
 
-        # mok_ky_session = '{0:}.session'.format(mok_ky_base)
-        # mok_ky_session_obj = '{0:}.Session'.format(mok_ky_session)
-        # mok_ky_session_construct = '{0:}.construct'\
-        #    .format(mok_ky_session_obj)
-
         mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
         mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
         mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
@@ -853,54 +712,11 @@ class OpenStackAuthTest(TestCase,
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
-                # mock.patch(mok_ky_discovery_init) as keystone_discovery, \
-                # mock.patch(mok_ky_discover_client) as keystone_find_client:
 
             keystone_auth_mock.return_value = True
-            # keystone_discovery.return_value = None
-            # keystone_find_client.return_value = True
 
-            keystone_discover_ver.return_value = [
-                {
-                    "id": "v1.0",
-                    "links": [
-                        {
-                            "href": "https://identity.api.rackspacecloud.com/"
-                            "v1.0",
-                            "rel": "self"
-                        }
-                    ],
-                    "status": "DEPRECATED",
-                    "updated": "2011-07-19T22:30:00Z"
-                },
-                {
-                    "id": "v1.1",
-                    "links": [
-                        {
-                            "href": "http://docs.rackspacecloud.com/"
-                            "auth/api/v1.1/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                },
-                {
-                    "id": "v2.0",
-                    "links": [
-                        {
-                            "href":
-                                "http://docs.rackspacecloud.com/"
-                                "auth/api/v2.0/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                }
-            ]
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
 
             keystone_raw_token_mock.return_value = FakeAccess()
@@ -916,9 +732,6 @@ class OpenStackAuthTest(TestCase,
             FakeAccess.expire_time = None
             expire_time = authengine.AuthExpirationTime()
             self.assertIsNotNone(expire_time)
-
-            # FakeAccess.expire_time = datetime.datetime.utcnow() + \
-            #    datetime.timedelta(seconds=500)
 
             FakeAccess.expire_time = 'howdy'
 
@@ -948,11 +761,6 @@ class OpenStackAuthTest(TestCase,
         mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
             .format(mok_ky_v2_client)
 
-        # mok_ky_session = '{0:}.session'.format(mok_ky_base)
-        # mok_ky_session_obj = '{0:}.Session'.format(mok_ky_session)
-        # mok_ky_session_construct = '{0:}.construct'\
-        #    .format(mok_ky_session_obj)
-
         mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
         mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
         mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
@@ -966,54 +774,11 @@ class OpenStackAuthTest(TestCase,
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
-                # mock.patch(mok_ky_discovery_init) as keystone_discovery, \
-                # mock.patch(mok_ky_discover_client) as keystone_find_client:
 
             keystone_auth_mock.return_value = True
-            # keystone_discovery.return_value = None
-            # keystone_find_client.return_value = True
 
-            keystone_discover_ver.return_value = [
-                {
-                    "id": "v1.0",
-                    "links": [
-                        {
-                            "href": "https://identity.api.rackspacecloud.com/"
-                            "v1.0",
-                            "rel": "self"
-                        }
-                    ],
-                    "status": "DEPRECATED",
-                    "updated": "2011-07-19T22:30:00Z"
-                },
-                {
-                    "id": "v1.1",
-                    "links": [
-                        {
-                            "href": "http://docs.rackspacecloud.com/"
-                            "auth/api/v1.1/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                },
-                {
-                    "id": "v2.0",
-                    "links": [
-                        {
-                            "href":
-                                "http://docs.rackspacecloud.com/"
-                                "auth/api/v2.0/auth.wadl",
-                            "rel": "describedby",
-                            "type": "application/vnd.sun.wadl+xml"
-                        }
-                    ],
-                    "status": "CURRENT",
-                    "updated": "2012-01-19T22:30:00.25Z"
-                }
-            ]
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
 
             keystone_raw_token_mock.return_value = FakeAccess()
@@ -1043,7 +808,8 @@ class OpenStackAuthTest(TestCase,
             FakeAccess.user_data['tenant']['name'] = '1'
             tenant_name = authengine.AuthTenantName
             self.assertIsNotNone(tenant_name)
-            self.assertEqual(tenant_name, FakeAccess.user_data['tenant']['name'])
+            self.assertEqual(tenant_name,
+                             FakeAccess.user_data['tenant']['name'])
 
             FakeAccess.user_data['user']['id'] = None
             user_id = authengine.AuthUserId
