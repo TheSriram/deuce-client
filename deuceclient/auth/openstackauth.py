@@ -2,6 +2,7 @@
 Deuce OpenStack Authentication API
 """
 import logging
+import time
 
 import keystoneclient.client
 

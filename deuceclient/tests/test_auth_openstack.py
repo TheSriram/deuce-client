@@ -1,6 +1,8 @@
 """
 Deuce Client OpenStack Authentication Tests
 """
+import datetime
+import time
 import uuid
 from unittest import TestCase
 
@@ -19,6 +21,8 @@ class FakeAccess(object):
     raise_until = 0
     raise_counter = 0
     raise_error = False
+
+    expire_time = None
 
     def __init__(self):
         pass
@@ -46,6 +50,28 @@ class FakeAccess(object):
             raise keystoneclient.exceptions.AuthorizationFailure('mocking')
         else:
             return 'token_{0:}'.format(str(uuid.uuid4()))
+
+    def will_expire_soon(self, stale_duration=None):
+        if self.__class__.expire_time is None:
+            # Expired already
+            return True
+
+        else:
+            check_time = self.__class__.expire_time
+            if stale_duration is not None:
+                # otherwise we need to apply stale_duration and check
+                check_time = check_time + \
+                    datetime.timedelta(seconds=stale_duration)
+
+            now_time = datetime.datetime.utcnow()
+
+            print('Stale Duration: {0:}'.format(stale_duration))
+            print('Expire Time: {0:}'.format(self.__class__.expire_time))
+            print(' Check Time: {0:}'.format(check_time))
+            print('   Now Time: {0:}'.format(now_time))
+            print('Result: {0:}'.format(check_time <= now_time))
+
+            return (check_time <= now_time)
 
 
 class FakeClient(object):
@@ -238,7 +264,6 @@ class OpenStackAuthTest(TestCase,
         auth_method = 'apikey'
 
         datacenter = 'test'
-        # auth_url = __name__
         auth_url = 'http://identity.api.rackspacecloud.com'
 
         # Because the mock strings are so long, we're going to store them
@@ -251,11 +276,6 @@ class OpenStackAuthTest(TestCase,
         mok_ky_v2_client = '{0:}.v2_0.client.Client'.format(mok_ky_base)
         mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
             .format(mok_ky_v2_client)
-
-        # mok_ky_session = '{0:}.session'.format(mok_ky_base)
-        # mok_ky_session_obj = '{0:}.Session'.format(mok_ky_session)
-        # mok_ky_session_construct = '{0:}.construct'\
-        #    .format(mok_ky_session_obj)
 
         mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
         mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
@@ -343,7 +363,6 @@ class OpenStackAuthTest(TestCase,
         auth_method = 'apikey'
 
         datacenter = 'test'
-        # auth_url = __name__
         auth_url = 'http://identity.api.rackspacecloud.com'
 
         # Because the mock strings are so long, we're going to store them
@@ -437,3 +456,319 @@ class OpenStackAuthTest(TestCase,
                                                 auth_url=auth_url)
 
             token = authengine.GetToken(retry=FakeAccess.raise_until)
+
+    def test_is_expired_no_client(self):
+        usertype = 'user_name'
+        username = self.create_username()
+
+        apikey = self.create_apikey()
+        auth_method = 'apikey'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        authengine = self.create_authengine(userid=username,
+                                            usertype=usertype,
+                                            credentials=apikey,
+                                            auth_method=auth_method,
+                                            datacenter=datacenter,
+                                            auth_url=auth_url)
+
+        self.assertTrue(authengine.IsExpired())
+
+    def test_is_expired_result(self):
+        usertype = 'user_name'
+        username = self.create_username()
+
+        apikey = self.create_apikey()
+        auth_method = 'apikey'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        # Because the mock strings are so long, we're going to store them
+        # in variables here to keep the mocking statements short
+        mok_ky_base = 'keystoneclient'
+
+        mok_ky_httpclient = '{0:}.httpclient.HTTPClient'.format(mok_ky_base)
+        mok_ky_auth = '{0:}.authenticate'.format(mok_ky_httpclient)
+
+        mok_ky_v2_client = '{0:}.v2_0.client.Client'.format(mok_ky_base)
+        mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
+            .format(mok_ky_v2_client)
+
+        # mok_ky_session = '{0:}.session'.format(mok_ky_base)
+        # mok_ky_session_obj = '{0:}.Session'.format(mok_ky_session)
+        # mok_ky_session_construct = '{0:}.construct'\
+        #    .format(mok_ky_session_obj)
+
+        mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
+        mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
+        mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
+        mok_ky_discover_client = '{0:}.create_client'.format(mok_ky_discovery)
+
+        mok_ky_discover_int = '{0:}._discover'.format(mok_ky_base)
+        mok_ky_discover_version = '{0:}.get_version_data'\
+            .format(mok_ky_discover_int)
+
+        with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
+                mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
+                mock.patch(mok_ky_discover_client) as keystone_discover_cli:
+                # mock.patch(mok_ky_discovery_init) as keystone_discovery, \
+                # mock.patch(mok_ky_discover_client) as keystone_find_client:
+
+            keystone_auth_mock.return_value = True
+            # keystone_discovery.return_value = None
+            # keystone_find_client.return_value = True
+
+            keystone_discover_ver.return_value = [
+                {
+                    "id": "v1.0",
+                    "links": [
+                        {
+                            "href": "https://identity.api.rackspacecloud.com/"
+                            "v1.0",
+                            "rel": "self"
+                        }
+                    ],
+                    "status": "DEPRECATED",
+                    "updated": "2011-07-19T22:30:00Z"
+                },
+                {
+                    "id": "v1.1",
+                    "links": [
+                        {
+                            "href": "http://docs.rackspacecloud.com/"
+                            "auth/api/v1.1/auth.wadl",
+                            "rel": "describedby",
+                            "type": "application/vnd.sun.wadl+xml"
+                        }
+                    ],
+                    "status": "CURRENT",
+                    "updated": "2012-01-19T22:30:00.25Z"
+                },
+                {
+                    "id": "v2.0",
+                    "links": [
+                        {
+                            "href":
+                                "http://docs.rackspacecloud.com/"
+                                "auth/api/v2.0/auth.wadl",
+                            "rel": "describedby",
+                            "type": "application/vnd.sun.wadl+xml"
+                        }
+                    ],
+                    "status": "CURRENT",
+                    "updated": "2012-01-19T22:30:00.25Z"
+                }
+            ]
+            keystone_discover_cli.return_value = FakeClient()
+
+            FakeAccess.raise_until = 4
+            FakeAccess.raise_counter = 0
+            keystone_raw_token_mock.return_value = FakeAccess()
+
+            authengine = self.create_authengine(userid=username,
+                                                usertype=usertype,
+                                                credentials=apikey,
+                                                auth_method=auth_method,
+                                                datacenter=datacenter,
+                                                auth_url=auth_url)
+
+            token = authengine.GetToken(retry=FakeAccess.raise_until)
+            FakeAccess.expire_time = None
+
+            self.assertTrue(authengine.IsExpired())
+
+            FakeAccess.expire_time = datetime.datetime.utcnow()
+
+            self.assertFalse(authengine.IsExpired(fuzz=5))
+
+            self.assertTrue(authengine.IsExpired())
+
+            FakeAccess.expire_time = datetime.datetime.utcnow() + \
+                datetime.timedelta(seconds=5)
+
+            self.assertFalse(authengine.IsExpired())
+
+            self.assertTrue(authengine.IsExpired(fuzz=-10))
+
+            sleep_time = (datetime.datetime.utcnow() - FakeAccess.expire_time)\
+                .total_seconds()
+
+            if sleep_time > 0:
+                time.sleep(sleep_time + 1)
+
+            self.assertFalse(authengine.IsExpired())
+
+            # We must reset expire_time when we're done
+            FakeAccess.expire_time = None
+
+    def test_auth_token_expired(self):
+        usertype = 'user_name'
+        username = self.create_username()
+
+        apikey = self.create_apikey()
+        auth_method = 'apikey'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        authengine = self.create_authengine(userid=username,
+                                            usertype=usertype,
+                                            credentials=apikey,
+                                            auth_method=auth_method,
+                                            datacenter=datacenter,
+                                            auth_url=auth_url)
+
+        mok_isexpired = 'deuceclient.auth.openstackauth' \
+            '.OpenStackAuthentication.IsExpired'
+        mok_gettoken = 'deuceclient.auth.openstackauth' \
+            '.OpenStackAuthentication.GetToken'
+
+        with mock.patch(mok_isexpired) as mock_isexpired,\
+                mock.patch(mok_gettoken) as mock_gettoken:
+
+            mock_isexpired.return_value = True
+            token = self.create_token()
+            mock_gettoken.return_value = token
+
+            self.assertEqual(token, authengine.AuthToken())
+
+    def test_auth_token_will_expire(self):
+        usertype = 'user_name'
+        username = self.create_username()
+
+        apikey = self.create_apikey()
+        auth_method = 'apikey'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        authengine = self.create_authengine(userid=username,
+                                            usertype=usertype,
+                                            credentials=apikey,
+                                            auth_method=auth_method,
+                                            datacenter=datacenter,
+                                            auth_url=auth_url)
+
+        mok_isexpired = 'deuceclient.auth.openstackauth' \
+            '.OpenStackAuthentication.IsExpired'
+        mok_gettoken = 'deuceclient.auth.openstackauth' \
+            '.OpenStackAuthentication.GetToken'
+
+        with mock.patch(mok_isexpired) as mock_isexpired,\
+                mock.patch(mok_gettoken) as mock_gettoken:
+
+            mock_isexpired.side_effect = [False, True]
+            token = self.create_token()
+            mock_gettoken.return_value = token
+
+            self.assertEqual(token, authengine.AuthToken())
+
+    def test_auth_token_cached(self):
+        usertype = 'user_name'
+        username = self.create_username()
+
+        apikey = self.create_apikey()
+        auth_method = 'apikey'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        mok_isexpired = 'deuceclient.auth.openstackauth' \
+            '.OpenStackAuthentication.IsExpired'
+        mok_authtoken = 'deuceclient.auth.openstackauth' \
+            '.OpenStackAuthentication.__access.auth_token'
+
+        # Because the mock strings are so long, we're going to store them
+        # in variables here to keep the mocking statements short
+        mok_ky_base = 'keystoneclient'
+
+        mok_ky_httpclient = '{0:}.httpclient.HTTPClient'.format(mok_ky_base)
+        mok_ky_auth = '{0:}.authenticate'.format(mok_ky_httpclient)
+
+        mok_ky_v2_client = '{0:}.v2_0.client.Client'.format(mok_ky_base)
+        mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
+            .format(mok_ky_v2_client)
+
+        mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
+        mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
+        mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
+        mok_ky_discover_client = '{0:}.create_client'.format(mok_ky_discovery)
+
+        mok_ky_discover_int = '{0:}._discover'.format(mok_ky_base)
+        mok_ky_discover_version = '{0:}.get_version_data'\
+            .format(mok_ky_discover_int)
+
+        with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
+                mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
+                mock.patch(mok_ky_discover_client) as keystone_discover_cli, \
+                mock.patch(mok_isexpired) as mock_isexpired:
+
+            keystone_auth_mock.return_value = True
+
+            keystone_discover_ver.return_value = [
+                {
+                    "id": "v1.0",
+                    "links": [
+                        {
+                            "href": "https://identity.api.rackspacecloud.com/"
+                            "v1.0",
+                            "rel": "self"
+                        }
+                    ],
+                    "status": "DEPRECATED",
+                    "updated": "2011-07-19T22:30:00Z"
+                },
+                {
+                    "id": "v1.1",
+                    "links": [
+                        {
+                            "href": "http://docs.rackspacecloud.com/"
+                            "auth/api/v1.1/auth.wadl",
+                            "rel": "describedby",
+                            "type": "application/vnd.sun.wadl+xml"
+                        }
+                    ],
+                    "status": "CURRENT",
+                    "updated": "2012-01-19T22:30:00.25Z"
+                },
+                {
+                    "id": "v2.0",
+                    "links": [
+                        {
+                            "href":
+                                "http://docs.rackspacecloud.com/"
+                                "auth/api/v2.0/auth.wadl",
+                            "rel": "describedby",
+                            "type": "application/vnd.sun.wadl+xml"
+                        }
+                    ],
+                    "status": "CURRENT",
+                    "updated": "2012-01-19T22:30:00.25Z"
+                }
+            ]
+            keystone_discover_cli.return_value = FakeClient()
+
+            FakeAccess.raise_until = 0
+            FakeAccess.raise_counter = 0
+            keystone_raw_token_mock.return_value = FakeAccess()
+
+            mock_isexpired.return_value = False
+            token = self.create_token()
+
+            authengine = self.create_authengine(userid=username,
+                                                usertype=usertype,
+                                                credentials=apikey,
+                                                auth_method=auth_method,
+                                                datacenter=datacenter,
+                                                auth_url=auth_url)
+
+            # Setups up the __acccess node used by AuthToken for
+            # non-expired functions
+            authengine.GetToken()
+
+            authengine.AuthToken()

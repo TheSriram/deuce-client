@@ -2,6 +2,7 @@
 Deuce Client Authentication Tests
 """
 import abc
+import mock
 import uuid
 
 import deuceclient.auth.base
