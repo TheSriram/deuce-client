@@ -1,6 +1,7 @@
 """
 Deuce OpenStack Authentication API
 """
+import datetime
 import logging
 import time
 
@@ -107,8 +108,9 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
         try:
             return self.__access.expires()
 
-        except:
-            return datetime.datetime.now()
+        except Exception as ex:
+            print('Error: {0}'.format(ex))
+            return datetime.datetime.utcnow()
 
     @property
     def AuthTenantId(self):
