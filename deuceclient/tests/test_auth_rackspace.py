@@ -26,12 +26,14 @@ class RackspaceAuthTest(openstacktest.OpenStackAuthTest):
 
         for dc in main_dc_list:
             uri = rackspaceauth.get_identity_apihost(dc)
-            self.assertEqual(uri, 'identity.api.rackspacecloud.com')
+            self.assertEqual(uri,
+                             'https://identity.api.rackspacecloud.com/v2.0')
 
         secondary_dc_list = ('hkg', 'syd')
         for dc in secondary_dc_list:
             uri = rackspaceauth.get_identity_apihost(dc)
-            expected_uri = '{0:}.identity.api.rackspacecloud.com'.format(dc)
+            expected_uri = 'https://{0:}.identity.api.rackspacecloud.com/v2.0'.\
+                format(dc)
             self.assertEqual(uri, expected_uri)
 
         with self.assertRaises(deuceclient.auth.AuthenticationError) \
@@ -73,4 +75,5 @@ class RackspaceAuthTest(openstacktest.OpenStackAuthTest):
                                             auth_method='apikey',
                                             datacenter='us',
                                             auth_url=None)
-        self.assertEqual(authengine.authurl, 'identity.api.rackspacecloud.com')
+        self.assertEqual(authengine.authurl,
+                         'https://identity.api.rackspacecloud.com/v2.0')

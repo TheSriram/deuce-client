@@ -32,14 +32,17 @@ class DeuceClient(Command):
     Object defining HTTP REST API calls for interacting with Deuce.
     """
 
-    def __init__(self, sslenabled, authenticator, apihost, usemossoid=False):
+    def __init__(self, authenticator, apihost, usemossoid=False,
+            sslenabled=False):
         """
         Initialize the Deuce Client access
             sslenabled - True if using HTTPS; otherwise false
             authenticator - instance of deuceclient.auth.Authentication to use
             apihost - server to use for API calls
         """
-        super(self.__class__, self).__init__(sslenabled, apihost, '/')
+        super(self.__class__, self).__init__(apihost,
+                                             '/',
+                                             sslenabled=sslenabled)
         self.log = logging.getLogger(__name__)
         self.sslenabled = sslenabled
         self.authenticator = authenticator
@@ -49,7 +52,7 @@ class DeuceClient(Command):
         """
         Update common headers
         """
-        self.headers['X-Auth-Token'] = self.authenticator.AuthToken
+        self.headers['X-Auth-Token'] = self.authenticator.AuthToken()
         self.headers['X-Project-ID'] = self.ProjectId
 
     def __log_request_data(self):

@@ -9,9 +9,10 @@ import deuceclient.auth.openstackauth
 
 def get_identity_apihost(datacenter):
     if datacenter in ('us', 'uk', 'lon', 'iad', 'dfw', 'ord'):
-        return 'identity.api.rackspacecloud.com'
+        return 'https://identity.api.rackspacecloud.com/v2.0'
     elif datacenter in ('hkg', 'syd'):
-        return'{0:}.identity.api.rackspacecloud.com'.format(datacenter)
+        return'https://{0:}.identity.api.rackspacecloud.com/v2.0'.\
+            format(datacenter)
     else:
         raise deuceclient.auth.AuthenticationError(
             'Unknown Data Center: {0:}'.format(datacenter))

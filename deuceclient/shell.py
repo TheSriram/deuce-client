@@ -69,7 +69,7 @@ def __api_operation_prep(log, arguments):
 
         for u in user_list:
             try:
-                auth_data['user']['value'] = u[0]
+                auth_data['user']['value'] = user_data[u[0]]
                 auth_data['user']['type'] = u[1]
                 return True
             except LookupError:
@@ -78,7 +78,7 @@ def __api_operation_prep(log, arguments):
         return False
 
     def find_credentials(data):
-        credential_list = ['token', 'apikey', 'password']
+        credential_list = ['token', 'password', 'apikey']
         for credential_type in credential_list:
             try:
                 auth_data['credentials']['value'] = user_data[credential_type]
@@ -126,7 +126,7 @@ def __api_operation_prep(log, arguments):
     uri = arguments.url
 
     # Setup Agent Access
-    deuce = client.DeuceClient(False, auth_engine, uri)
+    deuce = client.DeuceClient(auth_engine, uri)
 
     return (auth_engine, deuce, uri)
 
@@ -137,7 +137,7 @@ def vault_create(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    deuceclient.CreateVault(arguments.vault_name)
+    return not deuceclient.CreateVault(arguments.vault_name)
 
 
 def vault_exists(log, arguments):

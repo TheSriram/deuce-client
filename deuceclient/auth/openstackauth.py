@@ -5,7 +5,10 @@ import datetime
 import logging
 import time
 
-import keystoneclient.client
+# What we want to do:
+# import keystoneclient.client
+# What we have to do:
+import keystoneclient.v2_0.client as client_v2
 
 import deuceclient.auth
 
@@ -35,7 +38,8 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
         """
 
         auth_args = {
-            'auth_url': self.authurl
+            'auth_url': self.authurl,
+            'region_name': self.datacenter
         }
 
         # Extract the User Information
@@ -65,13 +69,20 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
                 'Invalid auth_method ({0:}) for OpenStackAuthentication'
                 .format(self.authmethod))
 
-        return keystoneclient.client.Client(**auth_args)
+        # What we want to do:
+        # return keystoneclient.client.Client(**auth_args)
+        # What we have to do:
+        return client_v2.Client(**auth_args)
 
     def GetToken(self, retry=5):
         """Retrieve a token from OpenStack Keystone
         """
         if self.__client is None:
-            self.__client = self.get_client()
+            try:
+                self.__client = self.get_client()
+            except:
+                raise deuceclient.auth.AuthenticationError(
+                    'Unable to retrieve the Authentication Client')
 
         try:
             self.__access = self.__client.get_raw_token_from_identity_service(

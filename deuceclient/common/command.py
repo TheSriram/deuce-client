@@ -57,7 +57,7 @@ class Command(object):
         self.headers = {}
         self.headers['Content-Type'] = 'application/json; charset=utf-8'
         # HTTP or HTTPS
-        if (sslenabled):
+        if sslenabled is True:
             self.uri = "https://" + self.apihost + uripath
         else:
             self.uri = "http://" + self.apihost + uripath

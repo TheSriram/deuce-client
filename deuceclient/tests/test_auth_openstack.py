@@ -204,12 +204,18 @@ class OpenStackAuthTest(TestCase,
         token = self.create_token()
 
         datacenter = 'test'
-        auth_url = __name__
+        auth_url = 'https://identity.api.rackspacecloud.com'
 
         usertype = 'user_id'
         auth_method = 'apikey'
-        with mock.patch('keystoneclient.client.Client') as keystone_mock:
+
+        mok_ky_gen_client = 'keystoneclient.client.Client'
+        mok_ky_v2_client = 'keystoneclient.v2_0.client.Client'
+
+        with mock.patch(mok_ky_gen_client) as keystone_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client:
             keystone_mock.return_value = True
+            keystone_v2_client.return_value = True
 
             authengine = self.create_authengine(userid=userid,
                                                 usertype=usertype,
@@ -220,7 +226,11 @@ class OpenStackAuthTest(TestCase,
 
             client = authengine.get_client()
 
-            kargs, kwargs = keystone_mock.call_args
+            try:
+                kargs, kwargs = keystone_mock.call_args
+            except TypeError:
+                kargs, kwargs = keystone_v2_client.call_args
+
             self.assertIn('username', kwargs)
             self.assertEqual(kwargs['username'], userid)
 
@@ -232,8 +242,10 @@ class OpenStackAuthTest(TestCase,
 
         usertype = 'user_name'
         auth_method = 'password'
-        with mock.patch('keystoneclient.client.Client') as keystone_mock:
+        with mock.patch(mok_ky_gen_client) as keystone_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client:
             keystone_mock.return_value = True
+            keystone_v2_client.return_value = True
 
             authengine = self.create_authengine(userid=username,
                                                 usertype=usertype,
@@ -244,7 +256,11 @@ class OpenStackAuthTest(TestCase,
 
             client = authengine.get_client()
 
-            kargs, kwargs = keystone_mock.call_args
+            try:
+                kargs, kwargs = keystone_mock.call_args
+            except TypeError:
+                kargs, kwargs = keystone_v2_client.call_args
+
             self.assertIn('username', kwargs)
             self.assertEqual(kwargs['username'], username)
 
@@ -256,8 +272,10 @@ class OpenStackAuthTest(TestCase,
 
         usertype = 'tenant_name'
         auth_method = 'token'
-        with mock.patch('keystoneclient.client.Client') as keystone_mock:
+        with mock.patch(mok_ky_gen_client) as keystone_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client:
             keystone_mock.return_value = True
+            keystone_v2_client.return_value = True
 
             authengine = self.create_authengine(userid=tenantname,
                                                 usertype=usertype,
@@ -268,7 +286,11 @@ class OpenStackAuthTest(TestCase,
 
             client = authengine.get_client()
 
-            kargs, kwargs = keystone_mock.call_args
+            try:
+                kargs, kwargs = keystone_mock.call_args
+            except TypeError:
+                kargs, kwargs = keystone_v2_client.call_args
+
             self.assertIn('tenant_name', kwargs)
             self.assertEqual(kwargs['tenant_name'], tenantname)
 
@@ -280,8 +302,10 @@ class OpenStackAuthTest(TestCase,
 
         usertype = 'tenant_id'
         auth_method = 'token'
-        with mock.patch('keystoneclient.client.Client') as keystone_mock:
+        with mock.patch(mok_ky_gen_client) as keystone_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client:
             keystone_mock.return_value = True
+            keystone_v2_client.return_value = True
 
             authengine = self.create_authengine(userid=tenantid,
                                                 usertype=usertype,
@@ -292,7 +316,11 @@ class OpenStackAuthTest(TestCase,
 
             client = authengine.get_client()
 
-            kargs, kwargs = keystone_mock.call_args
+            try:
+                kargs, kwargs = keystone_mock.call_args
+            except TypeError:
+                kargs, kwargs = keystone_v2_client.call_args
+
             self.assertIn('tenant_id', kwargs)
             self.assertEqual(kwargs['tenant_id'], tenantid)
 
@@ -303,8 +331,10 @@ class OpenStackAuthTest(TestCase,
             self.assertEqual(kwargs['auth_url'], auth_url)
 
         usertype = 'bison'
-        with mock.patch('keystoneclient.client.Client') as keystone_mock:
+        with mock.patch(mok_ky_gen_client) as keystone_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client:
             keystone_mock.return_value = False
+            keystone_v2_client.return_value = False
 
             authengine = self.create_authengine(userid=tenantid,
                                                 usertype=usertype,
@@ -322,8 +352,10 @@ class OpenStackAuthTest(TestCase,
 
         usertype = 'tenant_id'
         auth_method = 'yak'
-        with mock.patch('keystoneclient.client.Client') as keystone_mock:
+        with mock.patch(mok_ky_gen_client) as keystone_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client:
             keystone_mock.return_value = False
+            keystone_v2_client.return_value = False
 
             authengine = self.create_authengine(userid=tenantid,
                                                 usertype=usertype,
@@ -338,6 +370,33 @@ class OpenStackAuthTest(TestCase,
                 client = authengine.get_client()
 
                 self.assertIn('auth_method', str(auth_error))
+
+    def test_get_token_invalid_client(self):
+        usertype = 'user_name'
+        username = self.create_username()
+
+        apikey = self.create_apikey()
+        auth_method = 'apikey'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        with mock.patch(
+            'deuceclient.auth.openstackauth.OpenStackAuthentication.get_client'
+        ) as mok_get_client:
+            mok_get_client.side_effect = \
+                deuceclient.auth.AuthenticationError('mock')
+
+            authengine = self.create_authengine(userid=username,
+                                                usertype=usertype,
+                                                credentials=apikey,
+                                                auth_method=auth_method,
+                                                datacenter=datacenter,
+                                                auth_url=auth_url)
+
+            with self.assertRaises(deuceclient.auth.AuthenticationError) \
+                    as auth_error:
+                authengine.GetToken(retry=0)
 
     def test_get_token_failed(self):
         usertype = 'user_name'
@@ -370,6 +429,7 @@ class OpenStackAuthTest(TestCase,
             .format(mok_ky_discover_int)
 
         with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
@@ -379,6 +439,7 @@ class OpenStackAuthTest(TestCase,
             keystone_discover_ver.return_value = \
                 self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
 
             FakeAccess.raise_until = 4
             FakeAccess.raise_counter = 0
@@ -426,6 +487,7 @@ class OpenStackAuthTest(TestCase,
             .format(mok_ky_discover_int)
 
         with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
@@ -435,6 +497,7 @@ class OpenStackAuthTest(TestCase,
             keystone_discover_ver.return_value = \
                 self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
 
             FakeAccess.raise_until = 4
             FakeAccess.raise_counter = 0
@@ -499,6 +562,7 @@ class OpenStackAuthTest(TestCase,
             .format(mok_ky_discover_int)
 
         with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
@@ -508,6 +572,7 @@ class OpenStackAuthTest(TestCase,
             keystone_discover_ver.return_value = \
                 self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
 
             FakeAccess.raise_until = 4
             FakeAccess.raise_counter = 0
@@ -647,6 +712,7 @@ class OpenStackAuthTest(TestCase,
             .format(mok_ky_discover_int)
 
         with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli, \
@@ -657,6 +723,7 @@ class OpenStackAuthTest(TestCase,
             keystone_discover_ver.return_value = \
                 self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
 
             FakeAccess.raise_until = 0
             FakeAccess.raise_counter = 0
@@ -709,6 +776,7 @@ class OpenStackAuthTest(TestCase,
             .format(mok_ky_discover_int)
 
         with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
@@ -718,6 +786,7 @@ class OpenStackAuthTest(TestCase,
             keystone_discover_ver.return_value = \
                 self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
 
             keystone_raw_token_mock.return_value = FakeAccess()
 
@@ -771,6 +840,7 @@ class OpenStackAuthTest(TestCase,
             .format(mok_ky_discover_int)
 
         with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
                 mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
                 mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
                 mock.patch(mok_ky_discover_client) as keystone_discover_cli:
@@ -780,6 +850,7 @@ class OpenStackAuthTest(TestCase,
             keystone_discover_ver.return_value = \
                 self.keystone_discovery_version_data
             keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
 
             keystone_raw_token_mock.return_value = FakeAccess()
 
