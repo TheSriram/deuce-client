@@ -104,7 +104,7 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
         else:
             return self.__access.will_expire_soon(stale_duration=fuzz)
 
-    def AuthToken(self):
+    def _AuthToken(self):
         if self.IsExpired():
             return self.GetToken()
 

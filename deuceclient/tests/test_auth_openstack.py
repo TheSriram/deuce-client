@@ -643,7 +643,7 @@ class OpenStackAuthTest(TestCase,
             token = self.create_token()
             mock_gettoken.return_value = token
 
-            self.assertEqual(token, authengine.AuthToken())
+            self.assertEqual(token, authengine.AuthToken)
 
     def test_auth_token_will_expire(self):
         usertype = 'user_name'
@@ -674,7 +674,7 @@ class OpenStackAuthTest(TestCase,
             token = self.create_token()
             mock_gettoken.return_value = token
 
-            self.assertEqual(token, authengine.AuthToken())
+            self.assertEqual(token, authengine.AuthToken)
 
     def test_auth_token_cached(self):
         usertype = 'user_name'
@@ -743,7 +743,7 @@ class OpenStackAuthTest(TestCase,
             # non-expired functions
             authengine.GetToken()
 
-            authengine.AuthToken()
+            authengine.AuthToken
 
     def test_expiration_time(self):
         usertype = 'user_name'

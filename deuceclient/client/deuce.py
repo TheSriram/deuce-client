@@ -52,7 +52,7 @@ class DeuceClient(Command):
         """
         Update common headers
         """
-        self.headers['X-Auth-Token'] = self.authenticator.AuthToken()
+        self.headers['X-Auth-Token'] = self.authenticator.AuthToken
         self.headers['X-Project-ID'] = self.ProjectId
 
     def __log_request_data(self):

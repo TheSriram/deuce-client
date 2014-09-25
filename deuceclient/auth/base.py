@@ -125,12 +125,16 @@ class AuthenticationBase(object):
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @property
     def AuthToken(self):
         """Access the current AuthToken, retrieving it if necessary
 
         :returns: string - authentication token
         """
+        return self._AuthToken()
+
+    @abc.abstractmethod
+    def _AuthToken(self):
         raise NotImplementedError()
 
     @abc.abstractmethod
