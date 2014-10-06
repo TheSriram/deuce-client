@@ -32,8 +32,7 @@ class DeuceClient(Command):
     Object defining HTTP REST API calls for interacting with Deuce.
     """
 
-    def __init__(self, authenticator, apihost, usemossoid=False,
-            sslenabled=False):
+    def __init__(self, authenticator, apihost, sslenabled=False):
         """
         Initialize the Deuce Client access
             sslenabled - True if using HTTPS; otherwise false
@@ -46,7 +45,6 @@ class DeuceClient(Command):
         self.log = logging.getLogger(__name__)
         self.sslenabled = sslenabled
         self.authenticator = authenticator
-        self.__use_mossoid = usemossoid
 
     def __update_headers(self):
         """
@@ -69,11 +67,7 @@ class DeuceClient(Command):
         """
         Return the project id to use
         """
-        if self.__use_mossoid:
-            self.projectid = self.authenticator.MossoId
-        else:
-            self.projectid = self.authenticator.AuthTenantId
-        return self.projectid
+        return self.authenticator.AuthTenantId
 
     def CreateVault(self, vaultname):
         """
