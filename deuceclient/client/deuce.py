@@ -111,7 +111,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, '/v1.0/{0:}'.format(vaultname))
         self.__update_headers()
         self.__log_request_data()
-        res = requests.get(self.Uri, headers=self.Headers)
+        res = requests.head(self.Uri, headers=self.Headers)
 
         if res.status_code == 204:
             return True
@@ -157,7 +157,7 @@ class DeuceClient(Command):
 
             # Apply the limit
             if limit is not None:
-                url = '{-1:}limit={1:}'.format(url, limit)
+                url = '{0:}limit={1:}'.format(url, limit)
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()

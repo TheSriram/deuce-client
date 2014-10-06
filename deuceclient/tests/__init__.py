@@ -2,6 +2,7 @@
 Deuce Client Tests
 """
 import datetime
+import time
 import uuid
 
 import deuceclient.auth.base
@@ -35,7 +36,7 @@ class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
                 return None
         else:
             self.__token_data['token'] = token
-            self.__token_data['expires'] = expires_at
+            self.__token_data['expires'] = expires
             return token
 
     def IsExpired(self, fuzz=0):
