@@ -123,8 +123,7 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
             print('Error: {0}'.format(ex))
             return datetime.datetime.utcnow()
 
-    @property
-    def AuthTenantId(self):
+    def _AuthTenantId(self):
         """Return the Tenant Id
         """
         try:

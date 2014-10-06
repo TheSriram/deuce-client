@@ -35,9 +35,9 @@ class DeuceClient(Command):
     def __init__(self, authenticator, apihost, sslenabled=False):
         """
         Initialize the Deuce Client access
-            sslenabled - True if using HTTPS; otherwise false
             authenticator - instance of deuceclient.auth.Authentication to use
             apihost - server to use for API calls
+            sslenabled - True if using HTTPS; otherwise false
         """
         super(self.__class__, self).__init__(apihost,
                                              '/',

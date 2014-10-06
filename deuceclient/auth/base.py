@@ -137,6 +137,16 @@ class AuthenticationBase(object):
     def _AuthToken(self):
         raise NotImplementedError()
 
+    @property
+    def AuthTenantId(self):
+        """Return the Tenant Id
+        """
+        return self._AuthTenantId()
+
+    @abc.abstractmethod
+    def _AuthTenantId(self):
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def AuthExpirationTime(self):
         """Retrieve the time at which the token will expire
