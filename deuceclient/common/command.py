@@ -17,11 +17,8 @@ class Command(object):
           uripath - HTTP(S) Path for the REST API being defined
           sslenabled - True if using HTTPS; otherwise False
         """
-        self.body = {}
+        self.body = None
         self.headers = {}
-        self.headers['X-Deuce-User-Agent'] = 'Deuce-Client/{0:}'.format(
-            deuceclient.version())
-        self.headers['User-Agent'] = self.headers['X-Deuce-User-Agent']
         self.uri = ''
         self.apihost = apihost
         self.__ReInit(sslenabled, uripath)
@@ -56,6 +53,13 @@ class Command(object):
         # By default we set the HTTP Content Type
         self.headers = {}
         self.headers['Content-Type'] = 'application/json; charset=utf-8'
+        self.headers['X-Deuce-User-Agent'] = 'Deuce-Client/{0:}'.format(
+            deuceclient.version())
+        self.headers['User-Agent'] = self.headers['X-Deuce-User-Agent']
+
+        if not uripath.startswith('/'):
+            uripath = '/' + uripath
+
         # HTTP or HTTPS
         if sslenabled is True:
             self.uri = "https://" + self.apihost + uripath
