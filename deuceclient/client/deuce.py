@@ -1,36 +1,24 @@
 """
 Deuce API
 """
-from __future__ import print_function
 import json
 import requests
 import logging
 
+import deuceclient.api as api
 from deuceclient.common.command import Command
-
-
-class DeuceVault(Command):
-    """
-    Deuce Vault Functionality
-    """
-
-    def __init__(self, sslenabled, authenticator, apihost):
-        """
-        Initialize the Deuce Client access
-            sslenabled - True if using HTTPS; otherwise false
-            authenticator - instance of deuceclient.auth.Authentication to use
-            apihost - server to use for API calls
-        """
-        super(self.__class__, self).__init__(sslenabled, apihost, '/')
-        self.log = logging.getLogger(__name__)
-        self.sslenabled = sslenabled
-        self.authenticator = authenticator
 
 
 class DeuceClient(Command):
     """
     Object defining HTTP REST API calls for interacting with Deuce.
     """
+    @staticmethod
+    def __vault_id(vault):
+        if isinstance(vault, api.vault.Vault):
+            return vault.vault_id
+        else:
+            return vault
 
     def __init__(self, authenticator, apihost, sslenabled=False):
         """
@@ -69,12 +57,14 @@ class DeuceClient(Command):
         """
         return self.authenticator.AuthTenantId
 
-    def CreateVault(self, vaultname):
+    def CreateVault(self, vault):
         """
         Create a Vault
-            vaultname - name of vault to be created
+            vault - name of vault to be created
         """
-        self.ReInit(self.sslenabled, '/v1.0/{0:}'.format(vaultname))
+        path = api.v1.get_vault_path(self.__vault_id(vault))
+        self.ReInit(self.sslenabled, path)
+
         self.__update_headers()
         self.__log_request_data()
         res = requests.put(self.Uri, headers=self.Headers)
@@ -86,12 +76,13 @@ class DeuceClient(Command):
                 'Failed to create Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def DeleteVault(self, vaultname):
+    def DeleteVault(self, vault):
         """
         Delete a Vault
-            vaultname - name of vault to be deleted
+            vault - name of vault to be deleted
         """
-        self.ReInit(self.sslenabled, '/v1.0/{0:}'.format(vaultname))
+        path = api.v1.get_vault_path(self.__vault_id(vault))
+        self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
         res = requests.delete(self.Uri, headers=self.Headers)
@@ -103,12 +94,13 @@ class DeuceClient(Command):
                 'Failed to delete Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def VaultExists(self, vaultname):
+    def VaultExists(self, vault):
         """
         Return the statistics on a Vault
-            vaultname - name of vault to be deleted
+            vault - name of vault to be deleted
         """
-        self.ReInit(self.sslenabled, '/v1.0/{0:}'.format(vaultname))
+        path = api.v1.get_vault_path(self.__vault_id(vault))
+        self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
         res = requests.head(self.Uri, headers=self.Headers)
@@ -122,12 +114,13 @@ class DeuceClient(Command):
                 'Failed to determine if Vault exists. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetVaultStatistics(self, vaultname):
+    def GetVaultStatistics(self, vault):
         """
         Return the statistics on a Vault
-            vaultname - name of vault to be deleted
+            vault - name of vault to be deleted
         """
-        self.ReInit(self.sslenabled, '/v1.0/{0:}'.format(vaultname))
+        path = api.v1.get_vault_path(self.__vault_id(vault))
+        self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
         res = requests.get(self.Uri, headers=self.Headers)
@@ -139,11 +132,11 @@ class DeuceClient(Command):
                 'Failed to get Vault statistics. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetBlockList(self, vaultname, marker=None, limit=None):
+    def GetBlockList(self, vault, marker=None, limit=None):
         """
         Return the list of blocks in the vault
         """
-        url = '/v1.0/{0:}/blocks'.format(vaultname)
+        url = api.v1.get_blocks_path(self.__vault_id(vault))
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
             url = url + '?'
@@ -171,16 +164,15 @@ class DeuceClient(Command):
                 'Failed to get Block list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def UploadBlock(self, vaultname, blockid, blockcontent, blocksize):
+    def UploadBlock(self, vault, blockid, blockcontent, blocksize):
         """
         Upload a block to the vault specified.
-            vaultname - name of the vault to be created
+            vault - name of the vault to be created
             blockid - the id (SHA-1) of the block to be uploaded
                       f.e 74bdda817d796333e9fe359e283d5643ee1a1397
             blockcontent - data present in the block to uploaded
         """
-        url = '/v1.0/{0:}/blocks/{1:}'.format(vaultname, blockid)
-        print('url{0:}'.format(url))
+        url = api.v1.get_block_path(self.__vault_id(vault), blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -196,12 +188,12 @@ class DeuceClient(Command):
                 'Failed to upload Block. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def DeleteBlock(self, vaultname, blockid):
+    def DeleteBlock(self, vault, blockid):
         """
         Delete the block from the vault.
         This funciton has not been tested
         """
-        url = '/v1.0/{0:}/blocks/{1:}'.format(vaultname, blockid)
+        url = api.v1.get_block_path(self.__vault_id(vault), blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -213,13 +205,13 @@ class DeuceClient(Command):
                 'Failed to delete Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetBlockData(self, vaultname, blockid):
+    def GetBlockData(self, vault, blockid):
         """
         Gets the data associated with the block id provided
-        vaultname - exisiting vault, eg 'v1'
+        vault - exisiting vault, eg 'v1'
         block id - sha1 of block, eg - 74bdda817d796333e9fe359e283d5643ee1a1397
         """
-        url = '/v1.0/{0:}/blocks/{1:}'.format(vaultname, blockid)
+        url = api.v1.get_block_path(self.__vault_id(vault), blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -232,12 +224,12 @@ class DeuceClient(Command):
                 'Failed to get Block Content for Block Id . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def CreateFile(self, vaultname):
+    def CreateFile(self, vault):
         """
         Creates a file in the specified vault, does not post data to it
         Returns the location of the file which gives the file id
         """
-        url = '/v1.0/{0:}/files'.format(vaultname)
+        url = api.v1.get_files_path(self.__vault_id(vault))
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -249,7 +241,7 @@ class DeuceClient(Command):
                 'Failed to create File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def AssignBlocksToFile(self, vaultname, fileid, value):
+    def AssignBlocksToFile(self, vault, fileid, value):
         """
         Assigns the specified block to a file
         Returns an empty list if the blocks being assigned are already uploaded
@@ -278,7 +270,7 @@ class DeuceClient(Command):
                 }
         Mandatory to supply block size and offset along with the block id
         """
-        url = '/v1.0/{0}/files/{1}'.format(vaultname, fileid)
+        url = api.v1.get_file_path(self.__vault_id(vault), fileid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -292,14 +284,14 @@ class DeuceClient(Command):
                 'Failed to Assign Blocks to the File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetFileBlockList(self, vaultname, fileid, marker=None, limit=None):
+    def GetFileBlockList(self, vault, fileid, marker=None, limit=None):
         """
         Return the list of blocks assigned to the file
         This does not finalize the file.
         This function is returning a 404
         """
 
-        url = '/v1.0/{0:}/files/{1:}/blocks'.format(vaultname, fileid)
+        url = api.v1.get_fileblocks_path(self.__vault_id(vault), fileid)
 
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
