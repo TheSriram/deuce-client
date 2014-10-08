@@ -171,7 +171,7 @@ class DeuceClient(Command):
                 'Failed to get Block list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def UploadBlock(self, vaultname, blockid, blockcontent):
+    def UploadBlock(self, vaultname, blockid, blockcontent, blocksize):
         """
         Upload a block to the vault specified.
             vaultname - name of the vault to be created
@@ -187,7 +187,7 @@ class DeuceClient(Command):
         headers = {}
         headers.update(self.Headers)
         headers['content-type'] = 'application/octet-stream'
-        headers['content-length'] = len(blockcontent)
+        headers['content-length'] = blocksize
         res = requests.put(self.Uri, headers=self.Headers, data=blockcontent)
         if res.status_code == 201:
             return True
@@ -299,7 +299,7 @@ class DeuceClient(Command):
         This function is returning a 404
         """
 
-        url = '/v1.0/{0:}/files/{1:}/blocks/'.format(vaultname, fileid)
+        url = '/v1.0/{0:}/files/{1:}/blocks'.format(vaultname, fileid)
 
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
@@ -314,7 +314,7 @@ class DeuceClient(Command):
 
             # Apply the limit
             if limit is not None:
-                url = '{-1:}limit={1:}'.format(url, limit)
+                url = '{0:}limit={1:}'.format(url, limit)
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -322,7 +322,7 @@ class DeuceClient(Command):
         res = requests.get(self.Uri, headers=self.Headers)
 
         if res.status_code == 200:
-            return True
+            return res.json()
         else:
             raise RuntimeError(
                 'Failed to get Block list for File . '
