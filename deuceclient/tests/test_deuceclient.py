@@ -12,6 +12,7 @@ import httpretty
 import mock
 
 import deuceclient
+import deuceclient.api as api
 import deuceclient.client.deuce
 from deuceclient.common import errors
 from deuceclient.tests import *
@@ -59,7 +60,7 @@ class ClientTest(TestCase):
                          client.ProjectId)
 
     @httpretty.activate
-    def test_create_vault(self):
+    def test_create_vault_with_api_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
@@ -69,6 +70,21 @@ class ClientTest(TestCase):
                             status=201)
 
         self.assertTrue(client.CreateVault(self.vault_name))
+
+    @httpretty.activate
+    def test_create_vault(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        httpretty.register_uri(httpretty.PUT,
+                            get_vault_url(self.apihost, self.vault_name),
+                            status=201)
+
+        api_vault = api.vault.Vault(self.authenticator.AuthTenantId,
+                                    self.vault_name)
+
+        self.assertTrue(client.CreateVault(api_vault))
 
     @httpretty.activate
     def test_create_vault_failed(self):
