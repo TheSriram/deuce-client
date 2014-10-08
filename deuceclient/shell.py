@@ -10,6 +10,7 @@ import pprint
 import sys
 
 import deuceclient.client.deuce as client
+import deuceclient.auth.nonauth as noauth
 import deuceclient.auth.openstackauth as openstackauth
 import deuceclient.auth.rackspaceauth as rackspaceauth
 
@@ -109,6 +110,9 @@ def __api_operation_prep(log, arguments):
 
     elif auth_provider == 'rackspace':
         asp = rackspaceauth.RackspaceAuthentication
+
+    elif auth_provider == 'none':
+        asp = noauth.NonAuthAuthentication
 
     else:
         sys.stderr.write('Unknown Authentication Service Provider'
@@ -254,7 +258,7 @@ def main():
                             type=str,
                             required=False,
                             help='Authentication Service Provider',
-                            choices=['openstack', 'rackspace'])
+                            choices=['openstack', 'rackspace', 'none'])
     arg_parser.add_argument('--auth-service-url',
                             default=None,
                             type=str,
