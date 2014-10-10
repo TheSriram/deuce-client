@@ -32,13 +32,12 @@ class DeuceClient(Command):
     Object defining HTTP REST API calls for interacting with Deuce.
     """
 
-    def __init__(self, authenticator, apihost, usemossoid=False,
-            sslenabled=False):
+    def __init__(self, authenticator, apihost, sslenabled=False):
         """
         Initialize the Deuce Client access
-            sslenabled - True if using HTTPS; otherwise false
             authenticator - instance of deuceclient.auth.Authentication to use
             apihost - server to use for API calls
+            sslenabled - True if using HTTPS; otherwise false
         """
         super(self.__class__, self).__init__(apihost,
                                              '/',
@@ -46,7 +45,6 @@ class DeuceClient(Command):
         self.log = logging.getLogger(__name__)
         self.sslenabled = sslenabled
         self.authenticator = authenticator
-        self.__use_mossoid = usemossoid
 
     def __update_headers(self):
         """
@@ -69,11 +67,7 @@ class DeuceClient(Command):
         """
         Return the project id to use
         """
-        if self.__use_mossoid:
-            self.projectid = self.authenticator.MossoId
-        else:
-            self.projectid = self.authenticator.AuthTenantId
-        return self.projectid
+        return self.authenticator.AuthTenantId
 
     def CreateVault(self, vaultname):
         """
@@ -117,7 +111,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, '/v1.0/{0:}'.format(vaultname))
         self.__update_headers()
         self.__log_request_data()
-        res = requests.get(self.Uri, headers=self.Headers)
+        res = requests.head(self.Uri, headers=self.Headers)
 
         if res.status_code == 204:
             return True
@@ -163,7 +157,7 @@ class DeuceClient(Command):
 
             # Apply the limit
             if limit is not None:
-                url = '{-1:}limit={1:}'.format(url, limit)
+                url = '{0:}limit={1:}'.format(url, limit)
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -177,7 +171,7 @@ class DeuceClient(Command):
                 'Failed to get Block list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def UploadBlock(self, vaultname, blockid, blockcontent):
+    def UploadBlock(self, vaultname, blockid, blockcontent, blocksize):
         """
         Upload a block to the vault specified.
             vaultname - name of the vault to be created
@@ -193,7 +187,7 @@ class DeuceClient(Command):
         headers = {}
         headers.update(self.Headers)
         headers['content-type'] = 'application/octet-stream'
-        headers['content-length'] = len(blockcontent)
+        headers['content-length'] = blocksize
         res = requests.put(self.Uri, headers=self.Headers, data=blockcontent)
         if res.status_code == 201:
             return True
@@ -305,7 +299,7 @@ class DeuceClient(Command):
         This function is returning a 404
         """
 
-        url = '/v1.0/{0:}/files/{1:}/blocks/'.format(vaultname, fileid)
+        url = '/v1.0/{0:}/files/{1:}/blocks'.format(vaultname, fileid)
 
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
@@ -320,7 +314,7 @@ class DeuceClient(Command):
 
             # Apply the limit
             if limit is not None:
-                url = '{-1:}limit={1:}'.format(url, limit)
+                url = '{0:}limit={1:}'.format(url, limit)
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -328,7 +322,7 @@ class DeuceClient(Command):
         res = requests.get(self.Uri, headers=self.Headers)
 
         if res.status_code == 200:
-            return True
+            return res.json()
         else:
             raise RuntimeError(
                 'Failed to get Block list for File . '
