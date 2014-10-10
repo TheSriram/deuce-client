@@ -1,5 +1,5 @@
 """
-Deuce Client Tests
+Tests - Deuce Client - Client - Deuce
 """
 import hashlib
 import json

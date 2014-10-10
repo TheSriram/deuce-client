@@ -1,5 +1,5 @@
 """
-Deuce Client Tests
+Tests - Deuce Client - Support
 """
 import datetime
 import hashlib
@@ -13,6 +13,10 @@ import deuceclient.auth.base
 
 def create_vault_name():
     return 'vault_{0}'.format(str(uuid.uuid4()))
+
+
+def create_project_name():
+    return 'project_{0}'.format(str(uuid.uuid4()))
 
 
 def get_base_path():
