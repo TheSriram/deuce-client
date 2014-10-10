@@ -39,8 +39,10 @@ class Project(dict):
                 '{0} can only contain Vaults'.format(self.__class__))
 
     def __repr__(self):
-        return '{1} ({0})'.format(type(self).__name__, dict.__repr__(self))
+        return '{0}: "{1}" - {2}'.format(type(self).__name__,
+                                         self.project_id,
+                                         dict.__repr__(self))
 
     def update(self, *args, **kwargs):
-        for k, v in dict(*args, **kwargs).iteritems():
+        for k, v in dict(*args, **kwargs).items():
             self[k] = v

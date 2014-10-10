@@ -20,6 +20,16 @@ class DeuceClient(Command):
         else:
             return vault
 
+    @staticmethod
+    def __vault_status(vault, status):
+        if isinstance(vault, api.vault.Vault):
+            vault.status = status
+
+    @staticmethod
+    def __vault_statistics(vault, stats):
+        if isinstance(vault, api.vault.Vault):
+            vault.statistics = stats
+
     def __init__(self, authenticator, apihost, sslenabled=False):
         """
         Initialize the Deuce Client access
@@ -70,6 +80,7 @@ class DeuceClient(Command):
         res = requests.put(self.Uri, headers=self.Headers)
 
         if res.status_code == 201:
+            DeuceClient.__vault_status(vault, 'created')
             return True
         else:
             raise RuntimeError(
@@ -88,6 +99,7 @@ class DeuceClient(Command):
         res = requests.delete(self.Uri, headers=self.Headers)
 
         if res.status_code == 204:
+            DeuceClient.__vault_status(vault, 'deleted')
             return True
         else:
             raise RuntimeError(
@@ -106,8 +118,10 @@ class DeuceClient(Command):
         res = requests.head(self.Uri, headers=self.Headers)
 
         if res.status_code == 204:
+            DeuceClient.__vault_status(vault, 'valid')
             return True
         elif res.status_code == 404:
+            DeuceClient.__vault_status(vault, 'invalid')
             return False
         else:
             raise RuntimeError(
@@ -126,7 +140,9 @@ class DeuceClient(Command):
         res = requests.get(self.Uri, headers=self.Headers)
 
         if res.status_code == 200:
-            return res.json()
+            statistics = res.json()
+            DeuceClient.__vault_statistics(vault, statistics)
+            return statistics
         else:
             raise RuntimeError(
                 'Failed to get Vault statistics. '
