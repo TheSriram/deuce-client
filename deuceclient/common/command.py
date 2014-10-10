@@ -2,7 +2,7 @@
 Basic HTTP Command Interface
 """
 
-import deuce
+import deuceclient
 
 
 class Command(object):
@@ -20,7 +20,7 @@ class Command(object):
         self.body = {}
         self.headers = {}
         self.headers['X-Deuce-User-Agent'] = 'Deuce-Client/{0:}'.format(
-            deuce.version())
+            deuceclient.version())
         self.headers['User-Agent'] = self.headers['X-Deuce-User-Agent']
         self.uri = ''
         self.apihost = apihost
@@ -57,7 +57,7 @@ class Command(object):
         self.headers = {}
         self.headers['Content-Type'] = 'application/json; charset=utf-8'
         # HTTP or HTTPS
-        if (sslenabled):
+        if sslenabled is True:
             self.uri = "https://" + self.apihost + uripath
         else:
             self.uri = "http://" + self.apihost + uripath

@@ -9,7 +9,9 @@ import logging
 import pprint
 import sys
 
-import deuceclient.deuce
+import deuceclient.client.deuce as client
+import deuceclient.auth.openstackauth as openstackauth
+import deuceclient.auth.rackspaceauth as rackspaceauth
 
 
 class ProgramArgumentError(ValueError):
@@ -21,31 +23,110 @@ def __api_operation_prep(log, arguments):
     API Operation Common Functionality
     """
     # Parse the user data
-    example_user_config_json = "{\n    'user': <username>," \
-                               "\n    'apikey': <apikey>\n}\n"
-    try:
-        user_data = json.load(arguments.user_config)
-        username = user_data['user']
-        apikey = user_data['apikey']
-    except ValueError:
-        sys.stderr.write('Invalid User Config file. Format:\n{0:}'.format(
-            example_user_config_json))
-        sys.exit(-3)
-    except KeyError:
-        sys.stderr.write('Invalid User Config file. Format:\n{0:}'.format(
+    example_user_config_json = """
+    {
+        'user': <username>,
+        'username': <username>,
+        'user_name': <username>,
+        'user_id': <userid>
+        'tenant_name': <tenantname>,
+        'tenant_id': <tenantid>,
+        'apikey': <apikey>,
+        'password': <password>,
+        'token': <token>
+    }
+
+    Note: Only one of user, username, user_name, user_id, tenant_name,
+          or tenant_id must be specified.
+
+    Note: Only one of apikey, password, token must be specified.
+        Token preferred over apikey or password.
+        Apikey preferred over password.
+    """
+    auth_url = arguments.auth_service_url
+    auth_provider = arguments.auth_service
+
+    auth_data = {
+        'user': {
+            'value': None,
+            'type': None
+        },
+        'credentials': {
+            'value': None,
+            'type': None
+        }
+    }
+
+    def find_user(data):
+        user_list = [
+            ('user', 'user_name'),
+            ('username', 'user_name'),
+            ('user_name', 'user_name'),
+            ('user_id', 'user_id'),
+            ('tenant_name', 'tenant_name'),
+            ('tenant_id', 'tenant_id'),
+        ]
+
+        for u in user_list:
+            try:
+                auth_data['user']['value'] = user_data[u[0]]
+                auth_data['user']['type'] = u[1]
+                return True
+            except LookupError:
+                pass
+
+        return False
+
+    def find_credentials(data):
+        credential_list = ['token', 'password', 'apikey']
+        for credential_type in credential_list:
+            try:
+                auth_data['credentials']['value'] = user_data[credential_type]
+                auth_data['credentials']['type'] = credential_type
+                return True
+            except LookupError:
+                pass
+
+        return False
+
+    user_data = json.load(arguments.user_config)
+    if not find_user(user_data):
+        sys.stderr.write('Unknown User Type.\n Example Config: {0:}'.format(
             example_user_config_json))
         sys.exit(-2)
 
+    if not find_credentials(user_data):
+        sys.stderr.write('Unknown Auth Type.\n Example Config: {0:}'.format(
+            example_user_config_json))
+        sys.exit(-3)
+
     # Setup the Authentication
     datacenter = arguments.datacenter
-    auth_engine = rcbu.client.auth.Authentication(user_data['user'],
-                                                  user_data['apikey'],
-                                                  usertype='user',
-                                                  datacenter=datacenter)
+
+    asp = None
+    if auth_provider == 'openstack':
+        asp = openstackauth.OpenStackAuthentication
+
+    elif auth_provider == 'rackspace':
+        asp = rackspaceauth.RackspaceAuthentication
+
+    else:
+        sys.stderr.write('Unknown Authentication Service Provider'
+                         ': {0:}'.format(auth_provider))
+        sys.exit(-4)
+
+    auth_engine = asp(userid=auth_data['user']['value'],
+                      usertype=auth_data['user']['type'],
+                      credentials=auth_data['credentials']['value'],
+                      auth_method=auth_data['credentials']['type'],
+                      datacenter=datacenter,
+                      auth_url=auth_url)
+
+    # Deuce URL
     uri = arguments.url
 
     # Setup Agent Access
-    deuce = rcbu.client.deuce.DeuceClient(False, auth_engine, uri)
+    deuce = client.DeuceClient(auth_engine, uri)
 
     return (auth_engine, deuce, uri)
 
@@ -56,7 +137,7 @@ def vault_create(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    deuceclient.CreateVault(arguments.vault_name)
+    return not deuceclient.CreateVault(arguments.vault_name)
 
 
 def vault_exists(log, arguments):
@@ -168,6 +249,17 @@ def main():
                             required=True,
                             help='Datacenter the system is in',
                             choices=['lon', 'syd', 'hkg', 'ord', 'iad', 'dfw'])
+    arg_parser.add_argument('--auth-service',
+                            default='rackspace',
+                            type=str,
+                            required=False,
+                            help='Authentication Service Provider',
+                            choices=['openstack', 'rackspace'])
+    arg_parser.add_argument('--auth-service-url',
+                            default=None,
+                            type=str,
+                            required=False,
+                            help='Authentication Service Provider URL')
     sub_argument_parser = arg_parser.add_subparsers(title='subcommands')
 
     vault_parser = sub_argument_parser.add_parser('vault')
