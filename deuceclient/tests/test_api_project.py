@@ -26,6 +26,11 @@ class ProjectTest(TestCase):
         with self.assertRaises(TypeError):
             project = p.Project(bytes(self.project_id))
 
+    def test_project_name_invalid(self):
+
+        with self.assertRaises(errors.InvalidProject):
+            project = p.Project(self.project_id + '$')
+
     def test_project_add_vault(self):
 
         project = p.Project(self.project_id)
