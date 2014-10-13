@@ -13,6 +13,7 @@ import mock
 
 import deuceclient
 import deuceclient.api as api
+import deuceclient.api.vault as api_vault
 import deuceclient.client.deuce
 from deuceclient.common import errors
 from deuceclient.tests import *
@@ -35,7 +36,7 @@ class ClientTest(TestCase):
                                                datacenter='wonderland',
                                                auth_url='down.the.rabbit.hole')
 
-        self.vault = api.vault.Vault(create_project_name(),
+        self.vault = api_vault.Vault(create_project_name(),
                                      create_vault_name())
 
     @property

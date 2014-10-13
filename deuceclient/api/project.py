@@ -17,9 +17,6 @@ class Project(dict):
     def __init__(self, project_id):
         super(self.__class__, self).__init__()
 
-        if not isinstance(project_id, str):
-            raise TypeError('project_id must be type str()')
-
         self.__project_id = project_id
 
     @property
@@ -27,7 +24,7 @@ class Project(dict):
         return self.__project_id
 
     @validate(key=VaultIdRule)
-    def __getitem___(self, key):
+    def __getitem__(self, key):
         return dict.__getitem__(self, key)
 
     @validate(key=VaultIdRule)
@@ -44,5 +41,7 @@ class Project(dict):
                                          dict.__repr__(self))
 
     def update(self, *args, **kwargs):
+        # Force use of Project.__setitem__ in order
+        # to get validation of each entry in the incoming dictionary
         for k, v in dict(*args, **kwargs).items():
             self[k] = v

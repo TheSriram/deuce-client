@@ -5,6 +5,7 @@ from unittest import TestCase
 
 import deuceclient.api.project as p
 import deuceclient.api.vault as v
+import deuceclient.common.errors as errors
 from deuceclient.tests import *
 
 
@@ -39,8 +40,14 @@ class ProjectTest(TestCase):
     def test_project_add_vault_invalid(self):
         project = p.Project(self.project_id)
 
-        with self.assertRaises(TypeError):
-            project[create_vault_name()] = {}
+        with self.assertRaises(errors.InvalidVault):
+            project[create_vault_name() + '$'] = {}
+
+    def test_project_get_vault_invalid(self):
+        project = p.Project(self.project_id)
+
+        with self.assertRaises(errors.InvalidVault):
+            v = project[create_vault_name() + '$']
 
     def test_project_update_vault(self):
 

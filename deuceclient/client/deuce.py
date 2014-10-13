@@ -6,6 +6,8 @@ import requests
 import logging
 
 import deuceclient.api as api
+import deuceclient.api.vault as api_vault
+import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
 
 
@@ -15,19 +17,19 @@ class DeuceClient(Command):
     """
     @staticmethod
     def __vault_id(vault):
-        if isinstance(vault, api.vault.Vault):
+        if isinstance(vault, api_vault.Vault):
             return vault.vault_id
         else:
             return vault
 
     @staticmethod
     def __vault_status(vault, status):
-        if isinstance(vault, api.vault.Vault):
+        if isinstance(vault, api_vault.Vault):
             vault.status = status
 
     @staticmethod
     def __vault_statistics(vault, stats):
-        if isinstance(vault, api.vault.Vault):
+        if isinstance(vault, api_vault.Vault):
             vault.statistics = stats
 
     def __init__(self, authenticator, apihost, sslenabled=False):
@@ -72,7 +74,7 @@ class DeuceClient(Command):
         Create a Vault
             vault - name of vault to be created
         """
-        path = api.v1.get_vault_path(self.__vault_id(vault))
+        path = api_v1.get_vault_path(self.__vault_id(vault))
         self.ReInit(self.sslenabled, path)
 
         self.__update_headers()
@@ -92,7 +94,7 @@ class DeuceClient(Command):
         Delete a Vault
             vault - name of vault to be deleted
         """
-        path = api.v1.get_vault_path(self.__vault_id(vault))
+        path = api_v1.get_vault_path(self.__vault_id(vault))
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
@@ -111,7 +113,7 @@ class DeuceClient(Command):
         Return the statistics on a Vault
             vault - name of vault to be deleted
         """
-        path = api.v1.get_vault_path(self.__vault_id(vault))
+        path = api_v1.get_vault_path(self.__vault_id(vault))
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
@@ -133,7 +135,7 @@ class DeuceClient(Command):
         Return the statistics on a Vault
             vault - name of vault to be deleted
         """
-        path = api.v1.get_vault_path(self.__vault_id(vault))
+        path = api_v1.get_vault_path(self.__vault_id(vault))
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
@@ -152,7 +154,7 @@ class DeuceClient(Command):
         """
         Return the list of blocks in the vault
         """
-        url = api.v1.get_blocks_path(self.__vault_id(vault))
+        url = api_v1.get_blocks_path(self.__vault_id(vault))
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
             url = url + '?'
@@ -188,7 +190,7 @@ class DeuceClient(Command):
                       f.e 74bdda817d796333e9fe359e283d5643ee1a1397
             blockcontent - data present in the block to uploaded
         """
-        url = api.v1.get_block_path(self.__vault_id(vault), blockid)
+        url = api_v1.get_block_path(self.__vault_id(vault), blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -209,7 +211,7 @@ class DeuceClient(Command):
         Delete the block from the vault.
         This funciton has not been tested
         """
-        url = api.v1.get_block_path(self.__vault_id(vault), blockid)
+        url = api_v1.get_block_path(self.__vault_id(vault), blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -227,7 +229,7 @@ class DeuceClient(Command):
         vault - exisiting vault, eg 'v1'
         block id - sha1 of block, eg - 74bdda817d796333e9fe359e283d5643ee1a1397
         """
-        url = api.v1.get_block_path(self.__vault_id(vault), blockid)
+        url = api_v1.get_block_path(self.__vault_id(vault), blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -245,7 +247,7 @@ class DeuceClient(Command):
         Creates a file in the specified vault, does not post data to it
         Returns the location of the file which gives the file id
         """
-        url = api.v1.get_files_path(self.__vault_id(vault))
+        url = api_v1.get_files_path(self.__vault_id(vault))
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -286,7 +288,7 @@ class DeuceClient(Command):
                 }
         Mandatory to supply block size and offset along with the block id
         """
-        url = api.v1.get_file_path(self.__vault_id(vault), fileid)
+        url = api_v1.get_file_path(self.__vault_id(vault), fileid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
@@ -307,7 +309,7 @@ class DeuceClient(Command):
         This function is returning a 404
         """
 
-        url = api.v1.get_fileblocks_path(self.__vault_id(vault), fileid)
+        url = api_v1.get_fileblocks_path(self.__vault_id(vault), fileid)
 
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
