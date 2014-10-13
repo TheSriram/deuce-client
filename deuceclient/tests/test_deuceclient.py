@@ -1,5 +1,5 @@
 """
-Deuce Client Tests
+Tests - Deuce Client - Client - Deuce
 """
 import hashlib
 import json
@@ -12,8 +12,11 @@ import httpretty
 import mock
 
 import deuceclient
+import deuceclient.api as api
+import deuceclient.api.vault as api_vault
 import deuceclient.client.deuce
-from deuceclient.tests import FakeAuthenticator
+from deuceclient.common import errors
+from deuceclient.tests import *
 
 
 class ClientTest(TestCase):
@@ -33,58 +36,12 @@ class ClientTest(TestCase):
                                                datacenter='wonderland',
                                                auth_url='down.the.rabbit.hole')
 
-        self.vault_name = '{0}'.format(str(uuid.uuid4()))
+        self.vault = api_vault.Vault(create_project_name(),
+                                     create_vault_name())
 
-    def get_deuce_url(self):
-        return 'https://{0}/v1.0'.format(self.apihost)
-
-    def get_vault_url(self, vault):
-        return '{0}/{1}'.format(self.get_deuce_url(), vault)
-
-    def get_blocks_url(self, vault):
-        return '{0}/blocks'.format(self.get_vault_url(vault))
-
-    def get_block_url(self, vault, block_id):
-        return '{0}/{1}'.format(self.get_blocks_url(vault), block_id)
-
-    def get_files_url(self, vault):
-        return '{0}/files'.format(self.get_vault_url(vault))
-
-    def get_file_url(self, vault, file_id):
-        return '{0}/{1}'.format(self.get_files_url(vault), file_id)
-
-    def get_file_blocks_url(self, vault, file_id):
-        return '{0}/blocks'.format(self.get_file_url(vault, file_id))
-
-    @staticmethod
-    def get_block_id(data):
-        blockid_generator = hashlib.sha1()
-        blockid_generator.update(data)
-        return blockid_generator.hexdigest()
-
-    @staticmethod
-    def create_block(block_size=100):
-        block_data = os.urandom(block_size)
-        block_id = ClientTest.get_block_id(block_data)
-        return (block_id, block_data, block_size)
-
-    @staticmethod
-    def create_blocks(block_count=1, block_size=100, uniform_sizes=False,
-                      min_size=1, max_size=2000):
-        block_sizes = []
-        if uniform_sizes:
-            block_sizes = [blocksize for _ in range(block_count)]
-        else:
-            block_sizes = [random.randrange(min_size, max_size)
-                           for block_size in range(block_count)]
-
-        blocks = [ClientTest.create_block(block_size)
-                  for block_size in block_sizes]
-        return blocks
-
-    @staticmethod
-    def create_file():
-        return 'file_{0}'.format(str(uuid.uuid4()))
+    @property
+    def vault_name(self):
+        return self.vault.vault_id
 
     def tearDown(self):
         super(self.__class__, self).tearDown()
@@ -105,7 +62,6 @@ class ClientTest(TestCase):
 
         self.assertEqual(self.expected_uri,
                          client.uri)
-
         self.assertEqual(self.authenticator.AuthTenantId,
                          client.ProjectId)
 
@@ -116,10 +72,22 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.PUT,
-                            self.get_vault_url(self.vault_name),
+                            get_vault_url(self.apihost, self.vault.vault_id),
                             status=201)
 
-        self.assertTrue(client.CreateVault(self.vault_name))
+        self.assertTrue(client.CreateVault(self.vault.vault_id))
+
+    @httpretty.activate
+    def test_create_vault_with_api_vault(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        httpretty.register_uri(httpretty.PUT,
+                            get_vault_url(self.apihost, self.vault.vault_id),
+                            status=201)
+
+        self.assertTrue(client.CreateVault(self.vault))
 
     @httpretty.activate
     def test_create_vault_failed(self):
@@ -128,13 +96,13 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.PUT,
-                            self.get_vault_url(self.vault_name),
+                            get_vault_url(self.apihost, self.vault.vault_id),
                             content_type='text/plain',
                             body="mock failure",
                             status=404)
 
         with self.assertRaises(RuntimeError) as creation_error:
-            client.CreateVault(self.vault_name)
+            client.CreateVault(self.vault)
 
     @httpretty.activate
     def test_delete_vault(self):
@@ -143,9 +111,10 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.DELETE,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                status=204)
-        self.assertTrue(client.DeleteVault(self.vault_name))
+        self.assertTrue(client.DeleteVault(self.vault))
 
     @httpretty.activate
     def test_delete_vault_failed(self):
@@ -154,13 +123,14 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.DELETE,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.DeleteVault(self.vault_name)
+            client.DeleteVault(self.vault)
 
     @httpretty.activate
     def test_vault_exists(self):
@@ -170,10 +140,11 @@ class ClientTest(TestCase):
         expected_result = {'status': True}
 
         httpretty.register_uri(httpretty.HEAD,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                status=204)
 
-        self.assertTrue(client.VaultExists(self.vault_name))
+        self.assertTrue(client.VaultExists(self.vault))
 
     @httpretty.activate
     def test_vault_does_not_exist(self):
@@ -183,10 +154,11 @@ class ClientTest(TestCase):
         expected_result = {'status': True}
 
         httpretty.register_uri(httpretty.HEAD,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                status=404)
 
-        self.assertFalse(client.VaultExists(self.vault_name))
+        self.assertFalse(client.VaultExists(self.vault))
 
     @httpretty.activate
     def test_vault_exists_failure(self):
@@ -194,13 +166,14 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         httpretty.register_uri(httpretty.HEAD,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=401)
 
         with self.assertRaises(RuntimeError) as exists_error:
-            client.VaultExists(self.vault_name)
+            client.VaultExists(self.vault)
 
     @httpretty.activate
     def test_vault_statistics(self):
@@ -212,13 +185,14 @@ class ClientTest(TestCase):
         expected_body = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                content_type='application/json',
                                body=expected_body,
                                status=200)
 
         self.assertEqual(data,
-                         client.GetVaultStatistics(self.vault_name))
+                         client.GetVaultStatistics(self.vault))
 
     @httpretty.activate
     def test_vault_statistics_failure(self):
@@ -227,13 +201,14 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_vault_url(self.vault_name),
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as stats_error:
-            client.GetVaultStatistics(self.vault_name)
+            client.GetVaultStatistics(self.vault)
 
     @httpretty.activate
     def test_block_list(self):
@@ -245,13 +220,14 @@ class ClientTest(TestCase):
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_blocks_url(self.vault_name),
+                               get_blocks_url(self.apihost,
+                                              self.vault.vault_id),
                                content_type='application/json',
                                body=expected_data,
                                status=200)
 
         self.assertEqual(data,
-                         client.GetBlockList(self.vault_name))
+                         client.GetBlockList(self.vault))
 
     @httpretty.activate
     def test_block_list_with_marker(self):
@@ -259,19 +235,20 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        block_id, block_data, block_size = self.__class__.create_block()
+        block_id, block_data, block_size = create_block()
 
         data = {'list': 'my list'}
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_blocks_url(self.vault_name),
+                               get_blocks_url(self.apihost,
+                                              self.vault.vault_id),
                                content_type='application/json',
                                body=expected_data,
                                status=200)
 
         self.assertEqual(data,
-                         client.GetBlockList(self.vault_name, marker=block_id))
+                         client.GetBlockList(self.vault, marker=block_id))
 
     @httpretty.activate
     def test_block_list_with_marker_and_limit(self):
@@ -279,19 +256,20 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        block_id, block_data, block_size = self.__class__.create_block()
+        block_id, block_data, block_size = create_block()
 
         data = {'list': 'my list'}
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_blocks_url(self.vault_name),
+                               get_blocks_url(self.apihost,
+                                              self.vault.vault_id),
                                content_type='application/json',
                                body=expected_data,
                                status=200)
 
         self.assertEqual(data,
-                         client.GetBlockList(self.vault_name,
+                         client.GetBlockList(self.vault,
                                              marker=block_id,
                                              limit=5))
 
@@ -305,13 +283,14 @@ class ClientTest(TestCase):
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_blocks_url(self.vault_name),
+                               get_blocks_url(self.apihost,
+                                              self.vault.vault_id),
                                content_type='application/json',
                                body=expected_data,
                                status=200)
 
         self.assertEqual(data,
-                         client.GetBlockList(self.vault_name, limit=5))
+                         client.GetBlockList(self.vault, limit=5))
 
     @httpretty.activate
     def test_block_list_failure(self):
@@ -320,13 +299,14 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_blocks_url(self.vault_name),
+                               get_blocks_url(self.apihost,
+                                              self.vault.vault_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as stats_error:
-            client.GetBlockList(self.vault_name)
+            client.GetBlockList(self.vault)
 
     @httpretty.activate
     def test_block_upload(self):
@@ -334,13 +314,15 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        blockid, blockdata, block_size = self.__class__.create_block()
+        blockid, blockdata, block_size = create_block()
 
         httpretty.register_uri(httpretty.PUT,
-                               self.get_block_url(self.vault_name, blockid),
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             blockid),
                                status=201)
 
-        self.assertTrue(client.UploadBlock(self.vault_name,
+        self.assertTrue(client.UploadBlock(self.vault,
                                            blockid,
                                            blockdata,
                                            block_size))
@@ -351,14 +333,16 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        blockid, blockdata, block_size = self.__class__.create_block()
+        blockid, blockdata, block_size = create_block()
 
         httpretty.register_uri(httpretty.PUT,
-                               self.get_block_url(self.vault_name, blockid),
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             blockid),
                                status=404)
 
         with self.assertRaises(RuntimeError) as upload_error:
-            client.UploadBlock(self.vault_name, blockid, blockdata, block_size)
+            client.UploadBlock(self.vault, blockid, blockdata, block_size)
 
     @httpretty.activate
     def test_block_deletion(self):
@@ -366,13 +350,15 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        blockid, blockdata, block_size = self.__class__.create_block()
+        blockid, blockdata, block_size = create_block()
 
         httpretty.register_uri(httpretty.DELETE,
-                               self.get_block_url(self.vault_name, blockid),
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             blockid),
                                status=204)
 
-        self.assertTrue(client.DeleteBlock(self.vault_name, blockid))
+        self.assertTrue(client.DeleteBlock(self.vault, blockid))
 
     @httpretty.activate
     def test_block_deletion_failed(self):
@@ -380,16 +366,18 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        blockid, blockdata, block_size = self.__class__.create_block()
+        blockid, blockdata, block_size = create_block()
 
         httpretty.register_uri(httpretty.DELETE,
-                               self.get_block_url(self.vault_name, blockid),
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             blockid),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.DeleteBlock(self.vault_name, blockid)
+            client.DeleteBlock(self.vault, blockid)
 
     @httpretty.activate
     def test_block_download(self):
@@ -397,15 +385,17 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        blockid, blockdata, block_size = self.__class__.create_block()
+        blockid, blockdata, block_size = create_block()
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_block_url(self.vault_name, blockid),
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             blockid),
                                content_type='text/plain',
                                body=blockdata,
                                status=200)
 
-        data = client.GetBlockData(self.vault_name, blockid)
+        data = client.GetBlockData(self.vault, blockid)
         self.assertEqual(data, blockdata)
 
     @httpretty.activate
@@ -414,16 +404,18 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        blockid, blockdata, block_size = self.__class__.create_block()
+        blockid, blockdata, block_size = create_block()
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_block_url(self.vault_name, blockid),
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             blockid),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.GetBlockData(self.vault_name, blockid)
+            client.GetBlockData(self.vault, blockid)
 
     @httpretty.activate
     def test_file_creation(self):
@@ -431,17 +423,18 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
-        file_url = self.get_file_url(self.vault_name, file_id)
+        file_id = create_file()
+        file_url = get_file_url(self.apihost, self.vault.vault_id, file_id)
 
         httpretty.register_uri(httpretty.POST,
-                               self.get_files_url(self.vault_name),
+                               get_files_url(self.apihost,
+                                             self.vault.vault_id),
                                adding_headers={
                                    'location': file_url
                                },
                                status=201)
 
-        self.assertEqual(file_url, client.CreateFile(self.vault_name))
+        self.assertEqual(file_url, client.CreateFile(self.vault))
 
     @httpretty.activate
     def test_file_creation_missing_location_header(self):
@@ -449,15 +442,16 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
-        file_url = self.get_file_url(self.vault_name, file_id)
+        file_id = create_file()
+        file_url = get_file_url(self.apihost, self.vault.vault_id, file_id)
 
         httpretty.register_uri(httpretty.POST,
-                               self.get_files_url(self.vault_name),
+                               get_files_url(self.apihost,
+                                             self.vault.vault_id),
                                status=201)
 
         with self.assertRaises(KeyError) as creation_error:
-            client.CreateFile(self.vault_name)
+            client.CreateFile(self.vault)
 
     @httpretty.activate
     def test_file_creation_failed(self):
@@ -465,15 +459,16 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
-        file_url = self.get_file_url(self.vault_name, file_id)
+        file_id = create_file()
+        file_url = get_file_url(self.apihost, self.vault.vault_id, file_id)
 
         httpretty.register_uri(httpretty.POST,
-                               self.get_files_url(self.vault_name),
+                               get_files_url(self.apihost,
+                                             self.vault.vault_id),
                                status=404)
 
         with self.assertRaises(RuntimeError) as creation_error:
-            client.CreateFile(self.vault_name)
+            client.CreateFile(self.vault)
 
     @httpretty.activate
     def test_file_blocks_get(self):
@@ -481,17 +476,18 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
+        file_id = create_file()
         data = {'list': 'my list'}
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_file_blocks_url(self.vault_name,
-                                                        file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=200)
 
         self.assertEqual(data,
-                         client.GetFileBlockList(self.vault_name, file_id))
+                         client.GetFileBlockList(self.vault, file_id))
 
     @httpretty.activate
     def test_file_blocks_get_with_marker(self):
@@ -499,18 +495,19 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        block_id, block_data, block_size = self.__class__.create_block()
-        file_id = self.__class__.create_file()
+        block_id, block_data, block_size = create_block()
+        file_id = create_file()
         data = {'list': 'my list'}
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_file_blocks_url(self.vault_name,
-                                                        file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=200)
 
         self.assertEqual(data,
-                         client.GetFileBlockList(self.vault_name,
+                         client.GetFileBlockList(self.vault,
                                                  file_id,
                                                  marker=block_id))
 
@@ -520,18 +517,19 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        block_id, block_data, block_size = self.__class__.create_block()
-        file_id = self.__class__.create_file()
+        block_id, block_data, block_size = create_block()
+        file_id = create_file()
         data = {'list': 'my list'}
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_file_blocks_url(self.vault_name,
-                                                        file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=200)
 
         self.assertEqual(data,
-                         client.GetFileBlockList(self.vault_name,
+                         client.GetFileBlockList(self.vault,
                                                  file_id,
                                                  marker=block_id,
                                                  limit=5))
@@ -542,18 +540,19 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        block_id, block_data, block_size = self.__class__.create_block()
-        file_id = self.__class__.create_file()
+        block_id, block_data, block_size = create_block()
+        file_id = create_file()
         data = {'list': 'my list'}
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_file_blocks_url(self.vault_name,
-                                                        file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=200)
 
         self.assertEqual(data,
-                         client.GetFileBlockList(self.vault_name,
+                         client.GetFileBlockList(self.vault,
                                                  file_id,
                                                  limit=5))
 
@@ -563,17 +562,18 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
+        file_id = create_file()
         data = {'list': 'my list'}
 
         httpretty.register_uri(httpretty.GET,
-                               self.get_file_blocks_url(self.vault_name,
-                                                        file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=404)
 
         with self.assertRaises(RuntimeError) as stats_error:
-            client.GetFileBlockList(self.vault_name, file_id)
+            client.GetFileBlockList(self.vault, file_id)
 
     @httpretty.activate
     def test_file_assign_blocks(self):
@@ -581,13 +581,13 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
+        file_id = create_file()
 
         block_list = {'blocks': []}
 
         running_offset = 0
         for block_id, block_data, block_size in \
-                self.__class__.create_blocks(5):
+                create_blocks(5):
             block_list['blocks'].append({
                 'id': block_id,
                 'size': block_size,
@@ -598,13 +598,14 @@ class ClientTest(TestCase):
         data = {'status': True}
 
         httpretty.register_uri(httpretty.POST,
-                               self.get_file_url(self.vault_name,
-                                                 file_id),
+                               get_file_url(self.apihost,
+                                            self.vault.vault_id,
+                                            file_id),
                                body=json.dumps(data),
                                status=200)
 
         self.assertEqual(data,
-                         client.AssignBlocksToFile(self.vault_name,
+                         client.AssignBlocksToFile(self.vault,
                                                    file_id,
                                                    block_list))
 
@@ -614,13 +615,12 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        file_id = self.__class__.create_file()
+        file_id = create_file()
 
         block_list = {'blocks': []}
 
         running_offset = 0
-        for block_id, block_data, block_size in \
-                self.__class__.create_blocks(5):
+        for block_id, block_data, block_size in create_blocks(5):
             block_list['blocks'].append({
                 'id': block_id,
                 'size': block_size,
@@ -631,11 +631,12 @@ class ClientTest(TestCase):
         data = {'status': True}
 
         httpretty.register_uri(httpretty.POST,
-                               self.get_file_url(self.vault_name,
-                                                 file_id),
+                               get_file_url(self.apihost,
+                                            self.vault.vault_id,
+                                            file_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as stats_error:
-            client.AssignBlocksToFile(self.vault_name, file_id, block_list)
+            client.AssignBlocksToFile(self.vault, file_id, block_list)

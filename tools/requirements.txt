@@ -1,3 +1,4 @@
 argparse==1.2.1
-requests
 python-keystoneclient
+requests
+stoplight>=1.0.1
