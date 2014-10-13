@@ -93,3 +93,6 @@ MetadataBlockIdRule = Rule(val_metadata_block_id(), lambda: _abort(400))
 StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 OffsetRule = Rule(val_offset(), lambda: _abort(600))
 LimitRule = Rule(val_limit(), lambda: _abort(600))
+
+StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
+                                  lambda: _abort(500))

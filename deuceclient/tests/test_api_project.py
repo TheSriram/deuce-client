@@ -1,5 +1,5 @@
 """
-Testing - Deuce Client - API - Vault
+Testing - Deuce Client - API - Project
 """
 from unittest import TestCase
 
