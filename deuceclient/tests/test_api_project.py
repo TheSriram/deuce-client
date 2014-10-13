@@ -6,6 +6,7 @@ from unittest import TestCase
 import deuceclient.api.project as p
 import deuceclient.api.vault as v
 import deuceclient.common.errors as errors
+import deuceclient.common.validation as val
 from deuceclient.tests import *
 
 
@@ -30,6 +31,14 @@ class ProjectTest(TestCase):
 
         with self.assertRaises(errors.InvalidProject):
             project = p.Project(self.project_id + '$')
+
+        # Build project name that is too long
+        x = self.project_id
+        while len(x) < (val.PROJECT_ID_MAX_LEN + 1):
+            x = '{0}_{1}'.format(x, self.project_id)
+
+        with self.assertRaises(errors.InvalidProject):
+            project = p.Project(x)
 
     def test_project_add_vault(self):
 
