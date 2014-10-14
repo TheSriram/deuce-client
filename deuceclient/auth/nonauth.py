@@ -35,5 +35,5 @@ class NonAuthAuthentication(deuceclient.auth.AuthenticationBase):
         # This token never expires
         return False
 
-    def AuthTenantId(self):
+    def _AuthTenantId(self):
         return self.userid

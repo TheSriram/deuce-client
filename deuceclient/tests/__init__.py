@@ -24,7 +24,7 @@ def get_base_path():
 
 
 def get_vault_path(vault_name):
-    return '{0}/{1}'.format(get_base_path(), vault_name)
+    return '{0}/vaults/{1}'.format(get_base_path(), vault_name)
 
 
 def get_blocks_path(vault_name):

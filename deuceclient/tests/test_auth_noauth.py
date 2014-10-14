@@ -56,4 +56,4 @@ class NonAuthAuthTests(TestCase,
 
     def test_tenantid(self):
         self.assertEqual(self._userid,
-                         self.authengine.AuthTenantId())
+                         self.authengine.AuthTenantId)
