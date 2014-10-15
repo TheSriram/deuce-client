@@ -3,6 +3,7 @@ Deuce Client - Vault API
 """
 from stoplight import validate
 
+import deuceclient.api.blocks
 from deuceclient.common.validation import *
 
 
@@ -13,10 +14,7 @@ class Vault(object):
         self.__project_id = project_id
         self.__vault_id = vault_id
         self.__files = dict()
-        self.__blocks = {
-            'metadata': dict(),
-            'storage': dict()
-        }
+        self.__blocks = deuceclient.api.blocks.Blocks()
         self.__properties = {
             'status': None,
             'statistics': None
