@@ -104,7 +104,7 @@ class BlockTest(TestCase):
         self.assertIsNone(block.ref_modified)
 
     def test_create_block_with_ref_modified(self):
-        ref_modified = datetime.datetime.utcnow().toordinal()
+        ref_modified = int(datetime.datetime.utcnow().timestamp())
         block = b.Block(self.project_id,
                         self.vault_id,
                         self.block[0],
