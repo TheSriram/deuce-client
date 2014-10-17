@@ -418,6 +418,191 @@ class ClientTest(TestCase):
             client.GetBlockData(self.vault, blockid)
 
     @httpretty.activate
+    def test_storage_block_download(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        storage_blockid = create_storage_block()
+
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             storage_blockid),
+                               content_type='text/plain',
+                               body="mock",
+                               status=200)
+
+        data = client.GetBlockStorageData(self.vault, storage_blockid)
+        self.assertEqual(data, b"mock")
+
+    @httpretty.activate
+    def test_non_existent_storage_block_download(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        storage_blockid = create_storage_block()
+
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             storage_blockid),
+                               content_type='text/plain',
+                               body="mock",
+                               status=404)
+
+        with self.assertRaises(RuntimeError) as deletion_error:
+            client.GetBlockStorageData(self.vault, storage_blockid)
+
+    @httpretty.activate
+    def test_storage_block_list(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        data = {'list': 'my list'}
+        expected_data = json.dumps(data)
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_blocks_url(self.apihost,
+                                             self.vault.vault_id),
+                               content_type='text/plain',
+                               body=expected_data,
+                               status=200)
+
+        self.assertEqual(data, client.GetBlockStorageList(self.vault.vault_id))
+
+    @httpretty.activate
+    def test_storage_block_list_error(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_blocks_url(self.apihost,
+                                             self.vault.vault_id),
+                               status=500)
+
+        with self.assertRaises(RuntimeError):
+            client.GetBlockStorageList(self.vault.vault_id)
+
+    @httpretty.activate
+    def test_storage_block_list_with_marker(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        data = {'list': 'my list'}
+        expected_data = json.dumps(data)
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_blocks_url(self.apihost,
+                                             self.vault.vault_id),
+                               content_type='text/plain',
+                               body=expected_data,
+                               status=200)
+
+        self.assertEqual(data, client.GetBlockStorageList(self.vault.vault_id,
+                                                          marker='red'))
+
+    @httpretty.activate
+    def test_storage_block_list_with_limit(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        data = {'list': 'my list'}
+        expected_data = json.dumps(data)
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_blocks_url(self.apihost,
+                                             self.vault.vault_id),
+                               content_type='text/plain',
+                               body=expected_data,
+                               status=200)
+
+        self.assertEqual(data, client.GetBlockStorageList(self.vault.vault_id,
+                                                          limit=5))
+
+    @httpretty.activate
+    def test_storage_block_list_with_limit_and_marker(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        data = {'list': 'my list'}
+        expected_data = json.dumps(data)
+        httpretty.register_uri(httpretty.GET,
+                               get_storage_blocks_url(self.apihost,
+                                             self.vault.vault_id),
+                               content_type='text/plain',
+                               body=expected_data,
+                               status=200)
+
+        self.assertEqual(data, client.GetBlockStorageList(self.vault.vault_id,
+                                                          limit=5,
+                                                          marker='red'))
+
+    @httpretty.activate
+    def test_head_storage_block_non_existant(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        storage_blockid = create_storage_block()
+        httpretty.register_uri(httpretty.HEAD,
+                               get_storage_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             storage_blockid),
+                                             status=404)
+        with self.assertRaises(RuntimeError):
+            client.HeadBlockStorage(self.vault, storage_blockid)
+
+    @httpretty.activate
+    def test_head_storage_block(self):
+        headers = {'x-block-id':'mock'}
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+        storage_blockid = create_storage_block()
+        httpretty.register_uri(httpretty.HEAD,uri=get_storage_block_url(
+            self.apihost,
+            self.vault.vault_id,
+            storage_blockid),
+            adding_headers={'x-block-id':'mock'},
+            status=204)
+        returned_headers = client.HeadBlockStorage(self.vault.vault_id, storage_blockid)
+        self.assertEqual(headers['x-block-id'], returned_headers['x-block-id'])
+
+    @httpretty.activate
+    def test_delete_storage_block(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        storage_blockid = create_storage_block()
+        httpretty.register_uri(httpretty.DELETE,
+                               get_storage_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             storage_blockid),
+                               status=204)
+        self.assertTrue(True, client.DeleteBlockStorage(self.vault,
+                                                        storage_blockid))
+
+    @httpretty.activate
+    def test_delete_storage_block_non_existant(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        storage_blockid = create_storage_block()
+        httpretty.register_uri(httpretty.DELETE,
+                               get_storage_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             storage_blockid),
+                               status=404)
+        with self.assertRaises(RuntimeError):
+            client.DeleteBlockStorage(self.vault,storage_blockid)
+
+    @httpretty.activate
     def test_file_creation(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,

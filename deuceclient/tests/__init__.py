@@ -74,10 +74,16 @@ def get_vault_url(apihost, vault):
 def get_blocks_url(apihost, vault):
     return 'https://{0}{1}'.format(apihost, get_blocks_path(vault))
 
+def get_storage_blocks_url(apihost, vault):
+    return 'https://{0}{1}'.format(apihost, get_storage_blocks_path(vault))
 
 def get_block_url(apihost, vault, block_id):
     return 'https://{0}{1}'.format(apihost, get_block_path(vault, block_id))
 
+def get_storage_block_url(apihost, vault, storage_block_id):
+    return 'https://{0}{1}'.format(apihost,
+                                   get_storage_block_path(vault,
+                                                          storage_block_id))
 
 def get_files_url(apihost, vault):
     return 'https://{0}{1}'.format(apihost, get_files_path(vault))
@@ -179,7 +185,7 @@ class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
             return self.GetToken()
 
         else:
-            return self.__access.auth_token
+            return self.__token_data['token']
 
     def _AuthTenantId(self):
         return self.__tenantid

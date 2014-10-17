@@ -15,6 +15,7 @@ class DeuceClient(Command):
     """
     Object defining HTTP REST API calls for interacting with Deuce.
     """
+
     @staticmethod
     def __vault_id(vault):
         if isinstance(vault, api_vault.Vault):
@@ -32,7 +33,7 @@ class DeuceClient(Command):
         if isinstance(vault, api_vault.Vault):
             vault.statistics = stats
 
-    def __init__(self, authenticator, apihost, sslenabled=False):
+    def __init__(self, authenticator, apihost, sslenabled = False):
         """
         Initialize the Deuce Client access
             authenticator - instance of deuceclient.auth.Authentication to use
@@ -41,7 +42,7 @@ class DeuceClient(Command):
         """
         super(self.__class__, self).__init__(apihost,
                                              '/',
-                                             sslenabled=sslenabled)
+                                             sslenabled = sslenabled)
         self.log = logging.getLogger(__name__)
         self.sslenabled = sslenabled
         self.authenticator = authenticator
@@ -79,7 +80,7 @@ class DeuceClient(Command):
 
         self.__update_headers()
         self.__log_request_data()
-        res = requests.put(self.Uri, headers=self.Headers)
+        res = requests.put(self.Uri, headers = self.Headers)
 
         if res.status_code == 201:
             DeuceClient.__vault_status(vault, 'created')
@@ -98,7 +99,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.delete(self.Uri, headers=self.Headers)
+        res = requests.delete(self.Uri, headers = self.Headers)
 
         if res.status_code == 204:
             DeuceClient.__vault_status(vault, 'deleted')
@@ -117,7 +118,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.head(self.Uri, headers=self.Headers)
+        res = requests.head(self.Uri, headers = self.Headers)
 
         if res.status_code == 204:
             DeuceClient.__vault_status(vault, 'valid')
@@ -139,7 +140,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.get(self.Uri, headers=self.Headers)
+        res = requests.get(self.Uri, headers = self.Headers)
 
         if res.status_code == 200:
             statistics = res.json()
@@ -150,7 +151,7 @@ class DeuceClient(Command):
                 'Failed to get Vault statistics. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetBlockList(self, vault, marker=None, limit=None):
+    def GetBlockList(self, vault, marker = None, limit = None):
         """
         Return the list of blocks in the vault
         """
@@ -173,7 +174,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.get(self.Uri, headers=self.Headers)
+        res = requests.get(self.Uri, headers = self.Headers)
 
         if res.status_code == 200:
             return res.json()
@@ -198,7 +199,7 @@ class DeuceClient(Command):
         headers.update(self.Headers)
         headers['content-type'] = 'application/octet-stream'
         headers['content-length'] = blocksize
-        res = requests.put(self.Uri, headers=self.Headers, data=blockcontent)
+        res = requests.put(self.Uri, headers = self.Headers, data = blockcontent)
         if res.status_code == 201:
             return True
         else:
@@ -215,7 +216,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.delete(self.Uri, headers=self.Headers)
+        res = requests.delete(self.Uri, headers = self.Headers)
         if res.status_code == 204:
             return True
         else:
@@ -233,7 +234,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.get(self.Uri, headers=self.Headers)
+        res = requests.get(self.Uri, headers = self.Headers)
 
         if res.status_code == 200:
             return res.content
@@ -251,7 +252,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.post(self.Uri, headers=self.Headers)
+        res = requests.post(self.Uri, headers = self.Headers)
         if res.status_code == 201:
             return res.headers['location']
         else:
@@ -293,8 +294,8 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.post(self.Uri,
-                            data=json.dumps(value),
-                            headers=self.Headers)
+                            data = json.dumps(value),
+                            headers = self.Headers)
         if res.status_code == 200:
             return res.json()
         else:
@@ -302,7 +303,7 @@ class DeuceClient(Command):
                 'Failed to Assign Blocks to the File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetFileBlockList(self, vault, fileid, marker=None, limit=None):
+    def GetFileBlockList(self, vault, fileid, marker = None, limit = None):
         """
         Return the list of blocks assigned to the file
         This does not finalize the file.
@@ -329,7 +330,7 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
-        res = requests.get(self.Uri, headers=self.Headers)
+        res = requests.get(self.Uri, headers = self.Headers)
 
         if res.status_code == 200:
             return res.json()
@@ -337,3 +338,93 @@ class DeuceClient(Command):
             raise RuntimeError(
                 'Failed to get Block list for File . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    def GetBlockStorageData(self, vault, storage_blockid):
+        """
+            Gets the data associated with the block id provided
+            vault - exisiting vault, eg 'v1'
+            storage_block id - uuid, eg - 0c3de7c4-5fe9-4b2e-b19a-9cf81364997b
+            """
+        url = api_v1.get_storage_block_path(self.__vault_id(vault),
+                                            storage_blockid)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.get(self.Uri, headers = self.Headers)
+
+        if res.status_code == 200:
+            return res.content
+        else:
+            raise RuntimeError(
+                'Failed to get Content for Storage Block Id: {0:}, Vault: {1:}'
+                'Error ({2:}): {3:}'.format(storage_blockid, vault, res.status_code,
+                                            res.text))
+
+    def DeleteBlockStorage(self, vault, storage_blockid):
+        """
+        Delete the block from block storage in a given vault.
+        """
+        url = api_v1.get_storage_block_path(self.__vault_id(vault),
+                                            storage_blockid)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.delete(self.Uri, headers = self.Headers)
+        if res.status_code == 204:
+            return True
+        else:
+            raise RuntimeError(
+                'Failed to delete Block {0:} from BlockStorage, Vault {1:}'
+                'Error ({2:}): {3:}'.format(storage_blockid, vault, res.status_code,
+                                            res.text))
+
+    def GetBlockStorageList(self, vault, marker = None, limit = None):
+        """
+        Return the list of blocks in the vault
+        """
+        url = api_v1.get_storage_blocks_path(self.__vault_id(vault))
+        if marker is not None or limit is not None:
+            # add the separator between the URL and the parameters
+            url = url + '?'
+
+            # Apply the marker
+            if marker is not None:
+                url = '{0:}marker={1:}'.format(url, marker)
+                # Apply a comma if the next item is not none
+                if limit is not None:
+                    url = url + '&'
+
+            # Apply the limit
+            if limit is not None:
+                url = '{0:}limit={1:}'.format(url, limit)
+
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.get(self.Uri, headers = self.Headers)
+
+        if res.status_code == 200:
+            return res.json()
+        else:
+            raise RuntimeError(
+                'Failed to get Block Storage list for Vault . '
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    def HeadBlockStorage(self, vault, storage_blockid):
+        """
+        Head the block from block storage in a given vault.
+        """
+        url = api_v1.get_storage_block_path(self.__vault_id(vault),
+                                            storage_blockid)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.head(self.Uri, headers = self.Headers)
+        if res.status_code == 204:
+
+            return res.headers
+        else:
+            raise RuntimeError(
+                'Failed to head Block {0:} from BlockStorage, Vault {1:}'
+                'Error ({2:}): {3:}'.format(storage_blockid, vault, res.status_code,
+                                            res.text))
