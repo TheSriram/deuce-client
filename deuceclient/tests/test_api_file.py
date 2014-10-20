@@ -40,6 +40,15 @@ class FileTest(TestCase):
         self.assertEqual(a_file.offsets, {})
         self.assertEqual(a_file.blocks, {})
 
+    def test_create_file_no_file_id_alternate(self):
+        a_file = f.File(self.project_id, self.vault_id, file_id=None)
+
+        self.assertEqual(a_file.project_id, self.project_id)
+        self.assertEqual(a_file.vault_id, self.vault_id)
+        self.assertIsNone(a_file.file_id)
+        self.assertEqual(a_file.offsets, {})
+        self.assertEqual(a_file.blocks, {})
+
     def test_create_file_update_file_id(self):
         a_file = f.File(self.project_id, self.vault_id)
 
