@@ -3,7 +3,7 @@ Testing - Deuce Client - API - Vault
 """
 from unittest import TestCase
 
-import deuceclient.api.vault as v
+import deuceclient.api as api
 import deuceclient.common.errors as errors
 import deuceclient.common.validation as val
 from deuceclient.tests import *
@@ -18,7 +18,7 @@ class VaultTest(TestCase):
         self.project_id = create_project_name()
 
     def test_vault_creation(self):
-        vault = v.Vault(self.project_id, self.vault_id)
+        vault = api.Vault(self.project_id, self.vault_id)
 
         self.assertEqual(vault.vault_id, self.vault_id)
         self.assertEqual(vault.project_id, self.project_id)
@@ -27,11 +27,11 @@ class VaultTest(TestCase):
     def test_vault_invalid_project(self):
 
         with self.assertRaises(errors.InvalidProject):
-            vault = v.Vault(self.project_id + '$', self.vault_id)
+            vault = api.Vault(self.project_id + '$', self.vault_id)
 
     def test_vault_invalid_name(self):
         with self.assertRaises(errors.InvalidVault):
-            vault = v.Vault(self.project_id, self.vault_id + '$')
+            vault = api.Vault(self.project_id, self.vault_id + '$')
 
         # Build project name that is too long
         x = self.vault_id
@@ -39,7 +39,7 @@ class VaultTest(TestCase):
             x = '{0}_{1}'.format(x, self.vault_id)
 
         with self.assertRaises(errors.InvalidVault):
-            vault = v.Vault(self.project_id, x)
+            vault = api.Vault(self.project_id, x)
 
     def test_vault_status_values(self):
 
@@ -58,7 +58,7 @@ class VaultTest(TestCase):
             'a', 'b', 'c'
         ]
 
-        vault = v.Vault(self.project_id, self.vault_id)
+        vault = api.Vault(self.project_id, self.vault_id)
 
         for case in positive_cases:
             vault.status = case[0]
@@ -72,7 +72,7 @@ class VaultTest(TestCase):
 
         statistic = 5.0
 
-        vault = v.Vault(self.project_id, self.vault_id)
+        vault = api.Vault(self.project_id, self.vault_id)
 
         vault.statistics = statistic
 

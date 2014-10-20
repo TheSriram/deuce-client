@@ -3,8 +3,7 @@ Testing - Deuce Client - API File
 """
 from unittest import TestCase
 
-import deuceclient.api.afile as f
-import deuceclient.api.block as b
+import deuceclient.api as api
 import deuceclient.common.errors as errors
 import deuceclient.common.validation as val
 from deuceclient.tests import *
@@ -23,7 +22,7 @@ class FileTest(TestCase):
         ]
 
     def test_create_file(self):
-        a_file = f.File(self.project_id, self.vault_id, self.file_id)
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
 
         self.assertEqual(a_file.project_id, self.project_id)
         self.assertEqual(a_file.vault_id, self.vault_id)
@@ -32,7 +31,7 @@ class FileTest(TestCase):
         self.assertEqual(a_file.blocks, {})
 
     def test_create_file_no_file_id(self):
-        a_file = f.File(self.project_id, self.vault_id)
+        a_file = api.File(self.project_id, self.vault_id)
 
         self.assertEqual(a_file.project_id, self.project_id)
         self.assertEqual(a_file.vault_id, self.vault_id)
@@ -41,7 +40,7 @@ class FileTest(TestCase):
         self.assertEqual(a_file.blocks, {})
 
     def test_create_file_no_file_id_alternate(self):
-        a_file = f.File(self.project_id, self.vault_id, file_id=None)
+        a_file = api.File(self.project_id, self.vault_id, file_id=None)
 
         self.assertEqual(a_file.project_id, self.project_id)
         self.assertEqual(a_file.vault_id, self.vault_id)
@@ -50,7 +49,7 @@ class FileTest(TestCase):
         self.assertEqual(a_file.blocks, {})
 
     def test_create_file_update_file_id(self):
-        a_file = f.File(self.project_id, self.vault_id)
+        a_file = api.File(self.project_id, self.vault_id)
 
         self.assertEqual(a_file.project_id, self.project_id)
         self.assertEqual(a_file.vault_id, self.vault_id)
@@ -62,7 +61,7 @@ class FileTest(TestCase):
         self.assertEqual(a_file.file_id, self.file_id)
 
     def test_assign_block(self):
-        a_file = f.File(self.project_id, self.vault_id, self.file_id)
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
 
         self.assertEqual(a_file.project_id, self.project_id)
         self.assertEqual(a_file.vault_id, self.vault_id)
@@ -82,7 +81,7 @@ class FileTest(TestCase):
         offsets = {}
         for block_data in self.block_data:
             sha1, data, size = block_data[0]
-            block = b.Block(self.project_id, self.vault_id, sha1, data=data)
+            block = api.Block(self.project_id, self.vault_id, sha1, data=data)
             a_file.blocks[sha1] = block
             a_file.assign_block(sha1, offset)
             offsets[offset] = sha1
@@ -91,7 +90,7 @@ class FileTest(TestCase):
             self.assertEqual(a_file.get_block_for_offset(k), v)
 
     def test_get_block_offsets(self):
-        a_file = f.File(self.project_id, self.vault_id, self.file_id)
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
 
         self.assertEqual(a_file.project_id, self.project_id)
         self.assertEqual(a_file.vault_id, self.vault_id)
@@ -103,7 +102,7 @@ class FileTest(TestCase):
         offsets = {}
         for block_data in self.block_data:
             sha1, data, size = block_data[0]
-            block = b.Block(self.project_id, self.vault_id, sha1, data=data)
+            block = api.Block(self.project_id, self.vault_id, sha1, data=data)
             a_file.blocks[sha1] = block
             a_file.assign_block(sha1, offset)
             offsets[offset] = sha1
@@ -116,7 +115,7 @@ class FileTest(TestCase):
             self.assertEqual(a_file.get_offsets_for_block(v), x)
 
     def test_invalid_offsets(self):
-        a_file = f.File(self.project_id, self.vault_id, self.file_id)
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
         sha1, data, size = self.block_data[0][0]
 
         with self.assertRaises(errors.ParameterConstraintError):

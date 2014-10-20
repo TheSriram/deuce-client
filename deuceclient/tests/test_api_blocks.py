@@ -3,8 +3,7 @@ Testing - Deuce Client - API Blocks
 """
 from unittest import TestCase
 
-import deuceclient.api.blocks as bs
-import deuceclient.api.block as b
+import deuceclient.api as api
 import deuceclient.common.errors as errors
 import deuceclient.common.validation as val
 from deuceclient.tests import *
@@ -20,25 +19,25 @@ class BlocksTest(TestCase):
         self.block = create_block()
 
     def test_create_blocks(self):
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
 
     def test_add_block(self):
-        block = b.Block(self.project_id,
-                        self.vault_id,
-                        self.block[0])
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          self.block[0])
 
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
         blocks[block.block_id] = block
 
         self.assertEqual(block,
                          blocks[block.block_id])
 
     def test_add_invalid_block(self):
-        block = b.Block(self.project_id,
-                        self.vault_id,
-                        self.block[0])
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          self.block[0])
 
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
         with self.assertRaises(errors.InvalidBlocks):
             blocks['alfonso'] = block
 
@@ -46,26 +45,26 @@ class BlocksTest(TestCase):
             blocks[block.block_id] = 'what\'s up doc?'
 
     def test_repr(self):
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
 
         serialized_blocks = repr(blocks)
 
     def test_repr_with_data(self):
-        block = b.Block(self.project_id,
-                        self.vault_id,
-                        self.block[0])
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          self.block[0])
 
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
         blocks[block.block_id] = block
 
         serialized_blocks = repr(blocks)
 
     def test_update(self):
-        block = b.Block(self.project_id,
-                        self.vault_id,
-                        self.block[0])
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                         self.block[0])
 
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
         blocks.update({
             block.block_id: block
         })
@@ -74,11 +73,11 @@ class BlocksTest(TestCase):
                          blocks[block.block_id])
 
     def test_update_invalid(self):
-        block = b.Block(self.project_id,
-                        self.vault_id,
-                        self.block[0])
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          self.block[0])
 
-        blocks = bs.Blocks()
+        blocks = api.Blocks()
         with self.assertRaises(TypeError):
             blocks.update({
                 self.block[0]: 'be vewy, vewy quiet'
