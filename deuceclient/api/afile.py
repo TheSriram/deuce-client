@@ -17,7 +17,8 @@ class File(object):
             'project_id': project_id,
             'vault_id': vault_id,
             'file_id': file_id,
-            'blocks': Blocks(),
+            'blocks': Blocks(project_id=project_id,
+                             vault_id=vault_id),
             'offsets': {}
         }
 

@@ -19,14 +19,51 @@ class BlocksTest(TestCase):
         self.block = create_block()
 
     def test_create_blocks(self):
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
+        self.assertEqual(blocks.project_id,
+                         self.project_id)
+        self.assertEqual(blocks.vault_id,
+                         self.vault_id)
+
+    def test_create_blocks_no_project(self):
+        with self.assertRaises(errors.InvalidProject):
+            blocks = api.Blocks(vault_id=self.vault_id)
+
+    def test_create_blocks_none_project(self):
+        with self.assertRaises(errors.InvalidProject):
+            blocks = api.Blocks(project_id=None,
+                                vault_id=self.vault_id)
+
+    def test_create_blocks_no_vault(self):
+        with self.assertRaises(errors.InvalidVault):
+            blocks = api.Blocks(project_id=self.project_id)
+
+    def test_create_blocks_none_vault(self):
+        with self.assertRaises(errors.InvalidVault):
+            blocks = api.Blocks(project_id=self.project_id,
+                                vault_id=None)
+
+    def test_set_marker(self):
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
+        self.assertIsNone(blocks.marker)
+
+        blocks.marker = self.block[0]
+        self.assertIsNotNone(blocks.marker)
+        self.assertEqual(blocks.marker,
+                         self.block[0])
+
+        blocks.marker = None
+        self.assertIsNone(blocks.marker)
 
     def test_add_block(self):
         block = api.Block(self.project_id,
                           self.vault_id,
                           self.block[0])
 
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
         blocks[block.block_id] = block
 
         self.assertEqual(block,
@@ -37,7 +74,8 @@ class BlocksTest(TestCase):
                           self.vault_id,
                           self.block[0])
 
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
         with self.assertRaises(errors.InvalidBlocks):
             blocks['alfonso'] = block
 
@@ -45,7 +83,8 @@ class BlocksTest(TestCase):
             blocks[block.block_id] = 'what\'s up doc?'
 
     def test_repr(self):
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
 
         serialized_blocks = repr(blocks)
 
@@ -54,7 +93,8 @@ class BlocksTest(TestCase):
                           self.vault_id,
                           self.block[0])
 
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
         blocks[block.block_id] = block
 
         serialized_blocks = repr(blocks)
@@ -64,7 +104,8 @@ class BlocksTest(TestCase):
                           self.vault_id,
                          self.block[0])
 
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
         blocks.update({
             block.block_id: block
         })
@@ -77,7 +118,8 @@ class BlocksTest(TestCase):
                           self.vault_id,
                           self.block[0])
 
-        blocks = api.Blocks()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
         with self.assertRaises(TypeError):
             blocks.update({
                 self.block[0]: 'be vewy, vewy quiet'

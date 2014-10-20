@@ -15,6 +15,7 @@ class ProjectTest(TestCase):
         super(self.__class__, self).setUp()
 
         self.project_id = create_project_name()
+        self.vault_id = create_vault_name()
 
     def test_create_project(self):
 
@@ -39,12 +40,24 @@ class ProjectTest(TestCase):
         with self.assertRaises(errors.InvalidProject):
             project = api.Project(x)
 
+    def test_set_marker(self):
+        project = api.Project(self.project_id)
+        self.assertIsNone(project.marker)
+
+        project.marker = self.vault_id
+        self.assertIsNotNone(project.marker)
+        self.assertEqual(project.marker,
+                         self.vault_id)
+
+        project.marker = None
+        self.assertIsNone(project.marker)
+
     def test_project_add_vault(self):
 
         project = api.Project(self.project_id)
 
         vault = api.Vault(self.project_id,
-                        create_vault_name())
+                          self.vault_id)
 
         project[vault.vault_id] = vault
 
@@ -54,13 +67,13 @@ class ProjectTest(TestCase):
         project = api.Project(self.project_id)
 
         with self.assertRaises(errors.InvalidVault):
-            project[create_vault_name() + '$'] = {}
+            project[self.vault_id + '$'] = {}
 
     def test_project_get_vault_invalid(self):
         project = api.Project(self.project_id)
 
         with self.assertRaises(errors.InvalidVault):
-            v = project[create_vault_name() + '$']
+            v = project[self.vault_id + '$']
 
     def test_project_update_vault(self):
 
