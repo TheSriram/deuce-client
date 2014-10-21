@@ -784,20 +784,28 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         file_id = create_file()
+        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
+                                             vault_id=self.vault.vault_id,
+                                             file_id=file_id)
 
-        block_list = {'blocks': []}
+        block_list = []
 
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block_list['blocks'].append({
-                'id': block_id,
-                'size': block_size,
-                'offset': running_offset
-            })
+            block = api.Block(project_id=self.vault.project_id,
+                              vault_id=self.vault.vault_id,
+                              block_id=block_id,
+                              data=block_data)
+            self.vault.blocks[block_id] = block
+            self.vault.files[file_id].blocks[block_id] = block
+            self.vault.files[file_id].offsets[running_offset] = block_id
+
+            block_list.append((block_id, running_offset))
+
             running_offset = running_offset + block_size
 
-        data = {'status': True}
+        data = ['status'] 
 
         httpretty.register_uri(httpretty.POST,
                                get_file_url(self.apihost,
@@ -817,20 +825,26 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         file_id = create_file()
+        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
+                                             vault_id=self.vault.vault_id,
+                                             file_id=file_id)
 
-        block_list = {'blocks': []}
+        block_list = []
 
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block_list['blocks'].append({
-                'id': block_id,
-                'size': block_size,
-                'offset': running_offset
-            })
-            running_offset = running_offset + block_size
+            block = api.Block(project_id=self.vault.project_id,
+                              vault_id=self.vault.vault_id,
+                              block_id=block_id,
+                              data=block_data)
+            self.vault.blocks[block_id] = block
+            self.vault.files[file_id].blocks[block_id] = block
+            self.vault.files[file_id].offsets[running_offset] = block_id
 
-        data = {'status': True}
+            block_list.append((block_id, running_offset))
+
+            running_offset = running_offset + block_size
 
         with self.assertRaises(TypeError):
             client.AssignBlocksToFile(self.vault.vault_id,
@@ -844,19 +858,25 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         file_id = create_file()
+        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
+                                             vault_id=self.vault.vault_id,
+                                             file_id=file_id)
 
-        block_list = {'blocks': []}
+        block_list = []
 
         running_offset = 0
         for block_id, block_data, block_size in create_blocks(5):
-            block_list['blocks'].append({
-                'id': block_id,
-                'size': block_size,
-                'offset': running_offset
-            })
-            running_offset = running_offset + block_size
+            block = api.Block(project_id=self.vault.project_id,
+                              vault_id=self.vault.vault_id,
+                              block_id=block_id,
+                              data=block_data)
+            self.vault.blocks[block_id] = block
+            self.vault.files[file_id].blocks[block_id] = block
+            self.vault.files[file_id].offsets[running_offset] = block_id
 
-        data = {'status': True}
+            block_list.append((block_id, running_offset))
+
+            running_offset = running_offset + block_size
 
         httpretty.register_uri(httpretty.POST,
                                get_file_url(self.apihost,

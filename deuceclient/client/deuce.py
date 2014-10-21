@@ -344,21 +344,58 @@ class DeuceClient(Command):
                 'Failed to create File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def AssignBlocksToFile(self, vault, fileid, value):
+    def AssignBlocksToFile(self, vault, file_id, block_ids=None):
         """Assigns the specified block to a file
 
         :param vault: vault to containing the file
-        :param fileid: fileid of the file in the vault that the block
-                       will be assigned to
-        :param vault: block information being assigned to the file
+        :param file_id: file_id of the file in the vault that the block
+                        will be assigned to
+        :param blocks: optional parameter specify list of Block IDs that have
+                       already been assigned to the File object specified
+                       by file_id within the Vault.
+        :returns: a list of blocks id that have to be uploaded to complete
+                  if all the required blocks have been uploaded the the
+                  list will be empty.
+        """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+        if not isinstance(file_id, str):
+            raise TypeError('file_id must be string specifying the File ID')
+        if file_id not in vault.files:
+            raise KeyError('file_id must specify a file in the provided Vault')
+        if block_ids is not None:
+            if len(block_ids) == 0:
+                raise ValueError('block_ids must be iterable')
+            for block_id, offset in block_ids:
+                if block_id not in vault.blocks:
+                    raise KeyError(
+                        'block_id {0} must specify a block in the Vault'.
+                        format(block_id))
+                if block_id not in vault.files[file_id].blocks:
+                    raise KeyError(
+                        'block_id {0} must specify a block in the File'.
+                        format(block_id))
+                if offset not in vault.files[file_id].offsets:
+                    raise KeyError(
+                        'block offset {0} must be assigned in the File'.
+                        format(blocK_id[1]))
+                if vault.files[file_id].offsets[offset] != block_id:
+                    raise KeyError(
+                        'specified offset {0} must match the block {1}'.
+                        format(offset, block_id))
+        else:
+            if len(vault.files[file_id].offsets) == 0:
+                raise ValueError('File must have offsets specified')
+            if len(vault.files[file_id].blocks) == 0:
+                raise ValueError('File must have blocks specified')
 
-        TODO: Update this to the File+Blocks functionality
+        url = api_v1.get_file_path(vault.vault_id, file_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
 
-        Returns an empty list if the blocks being assigned are already uploaded
-        Returns the block id if the block trying to be assigned has not already
-            been uploaded
-        value - The block id, size and offset of the block to be assigned to
-            the file. eg -
+        """
+        File Block Assignment Takes a JSON body containing the following:
                 {
                     "blocks": [
                         {
@@ -378,20 +415,36 @@ class DeuceClient(Command):
                         }
                     ]
                 }
-        Mandatory to supply block size and offset along with the block id
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
+        block_assignment_data = {
+            'blocks': []
+        }
 
-        url = api_v1.get_file_path(vault.vault_id, fileid)
-        self.ReInit(self.sslenabled, url)
-        self.__update_headers()
-        self.__log_request_data()
+        if block_ids is not None:
+            for block_id, offset in block_ids:
+                entry = {
+                    'id': block_id,
+                    'offset': offset,
+                    'size': len(vault.files[file_id].blocks[block_id])
+                }
+                block_assignment_data['blocks'].append(entry)
+
+        else:
+            for offset, block_id in vault.files[file_id].offset.items():
+                entry = {
+                    'id': block_id,
+                    'offset': offset,
+                    'size': len(vault.files[file_id].blocks[block_id])
+                }
+                block_assignment_data['blocks'].append(entry)
+
         res = requests.post(self.Uri,
-                            data=json.dumps(value),
+                            data=json.dumps(block_assignment_data),
                             headers=self.Headers)
         if res.status_code == 200:
-            return res.json()
+            block_list_to_upload = [block_id
+                                    for block_id in res.json()]
+            return block_list_to_upload
         else:
             raise RuntimeError(
                 'Failed to Assign Blocks to the File. '
