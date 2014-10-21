@@ -392,6 +392,10 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
 
         httpretty.register_uri(httpretty.PUT,
                                get_block_url(self.apihost,
@@ -399,10 +403,7 @@ class ClientTest(TestCase):
                                              blockid),
                                status=201)
 
-        self.assertTrue(client.UploadBlock(self.vault,
-                                           blockid,
-                                           blockdata,
-                                           block_size))
+        self.assertTrue(client.UploadBlock(self.vault, block))
 
     def test_block_upload_bad_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
@@ -410,12 +411,27 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
 
         with self.assertRaises(TypeError):
-            client.UploadBlock(self.vault.vault_id,
-                               blockid,
-                               blockdata,
-                               block_size)
+            client.UploadBlock(self.vault.vault_id, block)
+
+    def test_block_upload_bad_block(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
+
+        with self.assertRaises(TypeError):
+            client.UploadBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_upload_failed(self):
@@ -424,6 +440,10 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
 
         httpretty.register_uri(httpretty.PUT,
                                get_block_url(self.apihost,
@@ -432,7 +452,7 @@ class ClientTest(TestCase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as upload_error:
-            client.UploadBlock(self.vault, blockid, blockdata, block_size)
+            client.UploadBlock(self.vault, block)
 
     @httpretty.activate
     def test_block_deletion(self):

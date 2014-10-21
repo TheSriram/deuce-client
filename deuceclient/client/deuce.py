@@ -5,8 +5,8 @@ import json
 import requests
 import logging
 
-import deuceclient.api as api
 import deuceclient.api.vault as api_vault
+import deuceclient.api.block as api_block
 import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
 
@@ -216,37 +216,36 @@ class DeuceClient(Command):
 
         if res.status_code == 200:
             for block_entry in res.json():
-                vault.blocks[block_entry] = api.Block(vault.project_id,
-                                                      vault.vault_id,
-                                                      block_entry)
+                vault.blocks[block_entry] = api_block.Block(vault.project_id,
+                                                            vault.vault_id,
+                                                            block_entry)
             return True
         else:
             raise RuntimeError(
                 'Failed to get Block list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def UploadBlock(self, vault, blockid, blockcontent, blocksize):
+    def UploadBlock(self, vault, block):
         """Upload a block to the vault specified.
 
         :param vault: vault to upload the block into
-        :param blockid: the id (SHA-1) of the block to be uploaded
-                      f.e 74bdda817d796333e9fe359e283d5643ee1a1397
-        :param blockcontent: data present in the block to uploaded
-
-        TODO: Change this to Block functionality
+        :param block: block to be uploaded
+                      must be deuceclient.api.Block type
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
+        if not isinstance(block, api_block.Block):
+            raise TypeError('block must be deuceclient.api.Block')
 
-        url = api_v1.get_block_path(vault.vault_id, blockid)
+        url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
         headers = {}
         headers.update(self.Headers)
         headers['content-type'] = 'application/octet-stream'
-        headers['content-length'] = blocksize
-        res = requests.put(self.Uri, headers=self.Headers, data=blockcontent)
+        headers['content-length'] = len(block)
+        res = requests.put(self.Uri, headers=self.Headers, data=block.data)
         if res.status_code == 201:
             return True
         else:
