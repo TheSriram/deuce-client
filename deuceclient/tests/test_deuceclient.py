@@ -532,6 +532,9 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid)
 
         httpretty.register_uri(httpretty.GET,
                                get_block_url(self.apihost,
@@ -541,8 +544,8 @@ class ClientTest(TestCase):
                                body=blockdata,
                                status=200)
 
-        data = client.GetBlockData(self.vault, blockid)
-        self.assertEqual(data, blockdata)
+        self.assertTrue(client.DownloadBlock(self.vault, block))
+        self.assertEqual(block.data, blockdata)
 
     def test_block_download_bad_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
@@ -550,17 +553,25 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
-
-        httpretty.register_uri(httpretty.GET,
-                               get_block_url(self.apihost,
-                                             self.vault.vault_id,
-                                             blockid),
-                               content_type='text/plain',
-                               body=blockdata,
-                               status=200)
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid)
 
         with self.assertRaises(TypeError):
-            client.GetBlockData(self.vault.vault_id, blockid)
+            client.DownloadBlock(self.vault.vault_id, block)
+
+    def test_block_download_bad_block(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid)
+
+        with self.assertRaises(TypeError):
+            client.DownloadBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_download_failed(self):
@@ -569,6 +580,9 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid)
 
         httpretty.register_uri(httpretty.GET,
                                get_block_url(self.apihost,
@@ -579,7 +593,7 @@ class ClientTest(TestCase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.GetBlockData(self.vault, blockid)
+            client.DownloadBlock(self.vault, block)
 
     @httpretty.activate
     def test_file_creation(self):

@@ -54,6 +54,7 @@ class DeuceClient(Command):
         """Create a vault
 
         :param vault_name: name of the vault
+
         :returns: deuceclient.api.Vault instance of the new Vault
         :raises: TypeError if vault_name is not a string object
         :raises: RunTimeError on failure
@@ -82,6 +83,7 @@ class DeuceClient(Command):
         """Get an existing vault
 
         :param vault_name: name of the vault
+
         :returns: deuceclient.api.Vault instance of the existing Vault
         :raises: TypeError if vault_name is not a string object
         :raises: RunTimeError on failure
@@ -102,6 +104,7 @@ class DeuceClient(Command):
         """Delete a Vault
 
         :param vault: vault of the vault to be deleted
+
         :returns: True on success
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
@@ -128,6 +131,7 @@ class DeuceClient(Command):
 
         :param vault: Vault object for the vault or name of vault to
                       be verified
+
         :returns: True if the Vault exists; otherwise False
         :raises: RunTimeError on error
         """
@@ -160,6 +164,7 @@ class DeuceClient(Command):
         """Return the statistics on a Vault
 
         :param vault: vault to get the statistics for
+
         :returns: True on success
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
@@ -187,6 +192,8 @@ class DeuceClient(Command):
         :param vault: vault to get the block list for
         :param marker: marker denoting the start of the list
         :param limit: integer denoting the maximum entries to retrieve
+
+        :returns: True on success
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
         """
@@ -231,6 +238,8 @@ class DeuceClient(Command):
         :param vault: vault to upload the block into
         :param block: block to be uploaded
                       must be deuceclient.api.Block type
+
+        :returns: True on success
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
@@ -259,6 +268,8 @@ class DeuceClient(Command):
         :param vault: vault to delete the block from
         :param block: the block to be deleted
 
+        :returns: True on success
+
         Note: The block is not removed from the local Vault object
         """
         if not isinstance(vault, api_vault.Vault):
@@ -278,25 +289,28 @@ class DeuceClient(Command):
                 'Failed to delete Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetBlockData(self, vault, blockid):
+    def DownloadBlock(self, vault, block):
         """Gets the data associated with the block id provided
 
         :param vault: vault to download the block from
-        :param blockid: the id (SHA-1) of the block to be downloaded
+        :param block: the block to be downloaded
 
-        TODO: change this to Block functionality
+        :returns: True on success
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
+        if not isinstance(block, api_block.Block):
+            raise TypeError('block must be deuceclient.api.Block')
 
-        url = api_v1.get_block_path(vault.vault_id, blockid)
+        url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()
         res = requests.get(self.Uri, headers=self.Headers)
 
         if res.status_code == 200:
-            return res.content
+            block.data = res.content
+            return True
         else:
             raise RuntimeError(
                 'Failed to get Block Content for Block Id . '
