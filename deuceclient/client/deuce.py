@@ -16,11 +16,12 @@ class DeuceClient(Command):
     Object defining HTTP REST API calls for interacting with Deuce.
     """
     def __init__(self, authenticator, apihost, sslenabled=False):
-        """
-        Initialize the Deuce Client access
-            authenticator - instance of deuceclient.auth.Authentication to use
-            apihost - server to use for API calls
-            sslenabled - True if using HTTPS; otherwise false
+        """Initialize the Deuce Client access
+
+        :param authenticator: instance of deuceclient.auth.Authentication
+                              to use for retrieving auth tokens
+        :param apihost: server to use for API calls
+        :param sslenabled: True if using HTTPS; otherwise false
         """
         super(self.__class__, self).__init__(apihost,
                                              '/',
@@ -30,15 +31,13 @@ class DeuceClient(Command):
         self.authenticator = authenticator
 
     def __update_headers(self):
-        """
-        Update common headers
+        """Update common headers
         """
         self.headers['X-Auth-Token'] = self.authenticator.AuthToken
         self.headers['X-Project-ID'] = self.project_id
 
     def __log_request_data(self):
-        """
-        Log the information about the request
+        """Log the information about the request
         """
         self.log.debug('host: %s', self.apihost)
         self.log.debug('body: %s', self.Body)
@@ -47,8 +46,7 @@ class DeuceClient(Command):
 
     @property
     def project_id(self):
-        """
-        Return the project id to use
+        """Return the project id to use
         """
         return self.authenticator.AuthTenantId
 
@@ -57,6 +55,8 @@ class DeuceClient(Command):
 
         :param vault_name: name of the vault
         :returns: deuceclient.api.Vault instance of the new Vault
+        :raises: TypeError if vault_name is not a string object
+        :raises: RunTimeError on failure
         """
         if not isinstance(vault_name, str):
             raise TypeError('vault_name must be string')
@@ -83,6 +83,8 @@ class DeuceClient(Command):
 
         :param vault_name: name of the vault
         :returns: deuceclient.api.Vault instance of the existing Vault
+        :raises: TypeError if vault_name is not a string object
+        :raises: RunTimeError on failure
         """
         if not isinstance(vault_name, str):
             raise TypeError('vault_name must be string')
@@ -97,9 +99,12 @@ class DeuceClient(Command):
                                .format(vault_name))
 
     def DeleteVault(self, vault):
-        """
-        Delete a Vault
-            vault - vault or name of the vault to be deleted
+        """Delete a Vault
+
+        :param vault: vault of the vault to be deleted
+        :returns: True on success
+        :raises: TypeError if vault is not a Vault object
+        :raises: RunTimeError on failure
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
@@ -119,9 +124,12 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def VaultExists(self, vault):
-        """
-        Return the statistics on a Vault
-            vault - name of vault to be deleted
+        """Return the statistics on a Vault
+
+        :param vault: Vault object for the vault or name of vault to
+                      be verified
+        :returns: True if the Vault exists; otherwise False
+        :raises: RunTimeError on error
         """
         # Note: We cannot use GetVault() here b/c it would
         #   end up being self-referential
@@ -149,9 +157,12 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def GetVaultStatistics(self, vault):
-        """
-        Return the statistics on a Vault
-            vault - name of vault to be deleted
+        """Return the statistics on a Vault
+
+        :param vault: vault to get the statistics for
+        :returns: True on success
+        :raises: TypeError if vault is not a Vault object
+        :raises: RunTimeError on failure
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be of type deuceclient.api.Vault')
@@ -164,16 +175,24 @@ class DeuceClient(Command):
 
         if res.status_code == 200:
             vault.statistics = res.json()
-            return vault
+            return True
         else:
             raise RuntimeError(
                 'Failed to get Vault statistics. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def GetBlockList(self, vault, marker=None, limit=None):
+        """Return the list of blocks in the vault
+
+        :param vault: vault to get the block list for
+        :param marker: marker denoting the start of the list
+        :param limit: integer denoting the maximum entries to retrieve
+        :raises: TypeError if vault is not a Vault object
+        :raises: RunTimeError on failure
         """
-        Return the list of blocks in the vault
-        """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+
         url = api_v1.get_blocks_path(vault.vault_id)
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
@@ -207,13 +226,18 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def UploadBlock(self, vault, blockid, blockcontent, blocksize):
-        """
-        Upload a block to the vault specified.
-            vault - name of the vault to be created
-            blockid - the id (SHA-1) of the block to be uploaded
+        """Upload a block to the vault specified.
+
+        :param vault: vault to upload the block into
+        :param blockid: the id (SHA-1) of the block to be uploaded
                       f.e 74bdda817d796333e9fe359e283d5643ee1a1397
-            blockcontent - data present in the block to uploaded
+        :param blockcontent: data present in the block to uploaded
+
+        TODO: Change this to Block functionality
         """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+
         url = api_v1.get_block_path(vault.vault_id, blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -231,10 +255,17 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def DeleteBlock(self, vault, blockid):
+        """Delete the block from the vault.
+
+        :param vault: vault to delete the block from
+        :param blockid: the id (SHA-1) of the block to be deleted
+
+        TODO: change this to Block functionality
+        Note: blockid is not removed from the Vault object
         """
-        Delete the block from the vault.
-        This funciton has not been tested
-        """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+
         url = api_v1.get_block_path(vault.vault_id, blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -248,11 +279,16 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def GetBlockData(self, vault, blockid):
+        """Gets the data associated with the block id provided
+
+        :param vault: vault to download the block from
+        :param blockid: the id (SHA-1) of the block to be downloaded
+
+        TODO: change this to Block functionality
         """
-        Gets the data associated with the block id provided
-        vault - exisiting vault, eg 'v1'
-        block id - sha1 of block, eg - 74bdda817d796333e9fe359e283d5643ee1a1397
-        """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+
         url = api_v1.get_block_path(vault.vault_id, blockid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -267,10 +303,16 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def CreateFile(self, vault):
+        """Create a file
+
+        :param vault: vault to create the file in
+        :returns: the name of the file within the vault
+
+        TODO: Update this to File functionality
         """
-        Creates a file in the specified vault, does not post data to it
-        Returns the location of the file which gives the file id
-        """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+
         url = api_v1.get_files_path(vault.vault_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -284,8 +326,15 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def AssignBlocksToFile(self, vault, fileid, value):
-        """
-        Assigns the specified block to a file
+        """Assigns the specified block to a file
+
+        :param vault: vault to containing the file
+        :param fileid: fileid of the file in the vault that the block
+                       will be assigned to
+        :param vault: block information being assigned to the file
+
+        TODO: Update this to the File+Blocks functionality
+
         Returns an empty list if the blocks being assigned are already uploaded
         Returns the block id if the block trying to be assigned has not already
             been uploaded
@@ -312,6 +361,9 @@ class DeuceClient(Command):
                 }
         Mandatory to supply block size and offset along with the block id
         """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
+
         url = api_v1.get_file_path(vault.vault_id, fileid)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -327,11 +379,17 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def GetFileBlockList(self, vault, fileid, marker=None, limit=None):
+        """Return the list of blocks assigned to the file
+
+        :param vault: vault to the file belongs to
+        :param fileid: fileid of the file to list the blocks for
+        :param marker: blockid within the list to start at
+        :param limit: the maximum number of entries to retrieve
+
+        TODO: Update this to File functionality
         """
-        Return the list of blocks assigned to the file
-        This does not finalize the file.
-        This function is returning a 404
-        """
+        if not isinstance(vault, api_vault.Vault):
+            raise TypeError('vault must be deuceclient.api.Vault')
 
         url = api_v1.get_fileblocks_path(vault.vault_id, fileid)
 
