@@ -63,7 +63,7 @@ class ClientTest(TestCase):
         self.assertEqual(self.expected_uri,
                          client.uri)
         self.assertEqual(self.authenticator.AuthTenantId,
-                         client.ProjectId)
+                         client.project_id)
 
     @httpretty.activate
     def test_create_vault(self):
@@ -75,19 +75,17 @@ class ClientTest(TestCase):
                             get_vault_url(self.apihost, self.vault.vault_id),
                             status=201)
 
-        self.assertTrue(client.CreateVault(self.vault.vault_id))
+        vault = client.CreateVault(self.vault.vault_id)
+        self.assertEqual(vault.vault_id, self.vault.vault_id)
+        self.assertEqual(vault.status, "created")
 
-    @httpretty.activate
-    def test_create_vault_with_api_vault(self):
+    def test_create_vault_invalid_parameter(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
 
-        httpretty.register_uri(httpretty.PUT,
-                            get_vault_url(self.apihost, self.vault.vault_id),
-                            status=201)
-
-        self.assertTrue(client.CreateVault(self.vault))
+        with self.assertRaises(TypeError) as creation_error:
+            client.CreateVault(self.vault)
 
     @httpretty.activate
     def test_create_vault_failed(self):
@@ -102,10 +100,46 @@ class ClientTest(TestCase):
                             status=404)
 
         with self.assertRaises(RuntimeError) as creation_error:
-            client.CreateVault(self.vault)
+            client.CreateVault(self.vault.vault_id)
 
     @httpretty.activate
-    def test_delete_vault(self):
+    def test_get_vault(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        httpretty.register_uri(httpretty.HEAD,
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
+                               status=204)
+        vault = client.GetVault(self.vault.vault_id)
+        self.assertEqual(vault.vault_id,
+                         self.vault.vault_id)
+        self.assertEqual(vault.status, "valid")
+
+    def test_get_vault_failed_bad_parameter(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        with self.assertRaises(TypeError):
+            client.GetVault(self.vault)
+
+    @httpretty.activate
+    def test_get_vault_failed(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        httpretty.register_uri(httpretty.HEAD,
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
+                               status=404)
+        with self.assertRaises(RuntimeError):
+            client.GetVault(self.vault.vault_id)
+
+    @httpretty.activate
+    def test_delete_vault_by_api_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
@@ -115,6 +149,15 @@ class ClientTest(TestCase):
                                              self.vault.vault_id),
                                status=204)
         self.assertTrue(client.DeleteVault(self.vault))
+
+    @httpretty.activate
+    def test_delete_vault_by_vault_name(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        with self.assertRaises(TypeError):
+            client.DeleteVault(self.vault.vault_id)
 
     @httpretty.activate
     def test_delete_vault_failed(self):
@@ -133,12 +176,10 @@ class ClientTest(TestCase):
             client.DeleteVault(self.vault)
 
     @httpretty.activate
-    def test_vault_exists(self):
+    def test_vault_exists_by_api_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
-        expected_result = {'status': True}
-
         httpretty.register_uri(httpretty.HEAD,
                                get_vault_url(self.apihost,
                                              self.vault.vault_id),
@@ -147,12 +188,22 @@ class ClientTest(TestCase):
         self.assertTrue(client.VaultExists(self.vault))
 
     @httpretty.activate
+    def test_vault_exists_by_vault_name(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+        httpretty.register_uri(httpretty.HEAD,
+                               get_vault_url(self.apihost,
+                                             self.vault.vault_id),
+                               status=204)
+
+        self.assertTrue(client.VaultExists(self.vault.vault_id))
+
+    @httpretty.activate
     def test_vault_does_not_exist(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
-        expected_result = {'status': True}
-
         httpretty.register_uri(httpretty.HEAD,
                                get_vault_url(self.apihost,
                                              self.vault.vault_id),
@@ -176,7 +227,7 @@ class ClientTest(TestCase):
             client.VaultExists(self.vault)
 
     @httpretty.activate
-    def test_vault_statistics(self):
+    def test_vault_statistics_by_api_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
@@ -191,8 +242,16 @@ class ClientTest(TestCase):
                                body=expected_body,
                                status=200)
 
-        self.assertEqual(data,
-                         client.GetVaultStatistics(self.vault))
+        self.assertTrue(client.GetVaultStatistics(self.vault))
+        self.assertEqual(data, self.vault.statistics)
+
+    def test_vault_statistics_by_vault_name(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        with self.assertRaises(TypeError):
+            client.GetVaultStatistics(self.vault.vault_id)
 
     @httpretty.activate
     def test_vault_statistics_failure(self):
@@ -216,7 +275,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        data = {'list': 'my list'}
+        data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
@@ -226,8 +285,9 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
 
-        self.assertEqual(data,
-                         client.GetBlockList(self.vault))
+        self.assertTrue(client.GetBlockList(self.vault))
+        for block_id in data:
+            self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_with_marker(self):
@@ -237,7 +297,7 @@ class ClientTest(TestCase):
 
         block_id, block_data, block_size = create_block()
 
-        data = {'list': 'my list'}
+        data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
@@ -247,8 +307,9 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
 
-        self.assertEqual(data,
-                         client.GetBlockList(self.vault, marker=block_id))
+        self.assertTrue(client.GetBlockList(self.vault, marker=block_id))
+        for block_id in data:
+            self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_with_marker_and_limit(self):
@@ -258,7 +319,7 @@ class ClientTest(TestCase):
 
         block_id, block_data, block_size = create_block()
 
-        data = {'list': 'my list'}
+        data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
@@ -268,10 +329,11 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
 
-        self.assertEqual(data,
-                         client.GetBlockList(self.vault,
-                                             marker=block_id,
-                                             limit=5))
+        self.assertTrue(client.GetBlockList(self.vault,
+                                            marker=block_id,
+                                            limit=5))
+        for block_id in data:
+            self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_with_limit(self):
@@ -279,7 +341,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        data = {'list': 'my list'}
+        data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
 
         httpretty.register_uri(httpretty.GET,
@@ -289,8 +351,9 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
 
-        self.assertEqual(data,
-                         client.GetBlockList(self.vault, limit=5))
+        self.assertTrue(client.GetBlockList(self.vault, limit=5))
+        for block_id in data:
+            self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_failure(self):
