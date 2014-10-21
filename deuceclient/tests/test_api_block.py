@@ -30,6 +30,8 @@ class BlockTest(TestCase):
                          block.vault_id)
         self.assertEqual(self.block[0],
                          block.block_id)
+        self.assertEqual(0,
+                         len(block))
         self.assertIsNone(block.storage_id)
         self.assertIsNone(block.data)
         self.assertIsNone(block.ref_count)
@@ -47,6 +49,8 @@ class BlockTest(TestCase):
                          block.vault_id)
         self.assertEqual(self.block[0],
                          block.block_id)
+        self.assertEqual(self.block[2],
+                         len(block))
         self.assertIsNone(block.storage_id)
         self.assertEqual(self.block[1],
                          block.data)
@@ -65,6 +69,8 @@ class BlockTest(TestCase):
                          block.vault_id)
         self.assertEqual(self.block[0],
                          block.block_id)
+        self.assertEqual(self.block[2],
+                         len(block))
         self.assertIsNotNone(block.storage_id)
         self.assertEqual(self.storage_id,
                          block.storage_id)
@@ -146,9 +152,13 @@ class BlockTest(TestCase):
                           self.vault_id,
                           self.block[0])
 
+        self.assertEqual(0,
+                         len(block))
         block.data = self.block[1]
         self.assertEqual(self.block[1],
                          block.data)
+        self.assertEqual(self.block[2],
+                         len(block))
 
     def test_reset_block_data(self):
         block = api.Block(self.project_id,
@@ -159,12 +169,16 @@ class BlockTest(TestCase):
         self.assertIsNotNone(block.data)
         self.assertEqual(self.block[1],
                          block.data)
+        self.assertEqual(self.block[2],
+                         len(block))
 
         block.data = None
 
         self.assertIsNone(block.data)
         self.assertNotEqual(self.block[1],
                             block.data)
+        self.assertEqual(0,
+                         len(block))
 
     def test_update_ref_count(self):
         block = api.Block(self.project_id,

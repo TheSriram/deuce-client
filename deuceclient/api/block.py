@@ -59,7 +59,10 @@ class Block(object):
         self.__properties['data'] = value
 
     def __len__(self):
-        return len(self.data)
+        if self.data is None:
+            return 0
+        else:
+            return len(self.data)
 
     @property
     def ref_count(self):
