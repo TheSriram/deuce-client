@@ -253,19 +253,20 @@ class DeuceClient(Command):
                 'Failed to upload Block. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def DeleteBlock(self, vault, blockid):
+    def DeleteBlock(self, vault, block):
         """Delete the block from the vault.
 
         :param vault: vault to delete the block from
-        :param blockid: the id (SHA-1) of the block to be deleted
+        :param block: the block to be deleted
 
-        TODO: change this to Block functionality
-        Note: blockid is not removed from the Vault object
+        Note: The block is not removed from the local Vault object
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
+        if not isinstance(block, api_block.Block):
+            raise TypeError('block must be deuceclient.api.Block')
 
-        url = api_v1.get_block_path(vault.vault_id, blockid)
+        url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data()

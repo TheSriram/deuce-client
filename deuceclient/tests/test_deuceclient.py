@@ -461,6 +461,10 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
 
         httpretty.register_uri(httpretty.DELETE,
                                get_block_url(self.apihost,
@@ -468,7 +472,7 @@ class ClientTest(TestCase):
                                              blockid),
                                status=204)
 
-        self.assertTrue(client.DeleteBlock(self.vault, blockid))
+        self.assertTrue(client.DeleteBlock(self.vault, block))
 
     def test_block_deletion_bad_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
@@ -476,9 +480,27 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
 
         with self.assertRaises(TypeError):
-            client.DeleteBlock(self.vault.vault_id, blockid)
+            client.DeleteBlock(self.vault.vault_id, block)
+
+    def test_block_deletion_bad_block(self):
+        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                      self.apihost,
+                                                      sslenabled=True)
+
+        blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
+
+        with self.assertRaises(TypeError):
+            client.DeleteBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_deletion_failed(self):
@@ -487,6 +509,10 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         blockid, blockdata, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=blockid,
+                          data=blockdata)
 
         httpretty.register_uri(httpretty.DELETE,
                                get_block_url(self.apihost,
@@ -497,7 +523,7 @@ class ClientTest(TestCase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.DeleteBlock(self.vault, blockid)
+            client.DeleteBlock(self.vault, block)
 
     @httpretty.activate
     def test_block_download(self):
