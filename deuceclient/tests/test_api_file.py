@@ -29,6 +29,21 @@ class FileTest(TestCase):
         self.assertEqual(a_file.file_id, self.file_id)
         self.assertEqual(a_file.offsets, {})
         self.assertEqual(a_file.blocks, {})
+        self.assertIsNone(a_file.url)
+
+    def test_create_file_with_url(self):
+        test_url = 'magic.example.com/open/sesame'
+        a_file = api.File(self.project_id,
+                          self.vault_id,
+                          self.file_id,
+                          url=test_url)
+
+        self.assertEqual(a_file.project_id, self.project_id)
+        self.assertEqual(a_file.vault_id, self.vault_id)
+        self.assertEqual(a_file.file_id, self.file_id)
+        self.assertEqual(a_file.offsets, {})
+        self.assertEqual(a_file.blocks, {})
+        self.assertEqual(a_file.url, test_url)
 
     def test_create_file_no_file_id(self):
         a_file = api.File(self.project_id, self.vault_id)
@@ -38,6 +53,7 @@ class FileTest(TestCase):
         self.assertIsNone(a_file.file_id)
         self.assertEqual(a_file.offsets, {})
         self.assertEqual(a_file.blocks, {})
+        self.assertIsNone(a_file.url)
 
     def test_create_file_no_file_id_alternate(self):
         a_file = api.File(self.project_id, self.vault_id, file_id=None)
@@ -47,6 +63,7 @@ class FileTest(TestCase):
         self.assertIsNone(a_file.file_id)
         self.assertEqual(a_file.offsets, {})
         self.assertEqual(a_file.blocks, {})
+        self.assertIsNone(a_file.url)
 
     def test_create_file_update_file_id(self):
         a_file = api.File(self.project_id, self.vault_id)

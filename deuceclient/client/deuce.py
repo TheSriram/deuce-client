@@ -5,8 +5,9 @@ import json
 import requests
 import logging
 
-import deuceclient.api.vault as api_vault
+import deuceclient.api.afile as api_file
 import deuceclient.api.block as api_block
+import deuceclient.api.vault as api_vault
 import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
 
@@ -320,9 +321,8 @@ class DeuceClient(Command):
         """Create a file
 
         :param vault: vault to create the file in
-        :returns: the name of the file within the vault
-
-        TODO: Update this to File functionality
+        :returns: create an object for the new file and adds it to the vault
+                  and then the name of the file within the vault
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
@@ -333,7 +333,12 @@ class DeuceClient(Command):
         self.__log_request_data()
         res = requests.post(self.Uri, headers=self.Headers)
         if res.status_code == 201:
-            return res.headers['location']
+            new_file = api_file.File(project_id=self.project_id,
+                                     vault_id=vault.vault_id,
+                                     file_id=res.headers['x-file-id'],
+                                     url=res.headers['location'])
+            vault.files[new_file.file_id] = new_file
+            return new_file.file_id
         else:
             raise RuntimeError(
                 'Failed to create File. '

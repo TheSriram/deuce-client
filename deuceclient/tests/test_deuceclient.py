@@ -608,11 +608,14 @@ class ClientTest(TestCase):
                                get_files_url(self.apihost,
                                              self.vault.vault_id),
                                adding_headers={
-                                   'location': file_url
+                                   'location': file_url,
+                                   'x-file-id': file_id
                                },
                                status=201)
 
-        self.assertEqual(file_url, client.CreateFile(self.vault))
+        file_id = client.CreateFile(self.vault)
+        self.assertIn(file_id, self.vault.files)
+        self.assertEqual(file_url, self.vault.files[file_id].url)
 
     def test_file_creation_bad_vault(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
