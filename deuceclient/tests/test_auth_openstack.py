@@ -13,6 +13,7 @@ import mock
 import deuceclient.auth
 import deuceclient.auth.openstackauth as openstackauth
 import deuceclient.tests.test_auth
+from deuceclient.tests import fastsleep
 
 
 class FakeAccess(object):
@@ -127,6 +128,8 @@ class FakeClient(object):
 
 class OpenStackAuthTest(TestCase,
                         deuceclient.tests.test_auth.AuthenticationBaseTest):
+    def setUp(self):
+        time.sleep = fastsleep
 
     keystone_discovery_version_data = [
         {
