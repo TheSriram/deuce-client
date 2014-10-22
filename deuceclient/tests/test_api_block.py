@@ -227,3 +227,36 @@ class BlockTest(TestCase):
         self.assertIsNone(block.ref_modified)
         self.assertNotEqual(ref_modified,
                             block.ref_modified)
+
+    def test_modify_block_size(self):
+        block_size = 200
+        block = b.Block(self.project_id,
+                        self.vault_id,
+                        self.block[0],
+                        block_size=block_size)
+
+        self.assertIsNotNone(block.block_size)
+        self.assertEqual(block.block_size,
+                         block_size)
+
+        block.block_size = 300
+
+        self.assertIsNotNone(block.block_size)
+        self.assertNotEqual(block_size,
+                            block.ref_modified)
+
+    def test_modify_block_orphaned(self):
+        block_orphaned = False
+        block = b.Block(self.project_id,
+                        self.vault_id,
+                        self.block[0],
+                        block_orphaned=block_orphaned)
+
+        self.assertIsNotNone(block.block_orphaned)
+        self.assertEqual(block.block_orphaned,
+                         block_orphaned)
+
+        block.block_orphaned = True
+
+        self.assertIsNotNone(block.block_orphaned)
+        self.assertTrue(block.block_orphaned)

@@ -210,7 +210,7 @@ def file_create(log, arguments):
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
     location = deuceclient.CreateFile(arguments.vault_name)
-    print ("Location where file is create {0:}".format(location))
+    print("Location where file is create {0:}".format(location))
 
 
 def file_assign_blocks(log, arguments):

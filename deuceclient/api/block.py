@@ -11,11 +11,12 @@ class Block(object):
     # TODO: Add a validator for data, ref_count, ref_modified
     @validate(project_id=ProjectIdRule,
               vault_id=VaultIdRule,
-              block_id=MetadataBlockIdRule,
+              block_id=MetadataBlockIdRuleNoneOkay,
               storage_id=StorageBlockIdRuleNoneOkay)
-    def __init__(self, project_id, vault_id, block_id,
+    def __init__(self, project_id, vault_id, block_id=None,
                  storage_id=None, data=None,
-                 ref_count=None, ref_modified=None):
+                 ref_count=None, ref_modified=None, block_size=None,
+                 block_orphaned='indeterminate'):
         self.__properties = {
             'project_id': project_id,
             'vault_id': vault_id,
@@ -24,8 +25,10 @@ class Block(object):
             'data': data,
             'references': {
                 'count': ref_count,
-                'modified': ref_modified
-            }
+                'modified': ref_modified,
+            },
+            'block_size': block_size,
+            'block_orphaned': block_orphaned
         }
 
     @property
@@ -57,6 +60,23 @@ class Block(object):
     @data.setter
     def data(self, value):
         self.__properties['data'] = value
+
+    @property
+    def block_size(self):
+        return self.__properties['block_size']
+
+    @block_size.setter
+    def block_size(self, value):
+        self.__properties['block_size'] = value
+
+    @property
+    def block_orphaned(self):
+        return self.__properties['block_orphaned']
+
+    @block_orphaned.setter
+    @validate(value=BoolRule)
+    def block_orphaned(self, value):
+        self.__properties['block_orphaned'] = value
 
     @property
     def ref_count(self):

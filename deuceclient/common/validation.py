@@ -73,6 +73,13 @@ def val_limit(value):
         raise ValidationFailed('Invalid limit {0}'.format(value))
 
 
+@validation_function
+def val_bool(value):
+    if not isinstance(value, bool):
+        raise ValidationFailed('Invalid type {0} instead of '
+                               'Bool'.format(type(value)))
+
+
 def _abort(error_code):
     abort_errors = {
         100: errors.InvalidProject,
@@ -90,9 +97,11 @@ ProjectIdRule = Rule(val_project_id(), lambda: _abort(100))
 VaultIdRule = Rule(val_vault_id(), lambda: _abort(200))
 FileIdRule = Rule(val_file_id(), lambda: _abort(300))
 MetadataBlockIdRule = Rule(val_metadata_block_id(), lambda: _abort(400))
+MetadataBlockIdRuleNoneOkay = Rule(val_metadata_block_id(none_ok=True),
+                                   lambda: _abort(400))
 StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 OffsetRule = Rule(val_offset(), lambda: _abort(600))
 LimitRule = Rule(val_limit(), lambda: _abort(600))
-
+BoolRule = Rule(val_bool(), lambda: _abort(600))
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
                                   lambda: _abort(500))
