@@ -3,8 +3,6 @@ Deuce Rackspace Authentication API
 """
 import logging
 
-import keystoneclient.v2_0.client as client_v2
-
 import deuceclient.auth
 import deuceclient.auth.openstackauth
 
