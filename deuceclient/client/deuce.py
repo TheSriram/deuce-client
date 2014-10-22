@@ -378,9 +378,9 @@ class DeuceClient(Command):
                 if offset not in vault.files[file_id].offsets:
                     raise KeyError(
                         'block offset {0} must be assigned in the File'.
-                        format(blocK_id[1]))
+                        format(block_id[1]))
                 if vault.files[file_id].offsets[offset] != block_id:
-                    raise KeyError(
+                    raise ValueError(
                         'specified offset {0} must match the block {1}'.
                         format(offset, block_id))
         else:
@@ -388,6 +388,11 @@ class DeuceClient(Command):
                 raise ValueError('File must have offsets specified')
             if len(vault.files[file_id].blocks) == 0:
                 raise ValueError('File must have blocks specified')
+            for offset, block_id in vault.files[file_id].offsets.items():
+                if block_id not in vault.files[file_id].blocks:
+                    raise KeyError(
+                        'block_id {0} found in offset list but not in '
+                        'the block list'.format(block_id))
 
         url = api_v1.get_file_path(vault.vault_id, file_id)
         self.ReInit(self.sslenabled, url)
@@ -430,7 +435,7 @@ class DeuceClient(Command):
                 block_assignment_data['blocks'].append(entry)
 
         else:
-            for offset, block_id in vault.files[file_id].offset.items():
+            for offset, block_id in vault.files[file_id].offsets.items():
                 entry = {
                     'id': block_id,
                     'offset': offset,
