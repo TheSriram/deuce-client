@@ -79,7 +79,10 @@ def val_offset(value):
 
 @validation_function
 def val_limit(value):
-    if not LIMIT_REGEX.match(value):
+    if isinstance(value, int):
+        if value < 0:
+            raise ValidationFailed('Valid Limit {0}'.format(value))
+    else:
         raise ValidationFailed('Invalid limit {0}'.format(value))
 
 
@@ -112,3 +115,5 @@ StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
                                   lambda: _abort(500))
 FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
                           lambda: _abort(300))
+
+LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))

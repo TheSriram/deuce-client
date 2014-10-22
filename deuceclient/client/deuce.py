@@ -5,11 +5,14 @@ import json
 import requests
 import logging
 
+from stoplight import validate
+
 import deuceclient.api.afile as api_file
 import deuceclient.api.block as api_block
 import deuceclient.api.vault as api_vault
 import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
+from deuceclient.common.validation import *
 
 
 class DeuceClient(Command):
@@ -51,6 +54,7 @@ class DeuceClient(Command):
         """
         return self.authenticator.AuthTenantId
 
+    @validate(vault_name=VaultIdRule)
     def CreateVault(self, vault_name):
         """Create a vault
 
@@ -60,9 +64,6 @@ class DeuceClient(Command):
         :raises: TypeError if vault_name is not a string object
         :raises: RunTimeError on failure
         """
-        if not isinstance(vault_name, str):
-            raise TypeError('vault_name must be string')
-
         path = api_v1.get_vault_path(vault_name)
         self.ReInit(self.sslenabled, path)
 
@@ -80,6 +81,7 @@ class DeuceClient(Command):
                 'Failed to create Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault_name=VaultIdRule)
     def GetVault(self, vault_name):
         """Get an existing vault
 
@@ -89,9 +91,6 @@ class DeuceClient(Command):
         :raises: TypeError if vault_name is not a string object
         :raises: RunTimeError on failure
         """
-        if not isinstance(vault_name, str):
-            raise TypeError('vault_name must be string')
-
         if self.VaultExists(vault_name):
             vault = api_vault.Vault(project_id=self.project_id,
                                     vault_id=vault_name)
@@ -189,6 +188,8 @@ class DeuceClient(Command):
                 'Failed to get Vault statistics. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(marker=MetadataBlockIdRuleNoneOkay,
+              limit=LimitRuleNoneOkay)
     def GetBlockList(self, vault, marker=None, limit=None):
         """Retrieve the list of blocks in the vault
 
@@ -348,6 +349,7 @@ class DeuceClient(Command):
                 'Failed to create File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(file_id=FileIdRule)
     def AssignBlocksToFile(self, vault, file_id, block_ids=None):
         """Assigns the specified block to a file
 
@@ -363,8 +365,6 @@ class DeuceClient(Command):
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
-        if not isinstance(file_id, str):
-            raise TypeError('file_id must be string specifying the File ID')
         if file_id not in vault.files:
             raise KeyError('file_id must specify a file in the provided Vault')
         if block_ids is not None:
@@ -459,6 +459,9 @@ class DeuceClient(Command):
                 'Failed to Assign Blocks to the File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(file_id=FileIdRule,
+              marker=MetadataBlockIdRuleNoneOkay,
+              limit=LimitRuleNoneOkay)
     def GetFileBlockList(self, vault, file_id, marker=None, limit=None):
         """Retrieve the list of blocks assigned to the file
 

@@ -934,10 +934,11 @@ class ClientTest(TestCase):
                                                       sslenabled=True)
 
         block_list = []
+        file_id = create_file().encode()
 
         with self.assertRaises(TypeError):
             client.AssignBlocksToFile(self.vault,
-                                      self.vault,
+                                      file_id,
                                       block_list)
 
     def test_file_assign_blocks_fileid_not_in_vault(self):
