@@ -162,10 +162,12 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def GetVaultStatistics(self, vault):
-        """Return the statistics on a Vault
+        """Retrieve the statistics on a Vault
 
         :param vault: vault to get the statistics for
 
+        :store: The Statistics for the Vault in the statistics property
+                for the specific Vault
         :returns: True on success
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
@@ -188,12 +190,13 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     def GetBlockList(self, vault, marker=None, limit=None):
-        """Return the list of blocks in the vault
+        """Retrieve the list of blocks in the vault
 
         :param vault: vault to get the block list for
         :param marker: marker denoting the start of the list
         :param limit: integer denoting the maximum entries to retrieve
 
+        :stores: The block information in the blocks property of the Vault
         :returns: True on success
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
@@ -296,6 +299,7 @@ class DeuceClient(Command):
         :param vault: vault to download the block from
         :param block: the block to be downloaded
 
+        :stores: The block Data in the the data property of the block
         :returns: True on success
         """
         if not isinstance(vault, api_vault.Vault):
@@ -322,7 +326,7 @@ class DeuceClient(Command):
 
         :param vault: vault to create the file in
         :returns: create an object for the new file and adds it to the vault
-                  and then the name of the file within the vault
+                  and then return the name of the file within the vault
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
@@ -455,20 +459,24 @@ class DeuceClient(Command):
                 'Failed to Assign Blocks to the File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetFileBlockList(self, vault, fileid, marker=None, limit=None):
-        """Return the list of blocks assigned to the file
+    def GetFileBlockList(self, vault, file_id, marker=None, limit=None):
+        """Retrieve the list of blocks assigned to the file
 
         :param vault: vault to the file belongs to
-        :param fileid: fileid of the file to list the blocks for
+        :param fileid: fileid of the file in the Vault to list the blocks for
         :param marker: blockid within the list to start at
         :param limit: the maximum number of entries to retrieve
 
-        TODO: Update this to File functionality
+        :stores: The resulting block list in the file data for the vault.
+        :returns: True on success
         """
         if not isinstance(vault, api_vault.Vault):
             raise TypeError('vault must be deuceclient.api.Vault')
+        if file_id not in vault.files:
+            raise KeyError(
+                'file_id must specify a file in the provided Vault.')
 
-        url = api_v1.get_fileblocks_path(vault.vault_id, fileid)
+        url = api_v1.get_fileblocks_path(vault.vault_id, file_id)
 
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
@@ -491,7 +499,9 @@ class DeuceClient(Command):
         res = requests.get(self.Uri, headers=self.Headers)
 
         if res.status_code == 200:
-            return res.json()
+            for block_id, offset in res.json():
+                vault.files[file_id].offsets[offset] = block_id
+            return True
         else:
             raise RuntimeError(
                 'Failed to get Block list for File . '
