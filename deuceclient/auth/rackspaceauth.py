@@ -3,6 +3,8 @@ Deuce Rackspace Authentication API
 """
 import logging
 
+import keystoneclient.v2_0.client as client_v2
+
 import deuceclient.auth
 import deuceclient.auth.openstackauth
 
@@ -44,3 +46,52 @@ class RackspaceAuthentication(
         super().__init__(userid=userid, usertype=usertype,
                          credentials=credentials, auth_method=auth_method,
                          datacenter=datacenter, auth_url=auth_url)
+
+    @staticmethod
+    def _management_url(*args, **kwargs):
+        return 'https://identity.api.rackspacecloud.com/v2.0'
+
+    @staticmethod
+    def patch_management_url(self):
+        from keystoneclient.service_catalog import ServiceCatalog
+        ServiceCatalog.url_for = RackspaceAuthentication._management_url
+
+    def get_client(self):
+        """Retrieve the Rackspace Client
+        """
+
+        auth_args = {
+            'auth_url': self.authurl,
+            'region_name': self.datacenter
+        }
+
+        # Extract the User Information
+        if self.usertype in ('user_name', 'user_id'):
+            auth_args['username'] = self.userid
+
+        elif self.usertype == 'tenant_name':
+            auth_args['tenant_name'] = self.userid
+
+        elif self.usertype == 'tenant_id':
+            auth_args['tenant_id'] = self.userid
+
+        else:
+            raise deuceclient.auth.AuthenticationError(
+                'Invalid usertype ({0:}) for RackspaceAuthentication'
+                .format(self.usertype))
+
+        # Extract the User's Credential Information
+        if self.authmethod in ('apikey', 'password'):
+            auth_args['password'] = self.credentials
+
+        elif self.authmethod == 'token':
+            auth_args['token'] = self.credentials
+
+        else:
+            raise deuceclient.auth.AuthenticationError(
+                'Invalid auth_method ({0:}) for RackspaceAuthentication'
+                .format(self.authmethod))
+
+        RackspaceAuthentication.patch_management_url()
+
+        return client_v2.Client(**auth_args)
