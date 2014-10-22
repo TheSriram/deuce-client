@@ -170,7 +170,8 @@ def vault_stats(log, arguments):
 
         if deuceclient.GetVaultStatistics(vault):
             for k in vault.statistics.keys():
-                print('{0:} = {1:}'.format(k, vault.statistics[k]))
+                print('{0:}:'.format(k), end='\t')
+                pprint.pprint(vault.statistics[k])
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
