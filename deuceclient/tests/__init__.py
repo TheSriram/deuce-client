@@ -6,9 +6,17 @@ import hashlib
 import os
 import random
 import time
+from time import sleep as slowsleep
 import uuid
 
 import deuceclient.auth.base
+
+
+# NOTE(TheSriram): Let's monkey patch sleep to get tests
+# to run faster
+def fastsleep(seconds):
+    speed_factor = 0.01
+    slowsleep(seconds * speed_factor)
 
 
 def create_vault_name():
