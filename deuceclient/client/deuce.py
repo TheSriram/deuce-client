@@ -48,6 +48,15 @@ class DeuceClient(Command):
         self.log.debug('headers: %s', self.Headers)
         self.log.debug('uri: %s', self.Uri)
 
+    def __log_response_data(self, response, jsondata=False):
+        """Log the information about the response
+        """
+        self.log.debug('status: %s', response.status_code)
+        if jsondata:
+            self.log.debug('content: %s', response.json())
+        else:
+            self.log.debug('content: %s', response.text)
+
     @property
     def project_id(self):
         """Return the project id to use
@@ -70,6 +79,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.put(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False)
 
         if res.status_code == 201:
             vault = api_vault.Vault(project_id=self.project_id,
@@ -117,6 +127,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.delete(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False)
 
         if res.status_code == 204:
             vault.status = 'deleted'
@@ -146,6 +157,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.head(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False)
 
         if res.status_code == 204:
             if isinstance(vault, api_vault.Vault):
@@ -179,6 +191,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
             vault.statistics = res.json()
@@ -225,6 +238,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
             for block_entry in res.json():
@@ -260,6 +274,7 @@ class DeuceClient(Command):
         headers['content-type'] = 'application/octet-stream'
         headers['content-length'] = len(block)
         res = requests.put(self.Uri, headers=self.Headers, data=block.data)
+        self.__log_response_data(res, jsondata=False)
         if res.status_code == 201:
             return True
         else:
@@ -287,6 +302,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.delete(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False)
         if res.status_code == 204:
             return True
         else:
@@ -313,6 +329,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False)
 
         if res.status_code == 200:
             block.data = res.content
@@ -337,6 +354,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.post(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False)
         if res.status_code == 201:
             new_file = api_file.File(project_id=self.project_id,
                                      vault_id=vault.vault_id,
@@ -450,6 +468,7 @@ class DeuceClient(Command):
         res = requests.post(self.Uri,
                             data=json.dumps(block_assignment_data),
                             headers=self.Headers)
+        self.__log_response_data(res, jsondata=True)
         if res.status_code == 200:
             block_list_to_upload = [block_id
                                     for block_id in res.json()]
@@ -500,6 +519,7 @@ class DeuceClient(Command):
         self.__update_headers()
         self.__log_request_data()
         res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
             for block_id, offset in res.json():
