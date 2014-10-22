@@ -47,7 +47,9 @@ class RackspaceAuthentication(
 
     @staticmethod
     def _management_url(*args, **kwargs):
-        return 'https://identity.api.rackspacecloud.com/v2.0'
+        # NOTE(TheSriram): kwarg region_name is the datacenter supplied
+        # when instantiating RackspaceAuthentication class
+        return get_identity_apihost(kwargs['region_name'])
 
     @staticmethod
     def patch_management_url():
