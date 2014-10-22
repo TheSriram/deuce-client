@@ -52,46 +52,14 @@ class RackspaceAuthentication(
         return 'https://identity.api.rackspacecloud.com/v2.0'
 
     @staticmethod
-    def patch_management_url(self):
+    def patch_management_url():
         from keystoneclient.service_catalog import ServiceCatalog
         ServiceCatalog.url_for = RackspaceAuthentication._management_url
 
     def get_client(self):
         """Retrieve the Rackspace Client
         """
-
-        auth_args = {
-            'auth_url': self.authurl,
-            'region_name': self.datacenter
-        }
-
-        # Extract the User Information
-        if self.usertype in ('user_name', 'user_id'):
-            auth_args['username'] = self.userid
-
-        elif self.usertype == 'tenant_name':
-            auth_args['tenant_name'] = self.userid
-
-        elif self.usertype == 'tenant_id':
-            auth_args['tenant_id'] = self.userid
-
-        else:
-            raise deuceclient.auth.AuthenticationError(
-                'Invalid usertype ({0:}) for RackspaceAuthentication'
-                .format(self.usertype))
-
-        # Extract the User's Credential Information
-        if self.authmethod in ('apikey', 'password'):
-            auth_args['password'] = self.credentials
-
-        elif self.authmethod == 'token':
-            auth_args['token'] = self.credentials
-
-        else:
-            raise deuceclient.auth.AuthenticationError(
-                'Invalid auth_method ({0:}) for RackspaceAuthentication'
-                .format(self.authmethod))
-
+        # NOTE(TheSriram): The exceptions thrown if any, would still
+        # bear OpenstackAuthentication class in the message.
         RackspaceAuthentication.patch_management_url()
-
-        return client_v2.Client(**auth_args)
+        return super(self.__class__, self).get_client()
