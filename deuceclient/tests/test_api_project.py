@@ -3,8 +3,7 @@ Testing - Deuce Client - API - Project
 """
 from unittest import TestCase
 
-import deuceclient.api.project as p
-import deuceclient.api.vault as v
+import deuceclient.api as api
 import deuceclient.common.errors as errors
 import deuceclient.common.validation as val
 from deuceclient.tests import *
@@ -19,18 +18,18 @@ class ProjectTest(TestCase):
 
     def test_create_project(self):
 
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
         self.assertEqual(project.project_id, self.project_id)
 
     def test_create_project_bad_type(self):
 
         with self.assertRaises(TypeError):
-            project = p.Project(bytes(self.project_id))
+            project = api.Project(bytes(self.project_id))
 
     def test_project_name_invalid(self):
 
         with self.assertRaises(errors.InvalidProject):
-            project = p.Project(self.project_id + '$')
+            project = api.Project(self.project_id + '$')
 
         # Build project name that is too long
         x = self.project_id
@@ -38,13 +37,13 @@ class ProjectTest(TestCase):
             x = '{0}_{1}'.format(x, self.project_id)
 
         with self.assertRaises(errors.InvalidProject):
-            project = p.Project(x)
+            project = api.Project(x)
 
     def test_project_add_vault(self):
 
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
 
-        vault = v.Vault(self.project_id,
+        vault = api.Vault(self.project_id,
                         create_vault_name())
 
         project[vault.vault_id] = vault
@@ -52,22 +51,22 @@ class ProjectTest(TestCase):
         self.assertEqual(vault, project[vault.vault_id])
 
     def test_project_add_vault_invalid(self):
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
 
         with self.assertRaises(errors.InvalidVault):
             project[create_vault_name() + '$'] = {}
 
     def test_project_get_vault_invalid(self):
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
 
         with self.assertRaises(errors.InvalidVault):
             v = project[create_vault_name() + '$']
 
     def test_project_update_vault(self):
 
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
         vaults = {
-            x: v.Vault(self.project_id, x) for x in [create_vault_name()]
+            x: api.Vault(self.project_id, x) for x in [create_vault_name()]
         }
 
         project.update(vaults)
@@ -77,7 +76,7 @@ class ProjectTest(TestCase):
 
     def test_project_update_vault_invalid(self):
 
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
         vaults = {
             x: x for x in [create_vault_name()]
         }
@@ -86,6 +85,6 @@ class ProjectTest(TestCase):
             project.update(vaults)
 
     def test_repr(self):
-        project = p.Project(self.project_id)
+        project = api.Project(self.project_id)
 
         serialized_project = repr(project)
