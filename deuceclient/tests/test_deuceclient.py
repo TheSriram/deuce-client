@@ -416,7 +416,7 @@ class ClientTest(TestCase):
                                get_block_url(self.apihost,
                                              self.vault.vault_id,
                                              blockid),
-                               content_type='application/octet-stream',
+                               content_type='text/plain',
                                body="mock failure",
                                status=404)
 
@@ -445,8 +445,8 @@ class ClientTest(TestCase):
                                },
                                status=200)
 
-        block = client.GetBlockStorageData(
-            self.vault.vault_id,
+        block = client.DownloadBlockStorageData(
+            self.vault,
             storage_blockid)
         self.assertEqual(block.data, b"mock")
         self.assertEqual(block.ref_count, '2')
@@ -471,7 +471,7 @@ class ClientTest(TestCase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.GetBlockStorageData(self.vault.vault_id, storage_blockid)
+            client.DownloadBlockStorageData(self.vault, storage_blockid)
 
     @httpretty.activate
     def test_storage_block_list(self):
@@ -487,7 +487,7 @@ class ClientTest(TestCase):
                                content_type='application/octet-stream',
                                body=expected_data,
                                status=200)
-        blocks = client.GetBlockStorageList(self.vault.vault_id)
+        blocks = client.GetBlockStorageList(self.vault)
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
@@ -502,7 +502,7 @@ class ClientTest(TestCase):
                                status=500)
 
         with self.assertRaises(RuntimeError):
-            client.GetBlockStorageList(self.vault.vault_id)
+            client.GetBlockStorageList(self.vault)
 
     @httpretty.activate
     def test_storage_block_list_with_marker(self):
@@ -521,7 +521,7 @@ class ClientTest(TestCase):
                                content_type='application/octet-stream',
                                body=expected_data,
                                status=200)
-        blocks = client.GetBlockStorageList(self.vault.vault_id,
+        blocks = client.GetBlockStorageList(self.vault,
             marker=block[0] + '_' + '09f074cd-36db-4a1f-9d09-ecf64dbe4fdc')
         self.assertEqual(set(blocks.keys()), set(data))
 
@@ -545,7 +545,7 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
 
-        blocks = client.GetBlockStorageList(self.vault.vault_id,
+        blocks = client.GetBlockStorageList(self.vault,
                                             limit=5)
         self.assertEqual(set(blocks.keys()), set(data))
 
@@ -567,7 +567,7 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
 
-        blocks = client.GetBlockStorageList(self.vault.vault_id,
+        blocks = client.GetBlockStorageList(self.vault,
             limit=3,
             marker=block[0] + '_' + '09f074cd-36db-4a1f-9d09-ecf64dbe4fde')
         self.assertEqual(set(blocks.keys()), set(data))
@@ -585,7 +585,7 @@ class ClientTest(TestCase):
                                                      storage_blockid),
                                status=404)
         with self.assertRaises(RuntimeError):
-            client.HeadBlockStorage(self.vault.vault_id, storage_blockid)
+            client.HeadBlockStorage(self.vault, storage_blockid)
 
     @httpretty.activate
     def test_head_storage_block(self):
@@ -610,7 +610,7 @@ class ClientTest(TestCase):
                                },
                                status=204)
 
-        block = client.HeadBlockStorage(self.vault.vault_id, storage_blockid)
+        block = client.HeadBlockStorage(self.vault, storage_blockid)
         self.assertEqual(block.ref_count, '2')
         self.assertEqual(block.ref_modified, str(datetime.datetime.max))
         self.assertEqual(block.storage_id, storage_blockid)
@@ -630,7 +630,7 @@ class ClientTest(TestCase):
                                                      self.vault.vault_id,
                                                      storage_blockid),
                                status=204)
-        self.assertTrue(True, client.DeleteBlockStorage(self.vault.vault_id,
+        self.assertTrue(True, client.DeleteBlockStorage(self.vault,
                                                         storage_blockid))
 
     @httpretty.activate
@@ -646,7 +646,7 @@ class ClientTest(TestCase):
                                                      storage_blockid),
                                status=404)
         with self.assertRaises(RuntimeError):
-            client.DeleteBlockStorage(self.vault.vault_id, storage_blockid)
+            client.DeleteBlockStorage(self.vault, storage_blockid)
 
     @httpretty.activate
     def test_file_creation(self):

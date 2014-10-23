@@ -2,15 +2,19 @@
 Deuce API
 """
 import json
-import requests
 import logging
+
+import requests
+from stoplight import validate
 
 import deuceclient.api as api
 import deuceclient.api.vault as api_vault
 import deuceclient.api.v1 as api_v1
 import deuceclient.api.block as api_block
 import deuceclient.api.blocks as api_blocks
+import deuceclient.api.storageblocks as api_storageblocks
 from deuceclient.common.command import Command
+from deuceclient.common.validation import *
 
 
 class DeuceClient(Command):
@@ -342,14 +346,13 @@ class DeuceClient(Command):
                 'Failed to get Block list for File . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    def GetBlockStorageData(self, vault, storage_blockid):
+    @validate(storage_blockid=StorageBlockIdRule)
+    def DownloadBlockStorageData(self, vault, storage_blockid):
         """
             Gets the data associated with the block id provided
             vault - exisiting vault, eg 'v1'
-            storage_block id - uuid, eg - 0c3de7c4-5fe9-4b2e-b19a-9cf81364997b
+            storage_block id - sha1 + '_' + uuid
             """
-        vault = api_vault.Vault(project_id=self.ProjectId,
-                                vault_id=vault)
         url = api_v1.get_storage_block_path(vault.vault_id,
                                             storage_blockid)
         self.ReInit(self.sslenabled, url)
@@ -374,12 +377,11 @@ class DeuceClient(Command):
                                             res.status_code,
                                             res.text))
 
+    @validate(storage_blockid=StorageBlockIdRule)
     def DeleteBlockStorage(self, vault, storage_blockid):
         """
         Delete the block from block storage in a given vault.
         """
-        vault = api_vault.Vault(project_id=self.ProjectId,
-                                vault_id=vault)
         url = api_v1.get_storage_block_path(vault.vault_id,
                                             storage_blockid)
         self.ReInit(self.sslenabled, url)
@@ -399,8 +401,6 @@ class DeuceClient(Command):
         """
         Return the list of blocks in the vault
         """
-        vault = api_vault.Vault(project_id=self.ProjectId,
-                                vault_id=vault)
         url = api_v1.get_storage_blocks_path(vault.vault_id)
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
@@ -423,10 +423,12 @@ class DeuceClient(Command):
         res = requests.get(self.Uri, headers=self.Headers)
 
         if res.status_code == 200:
-            block_list = api_blocks.StorageBlocks()
-            blocks = {resp: api_block.Block(project_id=self.ProjectId,
-                                            vault_id=vault.vault_id)
-                      for resp in res.json()}
+            block_list = api_storageblocks.StorageBlocks()
+            blocks = {
+                storageblockid: api_block.Block(project_id=self.ProjectId,
+                                                vault_id=vault.vault_id,
+                                                storage_id=storageblockid)
+                for storageblockid in res.json()}
             block_list.update(blocks)
             return block_list
         else:
@@ -434,12 +436,12 @@ class DeuceClient(Command):
                 'Failed to get Block Storage list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(storage_blockid=StorageBlockIdRule)
     def HeadBlockStorage(self, vault, storage_blockid):
         """
         Head the block from block storage in a given vault.
         """
-        vault = api_vault.Vault(project_id=self.ProjectId,
-                                vault_id=vault)
+
         url = api_v1.get_storage_block_path(vault.vault_id,
                                             storage_blockid)
         self.ReInit(self.sslenabled, url)

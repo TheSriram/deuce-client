@@ -17,6 +17,8 @@ class Block(object):
                  storage_id=None, data=None,
                  ref_count=None, ref_modified=None, block_size=None,
                  block_orphaned='indeterminate'):
+        if block_id is None and storage_id is None:
+            raise ValueError("Both storage_id and block_id cannot be None")
         self.__properties = {
             'project_id': project_id,
             'vault_id': vault_id,

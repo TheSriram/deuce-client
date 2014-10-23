@@ -20,6 +20,11 @@ class BlockTest(TestCase):
         self.block = create_block()
         self.storage_id = create_storage_block()
 
+    def test_create_block_storageid_block_id_None(self):
+        with self.assertRaises(ValueError):
+            block = b.Block(self.project_id,
+                            self.vault_id)
+
     def test_create_block(self):
         block = b.Block(self.project_id,
                         self.vault_id,
