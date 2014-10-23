@@ -379,9 +379,9 @@ class DeuceClient(Command):
         :param vault: vault to containing the file
         :param file_id: file_id of the file in the vault that the block
                         will be assigned to
-        :param blocks: optional parameter specify list of Block IDs that have
-                       already been assigned to the File object specified
-                       by file_id within the Vault.
+        :param block_ids: optional parameter specify list of Block IDs that
+                          have already been assigned to the File object
+                          specified by file_id within the Vault.
         :returns: a list of blocks id that have to be uploaded to complete
                   if all the required blocks have been uploaded the the
                   list will be empty.
