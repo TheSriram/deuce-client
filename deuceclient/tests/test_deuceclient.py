@@ -479,7 +479,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
 
-        data = [str(uuid.uuid4()) for _ in range(10)]
+        data = [create_storage_block() for _ in range(10)]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
                                get_storage_blocks_url(self.apihost,
@@ -509,10 +509,11 @@ class ClientTest(TestCase):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
-
-        data = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fdc',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fdd',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fde']
+        block = create_block()
+        uuids = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fdc',
+                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdd',
+                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fde']
+        data = [block[0] + '_' + uuid for uuid in uuids]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
                                get_storage_blocks_url(self.apihost,
@@ -521,7 +522,7 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
         blocks = client.GetBlockStorageList(self.vault.vault_id,
-            marker='09f074cd-36db-4a1f-9d09-ecf64dbe4fdc')
+            marker=block[0] + '_' + '09f074cd-36db-4a1f-9d09-ecf64dbe4fdc')
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
@@ -529,12 +530,13 @@ class ClientTest(TestCase):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
-
-        data = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fdc',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fdd',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fde',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fdf',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fe0']
+        block = create_block()
+        uuids = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fdc',
+                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdd',
+                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fde',
+                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdf',
+                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fe0']
+        data = [block[0] + '_' + uuid for uuid in uuids]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
                                get_storage_blocks_url(self.apihost,
@@ -552,10 +554,11 @@ class ClientTest(TestCase):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
-
-        data = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fde',
+        block = create_block()
+        uuids = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fde',
                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdf',
                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fe0']
+        data = [block[0] + '_' + uuid for uuid in uuids]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
                                get_storage_blocks_url(self.apihost,
@@ -566,7 +569,7 @@ class ClientTest(TestCase):
 
         blocks = client.GetBlockStorageList(self.vault.vault_id,
             limit=3,
-            marker='09f074cd-36db-4a1f-9d09-ecf64dbe4fde')
+            marker=block[0] + '_' + '09f074cd-36db-4a1f-9d09-ecf64dbe4fde')
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate

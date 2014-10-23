@@ -133,7 +133,7 @@ def create_blocks(block_count=1, block_size=100, uniform_sizes=False,
                   min_size=1, max_size=2000):
     block_sizes = []
     if uniform_sizes:
-        block_sizes = [blocksize for _ in range(block_count)]
+        block_sizes = [block_size for _ in range(block_count)]
     else:
         block_sizes = [random.randrange(min_size, max_size)
                        for block_size in range(block_count)]
@@ -146,7 +146,8 @@ def create_file():
 
 
 def create_storage_block():
-    return '{0}'.format(str(uuid.uuid4()))
+    block_id = hashlib.sha1(bytes(random.randrange(1000))).hexdigest()
+    return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
 
 
 class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
