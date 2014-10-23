@@ -244,11 +244,13 @@ class DeuceClient(Command):
         self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
+            block_ids = []
             for block_entry in res.json():
                 vault.blocks[block_entry] = api_block.Block(vault.project_id,
                                                             vault.vault_id,
                                                             block_entry)
-            return True
+                block_ids.append(block_entry)
+            return block_ids
         else:
             raise RuntimeError(
                 'Failed to get Block list for Vault . '
@@ -525,9 +527,11 @@ class DeuceClient(Command):
         self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
+            block_ids = []
             for block_id, offset in res.json():
                 vault.files[file_id].offsets[offset] = block_id
-            return True
+                block_ids.append(block_id)
+            return block_ids
         else:
             raise RuntimeError(
                 'Failed to get Block list for File . '
