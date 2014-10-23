@@ -44,3 +44,22 @@ class RackspaceAuthentication(
         super().__init__(userid=userid, usertype=usertype,
                          credentials=credentials, auth_method=auth_method,
                          datacenter=datacenter, auth_url=auth_url)
+
+    @staticmethod
+    def _management_url(*args, **kwargs):
+        # NOTE(TheSriram): kwarg region_name is the datacenter supplied
+        # when instantiating RackspaceAuthentication class
+        return get_identity_apihost(kwargs['region_name'])
+
+    @staticmethod
+    def patch_management_url():
+        from keystoneclient.service_catalog import ServiceCatalog
+        ServiceCatalog.url_for = RackspaceAuthentication._management_url
+
+    def get_client(self):
+        """Retrieve the Rackspace Client
+        """
+        # NOTE(TheSriram): The exceptions thrown if any, would still
+        # bear OpenstackAuthentication class in the message.
+        RackspaceAuthentication.patch_management_url()
+        return super(self.__class__, self).get_client()
