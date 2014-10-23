@@ -53,7 +53,10 @@ class DeuceClient(Command):
         """
         self.log.debug('status: %s', response.status_code)
         if jsondata:
-            self.log.debug('content: %s', response.json())
+            try:
+                self.log.debug('content: %s', response.json())
+            except:
+                self.log.debug('content: %s', response.text)
         else:
             self.log.debug('content: %s', response.text)
 
