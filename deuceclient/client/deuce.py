@@ -13,6 +13,7 @@ import deuceclient.api.vault as api_vault
 import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
 from deuceclient.common.validation import *
+from deuceclient.common.validation_instance import *
 
 
 class DeuceClient(Command):
@@ -113,18 +114,16 @@ class DeuceClient(Command):
             raise RuntimeError('Failed to find a Vault with the name {0:}'
                                .format(vault_name))
 
+    @validate(vault=VaultInstanceRule)
     def DeleteVault(self, vault):
         """Delete a Vault
 
-        :param vault: vault of the vault to be deleted
+        :param vault: the vault to be deleted
 
         :returns: True on success
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
-
         path = api_v1.get_vault_path(vault.vault_id)
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
@@ -175,6 +174,7 @@ class DeuceClient(Command):
                 'Failed to determine if Vault exists. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule)
     def GetVaultStatistics(self, vault):
         """Retrieve the statistics on a Vault
 
@@ -186,9 +186,6 @@ class DeuceClient(Command):
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be of type deuceclient.api.Vault')
-
         path = api_v1.get_vault_path(vault.vault_id)
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
@@ -204,7 +201,8 @@ class DeuceClient(Command):
                 'Failed to get Vault statistics. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    @validate(marker=MetadataBlockIdRuleNoneOkay,
+    @validate(vault=VaultInstanceRule,
+              marker=MetadataBlockIdRuleNoneOkay,
               limit=LimitRuleNoneOkay)
     def GetBlockList(self, vault, marker=None, limit=None):
         """Retrieve the list of blocks in the vault
@@ -218,9 +216,6 @@ class DeuceClient(Command):
         :raises: TypeError if vault is not a Vault object
         :raises: RunTimeError on failure
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
-
         url = api_v1.get_blocks_path(vault.vault_id)
         if marker is not None or limit is not None:
             # add the separator between the URL and the parameters
@@ -244,16 +239,20 @@ class DeuceClient(Command):
         self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
+            block_ids = []
             for block_entry in res.json():
                 vault.blocks[block_entry] = api_block.Block(vault.project_id,
                                                             vault.vault_id,
                                                             block_entry)
-            return True
+                block_ids.append(block_entry)
+            return block_ids
         else:
             raise RuntimeError(
                 'Failed to get Block list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule,
+              block=BlockInstanceRule)
     def UploadBlock(self, vault, block):
         """Upload a block to the vault specified.
 
@@ -263,11 +262,6 @@ class DeuceClient(Command):
 
         :returns: True on success
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
-        if not isinstance(block, api_block.Block):
-            raise TypeError('block must be deuceclient.api.Block')
-
         url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -285,6 +279,8 @@ class DeuceClient(Command):
                 'Failed to upload Block. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule,
+              block=BlockInstanceRule)
     def DeleteBlock(self, vault, block):
         """Delete the block from the vault.
 
@@ -295,11 +291,6 @@ class DeuceClient(Command):
 
         Note: The block is not removed from the local Vault object
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
-        if not isinstance(block, api_block.Block):
-            raise TypeError('block must be deuceclient.api.Block')
-
         url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -313,6 +304,8 @@ class DeuceClient(Command):
                 'Failed to delete Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule,
+              block=BlockInstanceRule)
     def DownloadBlock(self, vault, block):
         """Gets the data associated with the block id provided
 
@@ -322,11 +315,6 @@ class DeuceClient(Command):
         :stores: The block Data in the the data property of the block
         :returns: True on success
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
-        if not isinstance(block, api_block.Block):
-            raise TypeError('block must be deuceclient.api.Block')
-
         url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -342,6 +330,7 @@ class DeuceClient(Command):
                 'Failed to get Block Content for Block Id . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule)
     def CreateFile(self, vault):
         """Create a file
 
@@ -349,9 +338,6 @@ class DeuceClient(Command):
         :returns: create an object for the new file and adds it to the vault
                   and then return the name of the file within the vault
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
-
         url = api_v1.get_files_path(vault.vault_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
@@ -370,22 +356,22 @@ class DeuceClient(Command):
                 'Failed to create File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    @validate(file_id=FileIdRule)
+    @validate(vault=VaultInstanceRule,
+              file_id=FileIdRule,
+              block_ids=MetadataBlockIdIterableRuleNoneOkay)
     def AssignBlocksToFile(self, vault, file_id, block_ids=None):
         """Assigns the specified block to a file
 
         :param vault: vault to containing the file
         :param file_id: file_id of the file in the vault that the block
                         will be assigned to
-        :param blocks: optional parameter specify list of Block IDs that have
-                       already been assigned to the File object specified
-                       by file_id within the Vault.
+        :param block_ids: optional parameter specify list of Block IDs that
+                          have already been assigned to the File object
+                          specified by file_id within the Vault.
         :returns: a list of blocks id that have to be uploaded to complete
                   if all the required blocks have been uploaded the the
                   list will be empty.
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
         if file_id not in vault.files:
             raise KeyError('file_id must specify a file in the provided Vault')
         if block_ids is not None:
@@ -426,47 +412,20 @@ class DeuceClient(Command):
 
         """
         File Block Assignment Takes a JSON body containing the following:
-                {
-                    "blocks": [
-                        {
-                            "id": "Block Id 1",
-                            "size": "Block size 1",
-                            "offset": "Block Offset 1"
-                        },
-                        {
-                            "id": "Block Id 2",
-                            "size": "Block size 2",
-                            "offset":"Block Offset 2"
-                        },
-                        {
-                            "id": "Block Id 3",
-                            "size": "Block size 3",
-                            "offset": "Block Offset 3"
-                        }
-                    ]
-                }
+                [
+                    [block_id, offset],
+                    ...
+                ]
         """
-        block_assignment_data = {
-            'blocks': []
-        }
+        block_assignment_data = []
 
         if block_ids is not None:
-            for block_id, offset in block_ids:
-                entry = {
-                    'id': block_id,
-                    'offset': offset,
-                    'size': len(vault.files[file_id].blocks[block_id])
-                }
-                block_assignment_data['blocks'].append(entry)
-
+            block_assignment_data = [(block_id, offset)
+                                     for block_id, offset in block_ids]
         else:
-            for offset, block_id in vault.files[file_id].offsets.items():
-                entry = {
-                    'id': block_id,
-                    'offset': offset,
-                    'size': len(vault.files[file_id].blocks[block_id])
-                }
-                block_assignment_data['blocks'].append(entry)
+            block_assignment_data = [(block_id, offset)
+                                     for offset, block_id in
+                                     vault.files[file_id].offsets.items()]
 
         res = requests.post(self.Uri,
                             data=json.dumps(block_assignment_data),
@@ -481,7 +440,8 @@ class DeuceClient(Command):
                 'Failed to Assign Blocks to the File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    @validate(file_id=FileIdRule,
+    @validate(vault=VaultInstanceRule,
+              file_id=FileIdRule,
               marker=MetadataBlockIdRuleNoneOkay,
               limit=LimitRuleNoneOkay)
     def GetFileBlockList(self, vault, file_id, marker=None, limit=None):
@@ -495,8 +455,6 @@ class DeuceClient(Command):
         :stores: The resulting block list in the file data for the vault.
         :returns: True on success
         """
-        if not isinstance(vault, api_vault.Vault):
-            raise TypeError('vault must be deuceclient.api.Vault')
         if file_id not in vault.files:
             raise KeyError(
                 'file_id must specify a file in the provided Vault.')
@@ -525,9 +483,11 @@ class DeuceClient(Command):
         self.__log_response_data(res, jsondata=True)
 
         if res.status_code == 200:
+            block_ids = []
             for block_id, offset in res.json():
                 vault.files[file_id].offsets[offset] = block_id
-            return True
+                block_ids.append(block_id)
+            return block_ids
         else:
             raise RuntimeError(
                 'Failed to get Block list for File . '

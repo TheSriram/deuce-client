@@ -43,3 +43,21 @@ class ParameterConstraintError(DeuceClientExceptions):
     """Parameter Constraint Error
     """
     pass
+
+
+class InvalidApiObjectInstance(TypeError):
+    """Parameter Type Error
+    """
+    pass
+
+
+class InvalidVaultInstance(InvalidApiObjectInstance):
+    """Invalid Vault Object Instnace
+    """
+    pass
+
+
+class InvalidBlockInstance(InvalidApiObjectInstance):
+    """Invalid Vault Object Instnace
+    """
+    pass
