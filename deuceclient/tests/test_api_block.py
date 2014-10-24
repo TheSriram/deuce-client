@@ -1,5 +1,5 @@
 """
-Testing - Deuce Client - API Block
+Tests - Deuce Client - API Block
 """
 import datetime
 from unittest import TestCase
@@ -13,7 +13,7 @@ from deuceclient.tests import *
 class BlockTest(TestCase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(BlockTest, self).setUp()
 
         self.project_id = create_project_name()
         self.vault_id = create_vault_name()

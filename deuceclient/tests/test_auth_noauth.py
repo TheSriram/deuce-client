@@ -1,5 +1,5 @@
 """
-Deuce Client - NonAuth Authentication Tests
+Tests - Deuce Client - Auth - NonAuth Authentication
 """
 import datetime
 import random

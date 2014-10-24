@@ -1,5 +1,5 @@
 """
-Tests - Deuce Client - Support
+Tests - Deuce Client - Testing Support
 """
 import datetime
 import hashlib
@@ -145,7 +145,7 @@ def create_storage_block():
 class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
 
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(FakeAuthenticator, self).__init__(*args, **kwargs)
         self.__tenantid = "tid_{0}".format(str(uuid.uuid4()))
 
         self.__token_data = {}

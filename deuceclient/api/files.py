@@ -14,7 +14,7 @@ class Files(dict):
 
     @validate(project_id=ProjectIdRule, vault_id=VaultIdRule)
     def __init__(self, project_id, vault_id):
-        super(self.__class__, self).__init__()
+        super(Files, self).__init__()
         self.__properties = {
             'marker': None,
             'project_id': project_id,

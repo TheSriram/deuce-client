@@ -1,5 +1,5 @@
 """
-Deuce Client Tests - Deuce V1 API Support
+Tests - Deuce Client - API - V1 URLs
 """
 import hashlib
 import json
@@ -18,6 +18,7 @@ import deuceclient.tests as baseline
 class DeuceClientV1ApiSupportTests(TestCase):
 
     def setUp(self):
+        super(DeuceClientV1ApiSupportTests, self).setUp()
 
         self.vault_name = baseline.create_vault_name()
         self.file_name = baseline.create_file()

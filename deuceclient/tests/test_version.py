@@ -1,5 +1,5 @@
 """
-Deuce Client Version Test
+Tests - Deuce Client  - Version
 """
 
 from unittest import TestCase

@@ -1,5 +1,5 @@
 """
-Testing - Deuce Client - Common - Validation - Instances
+Tests - Deuce Client - Common - Validation - Instances
 """
 import mock
 from unittest import TestCase

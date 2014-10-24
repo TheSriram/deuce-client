@@ -8,10 +8,10 @@ from deuceclient.tests import *
 class ClientDeuceInitTests(ClientTestBase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(ClientDeuceInitTests, self).setUp()
 
     def tearDown(self):
-        super(self.__class__, self).tearDown()
+        super(ClientDeuceInitTests, self).tearDown()
 
     def test_init_ssl_correct_uri(self):
 

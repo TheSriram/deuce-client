@@ -13,10 +13,10 @@ from deuceclient.tests import *
 class ClientDeuceFileTests(ClientTestBase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(ClientDeuceFileTests, self).setUp()
 
     def tearDown(self):
-        super(self.__class__, self).tearDown()
+        super(ClientDeuceFileTests, self).tearDown()
 
     @httpretty.activate
     def test_file_assign_blocks(self):

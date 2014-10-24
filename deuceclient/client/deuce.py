@@ -28,9 +28,9 @@ class DeuceClient(Command):
         :param apihost: server to use for API calls
         :param sslenabled: True if using HTTPS; otherwise false
         """
-        super(self.__class__, self).__init__(apihost,
-                                             '/',
-                                             sslenabled=sslenabled)
+        super(DeuceClient, self).__init__(apihost,
+                                          '/',
+                                          sslenabled=sslenabled)
         self.log = logging.getLogger(__name__)
         self.sslenabled = sslenabled
         self.authenticator = authenticator

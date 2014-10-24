@@ -1,5 +1,5 @@
 """
-Deuce Client Rackspace Authentication Tests
+Tests - Deuce Client - Auth - Rackspace Authentication
 """
 
 from unittest import TestCase
