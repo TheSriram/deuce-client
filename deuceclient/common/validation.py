@@ -52,6 +52,16 @@ def val_file_id(value):
 
 
 @validation_function
+def val_file_block_offset(value):
+    if isinstance(value, int):
+        if value < 0:
+            raise ValidationFailed(
+                'Invalid File Block Offset {0}'.format(value))
+    else:
+        raise ValidationFailed('Invalid File Block Offset {0}'.format(value))
+
+
+@validation_function
 def val_metadata_block_id(value):
     if not METADATA_BLOCK_ID_REGEX.match(value):
         raise ValidationFailed('Invalid Block ID {0}'.format(value))
@@ -98,6 +108,7 @@ def _abort(error_code):
 ProjectIdRule = Rule(val_project_id(), lambda: _abort(100))
 VaultIdRule = Rule(val_vault_id(), lambda: _abort(200))
 FileIdRule = Rule(val_file_id(), lambda: _abort(300))
+FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
 MetadataBlockIdRule = Rule(val_metadata_block_id(), lambda: _abort(400))
 MetadataBlockIdRuleNoneOkay = Rule(val_metadata_block_id(none_ok=True),
                                    lambda: _abort(400))
@@ -107,3 +118,5 @@ LimitRule = Rule(val_limit(), lambda: _abort(600))
 BoolRule = Rule(val_bool(), lambda: _abort(600))
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
                                   lambda: _abort(500))
+FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
+                          lambda: _abort(300))
