@@ -45,6 +45,12 @@ class ParameterConstraintError(DeuceClientExceptions):
     pass
 
 
+class IterableContentError(DeuceClientExceptions):
+    """Iterable Content Exception
+    """
+    pass
+
+
 class InvalidApiObjectInstance(TypeError):
     """Parameter Type Error
     """

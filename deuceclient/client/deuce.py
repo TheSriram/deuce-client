@@ -358,7 +358,7 @@ class DeuceClient(Command):
 
     @validate(vault=VaultInstanceRule,
               file_id=FileIdRule,
-              block_ids=MetadataBlockIdIterableRuleNoneOkay)
+              block_ids=MetadataBlockIdOffsetIterableRuleNoneOkay)
     def AssignBlocksToFile(self, vault, file_id, block_ids=None):
         """Assigns the specified block to a file
 
@@ -367,7 +367,8 @@ class DeuceClient(Command):
                         will be assigned to
         :param block_ids: optional parameter specify list of Block IDs that
                           have already been assigned to the File object
-                          specified by file_id within the Vault.
+                          specified by file_id within the Vault in the form
+                          [(blockid, offset)]
         :returns: a list of blocks id that have to be uploaded to complete
                   if all the required blocks have been uploaded the the
                   list will be empty.

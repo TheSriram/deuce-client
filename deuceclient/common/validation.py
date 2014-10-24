@@ -3,7 +3,7 @@ Deuce Client: Validation Functionality
 """
 import re
 
-from stoplight import Rule, ValidationFailed, validation_function
+from stoplight import Rule, ValidationFailed, validation_function, validate
 
 import deuceclient.common.errors as errors
 
@@ -26,27 +26,27 @@ LIMIT_REGEX = re.compile(
 @validation_function
 def val_project_id(value):
     if not PROJECT_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid project id {0}'.format(value))
+        raise ValidationFailed('Invalid project id ({0})'.format(value))
 
     if len(value) > PROJECT_ID_MAX_LEN:
-        raise ValidationFailed('Project ID exceeded max len {0}'.format(
+        raise ValidationFailed('Project ID exceeded max len ({0})'.format(
             VAULT_ID_MAX_LEN))
 
 
 @validation_function
 def val_vault_id(value):
     if not VAULT_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid vault id {0}'.format(value))
+        raise ValidationFailed('Invalid vault id ({0})'.format(value))
 
     if len(value) > VAULT_ID_MAX_LEN:
-        raise ValidationFailed('Vault ID exceeded max len {0}'.format(
+        raise ValidationFailed('Vault ID exceeded max len ({0})'.format(
             VAULT_ID_MAX_LEN))
 
 
 @validation_function
 def val_file_id(value):
     if not FILE_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid File ID {0}'.format(value))
+        raise ValidationFailed('Invalid File ID ({0})'.format(value))
 
 
 @validation_function
@@ -54,48 +54,67 @@ def val_file_block_offset(value):
     if isinstance(value, int):
         if value < 0:
             raise ValidationFailed(
-                'Invalid File Block Offset {0}'.format(value))
+                'Invalid File Block Offset ({0})'.format(value))
     else:
-        raise ValidationFailed('Invalid File Block Offset {0}'.format(value))
+        raise ValidationFailed('Invalid File Block Offset ({0})'.format(value))
 
 
 @validation_function
 def val_metadata_block_id(value):
+    if not (isinstance(value, str) or isinstance(value, bytes)):
+        raise ValidationFailed('Invalid Block ID ({0}) Type {1})'
+                               .format(value, type(value)))
     if not METADATA_BLOCK_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid Block ID {0}'.format(value))
+        raise ValidationFailed('Invalid Block ID ({0})'.format(value))
 
 
 @validation_function
 def val_metadata_block_id_iterable(values):
     for value in values:
-        val_metadata_block_id(value)
+        val_metadata_block_id()(value)
+
+
+@validation_function
+def val_metadata_block_id_offset_iterable(values):
+    for mbid, offset in values:
+        val_metadata_block_id()(mbid)
+        val_offset_numeric()(offset)
 
 
 @validation_function
 def val_storage_block_id(value):
     if not STORAGE_BLOCK_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid Storage Block ID {0}'.format(value))
+        raise ValidationFailed('Invalid Storage Block ID ({0})'.format(value))
 
 
 @validation_function
 def val_storage_block_id_iterable(values):
     for value in values:
-        val_storage_block_id(value)
+        val_storage_block_id()(value)
 
 
 @validation_function
 def val_offset(value):
     if not OFFSET_REGEX.match(value):
-        raise ValidationFailed('Invalid offset {0}'.format(value))
+        raise ValidationFailed('Invalid offset ({0})'.format(value))
+
+
+@validation_function
+def val_offset_numeric(value):
+    if isinstance(value, int):
+        if value < 0:
+            raise ValidationFailed('Invalid offset ({0})'.format(value))
+    else:
+        raise ValidationFailed('Invalid offset ({0})'.format(value))
 
 
 @validation_function
 def val_limit(value):
     if isinstance(value, int):
         if value < 0:
-            raise ValidationFailed('Invalid Limit {0}'.format(value))
+            raise ValidationFailed('Invalid Limit ({0})'.format(value))
     else:
-        raise ValidationFailed('Invalid limit {0}'.format(value))
+        raise ValidationFailed('Invalid limit ({0})'.format(value))
 
 
 def _abort(error_code):
@@ -106,6 +125,7 @@ def _abort(error_code):
         400: errors.InvalidBlocks,
         500: errors.InvalidStorageBlocks,
         600: errors.ParameterConstraintError,
+        700: errors.IterableContentError
     }
     raise abort_errors[error_code]
 
@@ -124,6 +144,13 @@ MetadataBlockIdIterableRule = Rule(val_metadata_block_id_iterable(),
 MetadataBlockIdIterableRuleNoneOkay = Rule(val_metadata_block_id_iterable(
                                            none_ok=True),
                                            lambda: _abort(400))
+MetadataBlockIdOffsetIterableRule = \
+    Rule(val_metadata_block_id_offset_iterable(),
+         lambda: _abort(700))
+MetadataBlockIdOffsetIterableRuleNoneOkay = \
+    Rule(val_metadata_block_id_offset_iterable(none_ok=True),
+         lambda: _abort(700))
+
 
 StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
@@ -141,6 +168,10 @@ FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
 FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
 
 OffsetRule = Rule(val_offset(), lambda: _abort(600))
+OffsetRuleNoneOkay = Rule(val_offset(none_ok=True), lambda: _abort(600))
+OffsetNumericRule = Rule(val_offset_numeric(), lambda: _abort(600))
+OffsetNumericRuleNoneOkay = Rule(val_offset_numeric(none_ok=True),
+                                 lambda: _abort(600))
 
 LimitRule = Rule(val_limit(), lambda: _abort(600))
 LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))
