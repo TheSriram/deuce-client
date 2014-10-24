@@ -14,6 +14,8 @@ import mock
 import deuceclient
 import deuceclient.api as api
 import deuceclient.api.vault as api_vault
+import deuceclient.api.block as api_block
+import deuceclient.api.storageblocks as api_storageblocks
 import deuceclient.client.deuce
 from deuceclient.common import errors
 from deuceclient.tests import *
@@ -444,10 +446,12 @@ class ClientTest(TestCase):
                                    'x-block-id': blockid,
                                },
                                status=200)
-
+        block_before = api_block.Block(project_id=create_project_name(),
+                                       vault_id=create_vault_name(),
+                                       storage_id=storage_blockid)
         block = client.DownloadBlockStorageData(
             self.vault,
-            storage_blockid)
+            block_before)
         self.assertEqual(block.data, b"mock")
         self.assertEqual(block.ref_count, '2')
         self.assertEqual(block.ref_modified, str(datetime.datetime.max))
@@ -469,9 +473,11 @@ class ClientTest(TestCase):
                                content_type='application/octet-stream',
                                body="mock",
                                status=404)
-
+        block = api_block.Block(project_id=create_project_name(),
+                                       vault_id=create_vault_name(),
+                                       storage_id=storage_blockid)
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.DownloadBlockStorageData(self.vault, storage_blockid)
+            client.DownloadBlockStorageData(self.vault, block)
 
     @httpretty.activate
     def test_storage_block_list(self):
@@ -573,7 +579,7 @@ class ClientTest(TestCase):
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
-    def test_head_storage_block_non_existant(self):
+    def test_head_storage_block_non_existent(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
@@ -584,8 +590,11 @@ class ClientTest(TestCase):
                                                      self.vault.vault_id,
                                                      storage_blockid),
                                status=404)
+        block = api_block.Block(project_id=create_project_name(),
+                                vault_id=create_vault_name(),
+                                storage_id=storage_blockid)
         with self.assertRaises(RuntimeError):
-            client.HeadBlockStorage(self.vault, storage_blockid)
+            client.HeadBlockStorage(self.vault, block)
 
     @httpretty.activate
     def test_head_storage_block(self):
@@ -609,8 +618,10 @@ class ClientTest(TestCase):
                                    'x-block-orphaned': True
                                },
                                status=204)
-
-        block = client.HeadBlockStorage(self.vault, storage_blockid)
+        block_before = api_block.Block(project_id=create_project_name(),
+                                       vault_id=create_vault_name(),
+                                       storage_id=storage_blockid)
+        block = client.HeadBlockStorage(self.vault, block_before)
         self.assertEqual(block.ref_count, '2')
         self.assertEqual(block.ref_modified, str(datetime.datetime.max))
         self.assertEqual(block.storage_id, storage_blockid)
@@ -630,8 +641,11 @@ class ClientTest(TestCase):
                                                      self.vault.vault_id,
                                                      storage_blockid),
                                status=204)
+        block = api_block.Block(project_id=create_project_name(),
+                                vault_id=create_vault_name(),
+                                storage_id=storage_blockid)
         self.assertTrue(True, client.DeleteBlockStorage(self.vault,
-                                                        storage_blockid))
+                                                        block))
 
     @httpretty.activate
     def test_delete_storage_block_non_existant(self):
@@ -645,8 +659,11 @@ class ClientTest(TestCase):
                                                      self.vault.vault_id,
                                                      storage_blockid),
                                status=404)
+        block = api_block.Block(project_id=create_project_name(),
+                                vault_id=create_vault_name(),
+                                storage_id=storage_blockid)
         with self.assertRaises(RuntimeError):
-            client.DeleteBlockStorage(self.vault, storage_blockid)
+            client.DeleteBlockStorage(self.vault, block)
 
     @httpretty.activate
     def test_file_creation(self):

@@ -45,6 +45,11 @@ class Block(object):
     def block_id(self):
         return self.__properties['block_id']
 
+    @block_id.setter
+    @validate(value=MetadataBlockIdRule)
+    def block_id(self, value):
+        self.__properties['block_id'] = value
+
     @property
     def storage_id(self):
         return self.__properties['storage_id']

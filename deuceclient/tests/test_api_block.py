@@ -22,7 +22,7 @@ class BlockTest(TestCase):
 
     def test_create_block_storageid_block_id_None(self):
         with self.assertRaises(ValueError):
-            block = b.Block(self.project_id,
+            block = api.Block(self.project_id,
                             self.vault_id)
 
     def test_create_block(self):
@@ -235,7 +235,7 @@ class BlockTest(TestCase):
 
     def test_modify_block_size(self):
         block_size = 200
-        block = b.Block(self.project_id,
+        block = api.Block(self.project_id,
                         self.vault_id,
                         self.block[0],
                         block_size=block_size)
@@ -252,7 +252,7 @@ class BlockTest(TestCase):
 
     def test_modify_block_orphaned(self):
         block_orphaned = False
-        block = b.Block(self.project_id,
+        block = api.Block(self.project_id,
                         self.vault_id,
                         self.block[0],
                         block_orphaned=block_orphaned)

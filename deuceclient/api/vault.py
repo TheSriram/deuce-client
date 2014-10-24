@@ -15,6 +15,7 @@ class Vault(object):
         self.__vault_id = vault_id
         self.__files = dict()
         self.__blocks = deuceclient.api.Blocks()
+        self.__storageblocks = deuceclient.api.StorageBlocks()
         self.__properties = {
             'status': None,
             'statistics': None
@@ -29,6 +30,9 @@ class Vault(object):
         return self.__project_id
 
     @property
+    def storageblocks(self):
+        return self.__storageblocks
+
     def status(self):
         """Returns Vault Status
 
