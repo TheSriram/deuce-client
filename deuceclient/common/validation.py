@@ -81,7 +81,7 @@ def val_offset(value):
 def val_limit(value):
     if isinstance(value, int):
         if value < 0:
-            raise ValidationFailed('Valid Limit {0}'.format(value))
+            raise ValidationFailed('Invalid Limit {0}'.format(value))
     else:
         raise ValidationFailed('Invalid limit {0}'.format(value))
 

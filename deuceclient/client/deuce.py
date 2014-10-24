@@ -116,7 +116,7 @@ class DeuceClient(Command):
     def DeleteVault(self, vault):
         """Delete a Vault
 
-        :param vault: vault of the vault to be deleted
+        :param vault: the vault to be deleted
 
         :returns: True on success
         :raises: TypeError if vault is not a Vault object
@@ -428,47 +428,20 @@ class DeuceClient(Command):
 
         """
         File Block Assignment Takes a JSON body containing the following:
-                {
-                    "blocks": [
-                        {
-                            "id": "Block Id 1",
-                            "size": "Block size 1",
-                            "offset": "Block Offset 1"
-                        },
-                        {
-                            "id": "Block Id 2",
-                            "size": "Block size 2",
-                            "offset":"Block Offset 2"
-                        },
-                        {
-                            "id": "Block Id 3",
-                            "size": "Block size 3",
-                            "offset": "Block Offset 3"
-                        }
-                    ]
-                }
+                [
+                    [block_id, offset],
+                    ...
+                ]
         """
-        block_assignment_data = {
-            'blocks': []
-        }
+        block_assignment_data = []
 
         if block_ids is not None:
-            for block_id, offset in block_ids:
-                entry = {
-                    'id': block_id,
-                    'offset': offset,
-                    'size': len(vault.files[file_id].blocks[block_id])
-                }
-                block_assignment_data['blocks'].append(entry)
-
+            block_assignment_data = [(block_id, offset)
+                                     for block_id, offset in block_ids]
         else:
-            for offset, block_id in vault.files[file_id].offsets.items():
-                entry = {
-                    'id': block_id,
-                    'offset': offset,
-                    'size': len(vault.files[file_id].blocks[block_id])
-                }
-                block_assignment_data['blocks'].append(entry)
+            block_assignment_data = [(block_id, offset)
+                                     for offset, block_id in
+                                     vault.files[file_id].offsets.items()]
 
         res = requests.post(self.Uri,
                             data=json.dumps(block_assignment_data),
