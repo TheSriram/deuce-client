@@ -68,6 +68,12 @@ class Block(object):
     def data(self, value):
         self.__properties['data'] = value
 
+    def __len__(self):
+        if self.data is None:
+            return 0
+        else:
+            return len(self.data)
+
     @property
     def block_size(self):
         return self.__properties['block_size']

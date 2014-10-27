@@ -68,9 +68,21 @@ def val_metadata_block_id(value):
 
 
 @validation_function
+def val_metadata_block_id_iterable(values):
+    for value in values:
+        val_metadata_block_id(value)
+
+
+@validation_function
 def val_storage_block_id(value):
     if not STORAGE_BLOCK_ID_REGEX.match(value):
         raise ValidationFailed('Invalid Storage Block ID {0}'.format(value))
+
+
+@validation_function
+def val_storage_block_id_iterable(values):
+    for value in values:
+        val_storage_block_id(value)
 
 
 @validation_function
@@ -81,7 +93,10 @@ def val_offset(value):
 
 @validation_function
 def val_limit(value):
-    if not LIMIT_REGEX.match(value):
+    if isinstance(value, int):
+        if value < 0:
+            raise ValidationFailed('Invalid Limit {0}'.format(value))
+    else:
         raise ValidationFailed('Invalid limit {0}'.format(value))
 
 
@@ -106,17 +121,40 @@ def _abort(error_code):
 
 # Parameter Rules
 ProjectIdRule = Rule(val_project_id(), lambda: _abort(100))
+
 VaultIdRule = Rule(val_vault_id(), lambda: _abort(200))
-FileIdRule = Rule(val_file_id(), lambda: _abort(300))
-FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
+VaultIdRuleNoneOkay = Rule(val_vault_id(none_ok=True), lambda: _abort(200))
+
 MetadataBlockIdRule = Rule(val_metadata_block_id(), lambda: _abort(400))
 MetadataBlockIdRuleNoneOkay = Rule(val_metadata_block_id(none_ok=True),
                                    lambda: _abort(400))
+
 StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 OffsetRule = Rule(val_offset(), lambda: _abort(600))
 LimitRule = Rule(val_limit(), lambda: _abort(600))
 BoolRule = Rule(val_bool(), lambda: _abort(600))
+
+MetadataBlockIdIterableRule = Rule(val_metadata_block_id_iterable(),
+                                   lambda: _abort(400))
+MetadataBlockIdIterableRuleNoneOkay = Rule(val_metadata_block_id_iterable(
+                                           none_ok=True),
+                                           lambda: _abort(400))
+
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
                                   lambda: _abort(500))
+StorageBlockIdIterableRule = Rule(val_storage_block_id_iterable(),
+                                  lambda: _abort(400))
+StorageBlockIdIterableRuleNoneOkay = Rule(val_storage_block_id_iterable(
+                                          none_ok=True),
+                                          lambda: _abort(400))
+
+FileIdRule = Rule(val_file_id(), lambda: _abort(300))
 FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
                           lambda: _abort(300))
+
+FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
+
+OffsetRule = Rule(val_offset(), lambda: _abort(600))
+
+LimitRule = Rule(val_limit(), lambda: _abort(600))
+LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))

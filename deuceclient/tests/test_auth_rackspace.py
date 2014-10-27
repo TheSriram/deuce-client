@@ -41,6 +41,29 @@ class RackspaceAuthTest(openstacktest.OpenStackAuthTest):
 
             uri = rackspaceauth.get_identity_apihost('bizzaar')
 
+    def test_keystone_management_url_patcher(self):
+        main_dc_list = ('us', 'uk', 'lon', 'iad', 'dfw', 'ord')
+
+        for dc in main_dc_list:
+            uri = rackspaceauth.RackspaceAuthentication._management_url(
+                region_name=dc)
+            self.assertEqual(uri,
+                             'https://identity.api.rackspacecloud.com/v2.0')
+
+        secondary_dc_list = ('hkg', 'syd')
+        for dc in secondary_dc_list:
+            uri = rackspaceauth.RackspaceAuthentication._management_url(
+                region_name=dc)
+            expected_uri = 'https://{0:}.identity.api.rackspacecloud.com/v2.0'.\
+                format(dc)
+            self.assertEqual(uri, expected_uri)
+
+        with self.assertRaises(deuceclient.auth.AuthenticationError) \
+                as auth_error:
+
+            uri = rackspaceauth.RackspaceAuthentication._management_url(
+                region_name='bizzaar')
+
     def test_detect_auth_url(self):
 
         userid = self.create_userid()

@@ -3,7 +3,9 @@ Deuce Client - Vault API
 """
 from stoplight import validate
 
-import deuceclient.api
+from deuceclient.api.files import Files
+from deuceclient.api.blocks import Blocks
+from deuceclient.api.storageblocks import StorageBlocks
 from deuceclient.common.validation import *
 
 
@@ -11,28 +13,32 @@ class Vault(object):
 
     @validate(project_id=ProjectIdRule, vault_id=VaultIdRule)
     def __init__(self, project_id, vault_id):
-        self.__project_id = project_id
-        self.__vault_id = vault_id
-        self.__files = dict()
-        self.__blocks = deuceclient.api.Blocks()
-        self.__storageblocks = deuceclient.api.StorageBlocks()
         self.__properties = {
+            'project_id': project_id,
+            'vault_id': vault_id,
             'status': None,
-            'statistics': None
+            'statistics': None,
+            'blocks': Blocks(project_id=project_id,
+                             vault_id=vault_id),
+            'storageblocks': StorageBlocks(project_id=project_id,
+                                           vault_id=vault_id),
+            'files': Files(project_id=project_id,
+                           vault_id=vault_id)
         }
 
     @property
     def vault_id(self):
-        return self.__vault_id
+        return self.__properties['vault_id']
 
     @property
     def project_id(self):
-        return self.__project_id
+        return self.__properties['project_id']
 
     @property
     def storageblocks(self):
-        return self.__storageblocks
+        return self.__properties['storageblocks']
 
+    @property
     def status(self):
         """Returns Vault Status
 
@@ -66,3 +72,11 @@ class Vault(object):
     @statistics.setter
     def statistics(self, value):
         self.__properties['statistics'] = value
+
+    @property
+    def blocks(self):
+        return self.__properties['blocks']
+
+    @property
+    def files(self):
+        return self.__properties['files']
