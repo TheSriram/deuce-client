@@ -497,6 +497,7 @@ class DeuceClient(Command):
                 'Failed to get Block list for File . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
     def DownloadBlockStorageData(self, vault, block):
         """
             Gets the data associated with the block id provided
@@ -523,6 +524,7 @@ class DeuceClient(Command):
                                             res.status_code,
                                             res.text))
 
+    @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
     def DeleteBlockStorage(self, vault, block):
         """
         Delete the block from block storage in a given vault.
@@ -542,6 +544,8 @@ class DeuceClient(Command):
                                             res.status_code,
                                             res.text))
 
+    @validate(vault=VaultInstanceRule, marker=StorageBlockIdRuleNoneOkay,
+              limit=LimitRuleNoneOkay)
     def GetBlockStorageList(self, vault, marker=None, limit=None):
         """
         Return the list of blocks in the vault
@@ -584,6 +588,7 @@ class DeuceClient(Command):
                 'Failed to get Block Storage list for Vault . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
     def HeadBlockStorage(self, vault, block):
         """
         Head the block from block storage in a given vault.

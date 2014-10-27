@@ -824,7 +824,7 @@ class ClientTest(TestCase):
                                                         block))
 
     @httpretty.activate
-    def test_delete_storage_block_non_existant(self):
+    def test_delete_storage_block_non_existent(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
                                                       self.apihost,
                                                       sslenabled=True)
