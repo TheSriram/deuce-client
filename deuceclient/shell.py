@@ -4,15 +4,17 @@ Ben's Deuce Testing Client
 """
 from __future__ import print_function
 import argparse
+import hashlib
 import json
 import logging
 import pprint
 import sys
 
-import deuceclient.client.deuce as client
+import deuceclient.api as api
 import deuceclient.auth.nonauth as noauth
 import deuceclient.auth.openstackauth as openstackauth
 import deuceclient.auth.rackspaceauth as rackspaceauth
+import deuceclient.client.deuce as client
 
 
 class ProgramArgumentError(ValueError):
@@ -163,9 +165,16 @@ def vault_stats(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    stats = deuceclient.GetVaultStatistics(arguments.vault_name)
-    for k in stats.keys():
-        print('{0:} = {1:}'.format(k, stats[k]))
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        if deuceclient.GetVaultStatistics(vault):
+            for k in vault.statistics.keys():
+                print('{0:}:'.format(k), end='\t')
+                pprint.pprint(vault.statistics[k])
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
 
 
 def vault_delete(log, arguments):
@@ -174,7 +183,13 @@ def vault_delete(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    deuceclient.DeleteVault(arguments.vault_name)
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+        deuceclient.DeleteVault(vault)
+        print('Deleted Vault {0}'.format(arguments.vault_name))
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
 
 
 def block_list(log, arguments):
@@ -183,11 +198,18 @@ def block_list(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    block_list = deuceclient.GetBlockList(arguments.vault_name,
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        blocks = deuceclient.GetBlockList(vault,
                                           marker=arguments.marker,
-                                          limit=arguments.limit)
-    print('Block List:')
-    pprint.pprint(block_list)
+                                          limit=arguments.limit):
+            print('Block List:')
+            for block_id in blocks:
+                print('\t{0}'.format(vault.blocks[block_id]))
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
 
 
 def block_upload(log, arguments):
@@ -196,11 +218,25 @@ def block_upload(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    block_list = deuceclient.UploadBlock(arguments.vault_name,
-                                         arguments.blockid,
-                                         arguments.blockcontent)
-    print('Block List:')
-    pprint.pprint(block_list)
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        data = arguments.block_content.read()
+
+        sha1 = hashlib.sha1()
+        sha1.update(data.encode())
+        block_id = sha1.hexdigest().lower()
+
+        block = api.Block(project_id=auth_engine.AuthTenantId,
+                          vault_id=arguments.vault_name,
+                          block_id=block_id,
+                          data=data)
+
+        if deuceclient.UploadBlock(vault, block):
+            print('Uploaded the block to deuce.')
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
 
 
 def file_create(log, arguments):
@@ -209,22 +245,44 @@ def file_create(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    location = deuceclient.CreateFile(arguments.vault_name)
-    print ("Location where file is create {0:}".format(location))
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        file_id = deuceclient.CreateFile(vault)
+        file_url = vault.files[file_id].url
+
+        print('Created File')
+        print('\tFile ID: {0}'.format(file_id))
+        print('\tURL: {0}'.format(file_url))
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
 
 
+"""
+Disabling - underlying functionality relies on being able to have actual
+            blocks in the local Vault object
 def file_assign_blocks(log, arguments):
-    """
+    " " "
     Assign blocks to a file
     NEED to check the way value is passed in the command line,
     right now it does not accept it.
-    """
+    " " "
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        for
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex))
 
     result = deuceclient.AssignBlocksToFile(arguments.vaultname,
                                             arguments.fileid,
                                             arguments.value)
     print(result)
+"""
 
 
 def main():
@@ -310,12 +368,7 @@ def main():
     block_list_parser.set_defaults(func=block_list)
 
     block_upload_parser = block_subparsers.add_parser('upload')
-    block_upload_parser.add_argument('--blockid',
-                                     default=None,
-                                     required=True,
-                                     type=str,
-                                     help="sha1 of the block to be uploaded.")
-    block_upload_parser.add_argument('--blockcontent',
+    block_upload_parser.add_argument('--block-content',
                                      default=None,
                                      required=True,
                                      type=argparse.FileType('r'),
@@ -333,6 +386,7 @@ def main():
     file_create_parser = file_subparsers.add_parser('create')
     file_create_parser.set_defaults(func=file_create)
 
+    """
     file_assign_parser = file_subparsers.add_parser('assign_data')
     file_assign_parser.add_argument('--fileid',
                                     default=None,
@@ -343,9 +397,11 @@ def main():
                                     default=None,
                                     required=True,
                                     type=dict,
-                                    help="Value passed in as a dict "
-                                         "with offset and size")
+                                    help="Value passed in as a dict of tuples"
+                                         "(blockid, offset, size)")
     file_assign_parser.set_defaults(func=file_assign_blocks)
+    """
+
     arguments = arg_parser.parse_args()
 
     # If the caller provides a log configuration then use it

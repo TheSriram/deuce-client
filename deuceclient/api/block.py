@@ -58,6 +58,12 @@ class Block(object):
     def data(self, value):
         self.__properties['data'] = value
 
+    def __len__(self):
+        if self.data is None:
+            return 0
+        else:
+            return len(self.data)
+
     @property
     def ref_count(self):
         return self.__properties['references']['count']

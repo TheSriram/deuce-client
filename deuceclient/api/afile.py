@@ -12,13 +12,15 @@ class File(object):
     @validate(project_id=ProjectIdRule,
               vault_id=VaultIdRule,
               file_id=FileIdRuleNoneOkay)
-    def __init__(self, project_id, vault_id, file_id=None):
+    def __init__(self, project_id, vault_id, file_id=None, url=None):
         self.__properties = {
             'project_id': project_id,
             'vault_id': vault_id,
             'file_id': file_id,
-            'blocks': Blocks(),
-            'offsets': {}
+            'blocks': Blocks(project_id=project_id,
+                             vault_id=vault_id),
+            'offsets': {},
+            'url': url
         }
 
     @property
@@ -32,6 +34,10 @@ class File(object):
     @property
     def file_id(self):
         return self.__properties['file_id']
+
+    @property
+    def url(self):
+        return self.__properties['url']
 
     @file_id.setter
     @validate(value=FileIdRule)

@@ -16,12 +16,14 @@ class Project(dict):
     @validate(project_id=ProjectIdRule)
     def __init__(self, project_id):
         super(self.__class__, self).__init__()
-
-        self.__project_id = project_id
+        self.__properties = {
+            'marker': None,
+            'project_id': project_id,
+        }
 
     @property
     def project_id(self):
-        return self.__project_id
+        return self.__properties['project_id']
 
     @validate(key=VaultIdRule)
     def __getitem__(self, key):
@@ -34,6 +36,18 @@ class Project(dict):
         else:
             raise TypeError(
                 '{0} can only contain Vaults'.format(self.__class__))
+
+    @property
+    def marker(self):
+        return self.__properties['marker']
+
+    @marker.setter
+    @validate(value=VaultIdRuleNoneOkay)
+    def marker(self, value):
+        # Note: We could force that "marker" is in the dict;
+        #   but then that would also unnecessarily force
+        #   order-of-operations on how to use the object
+        self.__properties['marker'] = value
 
     def __repr__(self):
         return '{0}: "{1}" - {2}'.format(type(self).__name__,

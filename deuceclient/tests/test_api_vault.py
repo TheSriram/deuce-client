@@ -23,6 +23,11 @@ class VaultTest(TestCase):
         self.assertEqual(vault.vault_id, self.vault_id)
         self.assertEqual(vault.project_id, self.project_id)
         self.assertEqual(vault.status, 'unknown')
+        self.assertIsNone(vault.statistics)
+        self.assertEqual(vault.blocks,
+                         api.Blocks(self.project_id, self.vault_id))
+        self.assertEqual(vault.files,
+                         api.Files(self.project_id, self.vault_id))
 
     def test_vault_invalid_project(self):
 
