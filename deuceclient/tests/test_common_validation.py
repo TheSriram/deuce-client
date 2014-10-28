@@ -250,6 +250,7 @@ class TestStorageBlockRules(TestRulesBase):
         '',
         'e7bf692b-ec7b-40ad-b0d1-45ce6798fb6z',  # note trailing z
         str(uuid.uuid4()).upper(),  # Force case sensitivity
+        123456,
         None
     ]
 
@@ -313,10 +314,10 @@ class TestStorageBlockRules(TestRulesBase):
         self.iterable_storage_id(positive_cases)
 
         for blockid in negative_cases:
-            with self.assertRaises(errors.InvalidBlocks):
+            with self.assertRaises(errors.InvalidStorageBlocks):
                 self.iterable_storage_id([blockid])
 
-        with self.assertRaises(errors.InvalidBlocks):
+        with self.assertRaises(errors.InvalidStorageBlocks):
             self.iterable_storage_id(None)
 
     def test_storage_offset_iterable_with_none_rule(self):
@@ -324,15 +325,15 @@ class TestStorageBlockRules(TestRulesBase):
         positive_cases, negative_cases = self.iterable_cases()
 
         for blockid in positive_cases:
-            self.iterable_storage_id_with_none([(blockid, 0)])
+            self.iterable_storage_id_with_none([blockid])
 
         self.iterable_storage_id_with_none(None)
 
         for blockid in negative_cases:
-            with self.assertRaises(errors.IterableContentError):
-                self.iterable_storage_id_with_none([(blockid, 0)])
-            with self.assertRaises(errors.IterableContentError):
-                self.iterable_storage_id_with_none([(0, blockid)])
+            with self.assertRaises(errors.InvalidStorageBlocks):
+                self.iterable_storage_id_with_none([blockid])
+            with self.assertRaises(errors.InvalidStorageBlocks):
+                self.iterable_storage_id_with_none([blockid])
 
 
 class TestFileRules(TestRulesBase):

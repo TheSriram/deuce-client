@@ -161,10 +161,10 @@ StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
                                   lambda: _abort(500))
 StorageBlockIdIterableRule = Rule(val_storage_block_id_iterable(),
-                                  lambda: _abort(400))
+                                  lambda: _abort(500))
 StorageBlockIdIterableRuleNoneOkay = Rule(val_storage_block_id_iterable(
                                           none_ok=True),
-                                          lambda: _abort(400))
+                                          lambda: _abort(500))
 
 FileIdRule = Rule(val_file_id(), lambda: _abort(300))
 FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
