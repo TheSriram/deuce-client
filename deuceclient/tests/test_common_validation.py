@@ -499,11 +499,11 @@ class TestLimitRules(TestRulesBase):
     ]
 
     @validate(limit=v.LimitRule)
-    def normal_limit(limit):
+    def normal_limit(self, limit):
         return True
 
     @validate(limit=v.LimitRuleNoneOkay)
-    def normal_limit_with_none(limit):
+    def normal_limit_with_none(self, limit):
         return True
 
     def test_limit(self):
