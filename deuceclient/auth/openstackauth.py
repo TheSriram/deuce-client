@@ -85,15 +85,24 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
                     'Unable to retrieve the Authentication Client')
 
         try:
-            self.__access = self.__client.get_raw_token_from_identity_service(
-                auth_url=self.authurl)
+            if self.authmethod in ('apikey', 'password'):
+                self.__access = \
+                    self.__client.get_raw_token_from_identity_service(
+                        auth_url=self.authurl, username=self.userid,
+                        password=self.credentials)
+            else:
+                self.__access = \
+                    self.__client.get_raw_token_from_identity_service(
+                        auth_url=self.authurl, project_id=self.userid,
+                        token=self.credentials)
+
             return self.__access.auth_token
 
-        except:
+        except Exception as ex:
             if retry is 0:
                 self.__access = None
                 raise deuceclient.auth.AuthenticationError(
-                    'Unable to retrieve the Auth Token')
+                    'Unable to retrieve the Auth Token: {0}'.format(ex))
             else:
                 return self.GetToken(retry=retry - 1)
 
@@ -115,9 +124,9 @@ class OpenStackAuthentication(deuceclient.auth.AuthenticationBase):
         else:
             return self.__access.auth_token
 
-    def AuthExpirationTime(self):
+    def _AuthExpirationTime(self):
         try:
-            return self.__access.expires()
+            return self.__access.expires
 
         except Exception as ex:
             print('Error: {0}'.format(ex))

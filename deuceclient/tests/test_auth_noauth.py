@@ -52,7 +52,7 @@ class NonAuthAuthTests(TestCase,
 
     def test_expires(self):
         self.assertEqual(datetime.datetime.max,
-                         self.authengine.AuthExpirationTime())
+                         self.authengine.AuthExpirationTime)
 
     def test_tenantid(self):
         self.assertEqual(self._userid,

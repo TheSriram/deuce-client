@@ -28,7 +28,7 @@ class NonAuthAuthentication(deuceclient.auth.AuthenticationBase):
     def _AuthToken(self):
         return self._token
 
-    def AuthExpirationTime(self):
+    def _AuthExpirationTime(self):
         return self._expires
 
     def IsExpired(self, fuzz=0):
