@@ -142,8 +142,12 @@ class TestMetadataBlockRules(TestRulesBase):
     def iterable_metadata_id_with_none(self, metadata_block_ids):
         return True
 
-    @validate(metadata_block_ids=v.MetadataBlockIdOffsetIterableRuleNoneOkay)
+    @validate(metadata_block_ids=v.MetadataBlockIdOffsetIterableRule)
     def iterable_metadata_id_with_offset(self, metadata_block_ids):
+        return True
+
+    @validate(metadata_block_ids=v.MetadataBlockIdOffsetIterableRuleNoneOkay)
+    def iterable_metadata_id_with_offset_with_none(self, metadata_block_ids):
         return True
 
     def test_metadata_block_id(self):
@@ -211,20 +215,31 @@ class TestMetadataBlockRules(TestRulesBase):
             with self.assertRaises(errors.InvalidBlocks):
                 self.iterable_metadata_id_with_none([blockid])
 
+    def test_metadata_offset_iterable_rule(self):
+
+        for blockid in self.__class__.positive_cases:
+            self.iterable_metadata_id_with_offset([(blockid, 0)])
+
+        for blockid in self.__class__.negative_cases:
+            with self.assertRaises(errors.IterableContentError):
+                self.iterable_metadata_id_with_offset([(blockid, 0)])
+            with self.assertRaises(errors.IterableContentError):
+                self.iterable_metadata_id_with_offset([(0, blockid)])
+
     def test_metadata_offset_iterable_with_none_rule(self):
 
         positive_cases, negative_cases = self.iterable_cases()
 
         for blockid in positive_cases:
-            self.iterable_metadata_id_with_offset([(blockid, 0)])
+            self.iterable_metadata_id_with_offset_with_none([(blockid, 0)])
 
-        self.iterable_metadata_id_with_none(None)
+        self.iterable_metadata_id_with_offset_with_none(None)
 
         for blockid in negative_cases:
             with self.assertRaises(errors.IterableContentError):
-                self.iterable_metadata_id_with_offset([(blockid, 0)])
+                self.iterable_metadata_id_with_offset_with_none([(blockid, 0)])
             with self.assertRaises(errors.IterableContentError):
-                self.iterable_metadata_id_with_offset([(0, blockid)])
+                self.iterable_metadata_id_with_offset_with_none([(0, blockid)])
 
 
 class TestStorageBlockRules(TestRulesBase):
@@ -248,6 +263,10 @@ class TestStorageBlockRules(TestRulesBase):
 
     @validate(storage_block_ids=v.StorageBlockIdIterableRule)
     def iterable_storage_id(self, storage_block_ids):
+        return True
+
+    @validate(storage_block_ids=v.StorageBlockIdIterableRuleNoneOkay)
+    def iterable_storage_id_with_none(self, storage_block_ids):
         return True
 
     def test_storage_block_id(self):
@@ -299,6 +318,21 @@ class TestStorageBlockRules(TestRulesBase):
 
         with self.assertRaises(errors.InvalidBlocks):
             self.iterable_storage_id(None)
+
+    def test_storage_offset_iterable_with_none_rule(self):
+
+        positive_cases, negative_cases = self.iterable_cases()
+
+        for blockid in positive_cases:
+            self.iterable_storage_id_with_none([(blockid, 0)])
+
+        self.iterable_storage_id_with_none(None)
+
+        for blockid in negative_cases:
+            with self.assertRaises(errors.IterableContentError):
+                self.iterable_storage_id_with_none([(blockid, 0)])
+            with self.assertRaises(errors.IterableContentError):
+                self.iterable_storage_id_with_none([(0, blockid)])
 
 
 class TestFileRules(TestRulesBase):

@@ -83,6 +83,9 @@ def val_metadata_block_id_offset_iterable(values):
 
 @validation_function
 def val_storage_block_id(value):
+    if not (isinstance(value, str) or isinstance(value, bytes)):
+        raise ValidationFailed('Invalid Storage Block ID ({0}) Type {1})'
+                               .format(value, type(value)))
     if not STORAGE_BLOCK_ID_REGEX.match(value):
         raise ValidationFailed('Invalid Storage Block ID ({0})'.format(value))
 
@@ -112,9 +115,11 @@ def val_offset_numeric(value):
 def val_limit(value):
     if isinstance(value, int):
         if value < 0:
-            raise ValidationFailed('Invalid Limit ({0})'.format(value))
+            raise ValidationFailed('Invalid Limit ({0}) - cannot be negative'
+                .format(value))
     else:
-        raise ValidationFailed('Invalid limit ({0})'.format(value))
+        raise ValidationFailed('Invalid limit ({0}) - invalid type'
+            .format(value))
 
 
 def _abort(error_code):
