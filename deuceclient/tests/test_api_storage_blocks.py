@@ -60,7 +60,8 @@ class StorageBlocksTest(TestCase):
     def test_add_block(self):
         block = api.Block(self.project_id,
                         self.vault_id,
-                        storage_id=self.storageblock)
+                        storage_id=self.storageblock,
+                        block_type='storage')
 
         blocks = api.StorageBlocks(project_id=self.project_id,
                                   vault_id=self.vault_id)
@@ -72,7 +73,8 @@ class StorageBlocksTest(TestCase):
     def test_add_invalid_block(self):
         block = api.Block(self.project_id,
                         self.vault_id,
-                        storage_id=self.storageblock)
+                        storage_id=self.storageblock,
+                        block_type='storage')
 
         blocks = api.StorageBlocks(project_id=self.project_id,
                                   vault_id=self.vault_id)
@@ -90,7 +92,8 @@ class StorageBlocksTest(TestCase):
     def test_repr_with_data(self):
         block = api.Block(self.project_id,
                         self.vault_id,
-                        storage_id=self.storageblock)
+                        storage_id=self.storageblock,
+                        block_type='storage')
 
         blocks = api.StorageBlocks(project_id=self.project_id,
                                   vault_id=self.vault_id)
@@ -101,7 +104,8 @@ class StorageBlocksTest(TestCase):
     def test_update(self):
         block = api.Block(self.project_id,
                         self.vault_id,
-                        storage_id=self.storageblock)
+                        storage_id=self.storageblock,
+                        block_type='storage')
 
         blocks = api.StorageBlocks(project_id=self.project_id,
                                   vault_id=self.vault_id)
@@ -115,7 +119,8 @@ class StorageBlocksTest(TestCase):
     def test_update_invalid(self):
         block = api.Block(self.project_id,
                         self.vault_id,
-                        storage_id=self.storageblock)
+                        storage_id=self.storageblock,
+                        block_type='storage')
 
         blocks = api.StorageBlocks(project_id=self.project_id,
                                   vault_id=self.vault_id)

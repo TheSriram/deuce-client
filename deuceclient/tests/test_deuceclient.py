@@ -624,7 +624,8 @@ class ClientTest(TestCase):
                                status=200)
         block_before = api_block.Block(project_id=create_project_name(),
                                        vault_id=create_vault_name(),
-                                       storage_id=storage_blockid)
+                                       storage_id=storage_blockid,
+                                       block_type='storage')
         block = client.DownloadBlockStorageData(
             self.vault,
             block_before)
@@ -651,7 +652,8 @@ class ClientTest(TestCase):
                                status=404)
         block = api_block.Block(project_id=create_project_name(),
                                 vault_id=create_vault_name(),
-                                storage_id=storage_blockid)
+                                storage_id=storage_blockid,
+                                block_type='storage')
         with self.assertRaises(RuntimeError) as deletion_error:
             client.DownloadBlockStorageData(self.vault, block)
 
@@ -768,7 +770,8 @@ class ClientTest(TestCase):
                                status=404)
         block = api_block.Block(project_id=create_project_name(),
                                 vault_id=create_vault_name(),
-                                storage_id=storage_blockid)
+                                storage_id=storage_blockid,
+                                block_type='storage')
         with self.assertRaises(RuntimeError):
             client.HeadBlockStorage(self.vault, block)
 
@@ -796,7 +799,8 @@ class ClientTest(TestCase):
                                status=204)
         block_before = api_block.Block(project_id=create_project_name(),
                                        vault_id=create_vault_name(),
-                                       storage_id=storage_blockid)
+                                       storage_id=storage_blockid,
+                                       block_type='storage')
         block = client.HeadBlockStorage(self.vault, block_before)
         self.assertEqual(block.ref_count, '2')
         self.assertEqual(block.ref_modified, str(datetime.datetime.max))
@@ -819,7 +823,8 @@ class ClientTest(TestCase):
                                status=204)
         block = api_block.Block(project_id=create_project_name(),
                                 vault_id=create_vault_name(),
-                                storage_id=storage_blockid)
+                                storage_id=storage_blockid,
+                                block_type='storage')
         self.assertTrue(True, client.DeleteBlockStorage(self.vault,
                                                         block))
 
@@ -837,7 +842,8 @@ class ClientTest(TestCase):
                                status=404)
         block = api_block.Block(project_id=create_project_name(),
                                 vault_id=create_vault_name(),
-                                storage_id=storage_blockid)
+                                storage_id=storage_blockid,
+                                block_type='storage')
         with self.assertRaises(RuntimeError):
             client.DeleteBlockStorage(self.vault, block)
 

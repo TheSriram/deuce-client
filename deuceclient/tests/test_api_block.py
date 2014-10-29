@@ -143,6 +143,51 @@ class BlockTest(TestCase):
         self.assertEqual(self.storage_id,
                          block.storage_id)
 
+    def test_set_block_type_invalid(self):
+        # Only accepted values for block_type are
+        # 'storage' and 'metadata'
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                              self.vault_id,
+                              storage_id=self.storage_id,
+                              block_type='bugs-bunny')
+
+    def test_update_block_storage_id_block_type_storage(self):
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          storage_id=self.storage_id,
+                          block_type='storage')
+
+        with self.assertRaises(ValueError):
+            block.storage_id = self.storage_id
+
+    def test_update_block_block_id_block_type_metadata(self):
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          block_id=self.block[0],
+                          block_type='metadata')
+
+        with self.assertRaises(ValueError):
+            block.block_id = self.block[0]
+
+    def test_block_block_id_block_type_storage(self):
+        # Block cannot be instantiated with block_type
+        # set to storage, if storage_id is None
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                              self.vault_id,
+                              block_id=self.block[0],
+                              block_type='storage')
+
+    def test_block_storage_id_block_type_metadata(self):
+        # Block cannot be instantiated with block_type
+        # set to metadata, if block_id is None
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                              self.vault_id,
+                              storage_id=self.storage_id,
+                              block_type='metadata')
+
     def test_update_block_storage_id_invalid(self):
         block = api.Block(self.project_id,
                           self.vault_id,

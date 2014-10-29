@@ -578,7 +578,8 @@ class DeuceClient(Command):
             blocks = {
                 storageblockid: api_block.Block(project_id=self.project_id,
                                                 vault_id=vault.vault_id,
-                                                storage_id=storageblockid)
+                                                storage_id=storageblockid,
+                                                block_type='storage')
                 for storageblockid in res.json()}
             block_list.update(blocks)
             vault.storageblocks.update(block_list)
@@ -604,7 +605,6 @@ class DeuceClient(Command):
             block.ref_modified = res.headers['X-Ref-Modified']
             block.ref_count = res.headers['X-Block-Reference-Count']
             block.block_id = res.headers['X-Block-ID']
-            block.storage_id = res.headers['X-Storage-ID']
             block.block_size = res.headers['X-Block-Size']
             block.block_orphaned = bool(res.headers['X-Block-Orphaned'])
             return block

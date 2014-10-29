@@ -16,22 +16,43 @@ class Block(object):
     def __init__(self, project_id, vault_id, block_id=None,
                  storage_id=None, data=None,
                  ref_count=None, ref_modified=None, block_size=None,
-                 block_orphaned='indeterminate'):
+                 block_orphaned='indeterminate', block_type='metadata'):
+
+        # NOTE(TheSriram): By default, the block_type is set to be metadata
+        # but this can be overridden when instantiating to either be metadata
+        # or storage
+
         if block_id is None and storage_id is None:
             raise ValueError("Both storage_id and block_id cannot be None")
-        self.__properties = {
-            'project_id': project_id,
-            'vault_id': vault_id,
-            'block_id': block_id,
-            'storage_id': storage_id,
-            'data': data,
-            'references': {
-                'count': ref_count,
-                'modified': ref_modified,
-            },
-            'block_size': block_size,
-            'block_orphaned': block_orphaned
-        }
+
+        elif block_type not in ('metadata', 'storage'):
+            raise ValueError(
+                'Invalid block_type Status Value: {0} '
+                'Accepted values are metadata '
+                'and storage'.format(block_type))
+        elif block_type == 'metadata' and block_id is None:
+            raise ValueError(
+                'block_id cannot be None, if block_type is set to metadata'
+            )
+        elif block_type == 'storage' and storage_id is None:
+            raise ValueError(
+                'storage_id cannot be None, if block_type is set to storage'
+            )
+        else:
+            self.__properties = {
+                'project_id': project_id,
+                'vault_id': vault_id,
+                'block_id': block_id,
+                'storage_id': storage_id,
+                'data': data,
+                'references': {
+                    'count': ref_count,
+                    'modified': ref_modified,
+                },
+                'block_size': block_size,
+                'block_orphaned': block_orphaned,
+                'block_type': block_type
+            }
 
     @property
     def project_id(self):
@@ -48,7 +69,10 @@ class Block(object):
     @block_id.setter
     @validate(value=MetadataBlockIdRule)
     def block_id(self, value):
-        self.__properties['block_id'] = value
+        if self.__properties['block_type'] == 'metadata':
+            raise ValueError('Cannot update block_id')
+        else:
+            self.__properties['block_id'] = value
 
     @property
     def storage_id(self):
@@ -57,7 +81,10 @@ class Block(object):
     @storage_id.setter
     @validate(value=StorageBlockIdRule)
     def storage_id(self, value):
-        self.__properties['storage_id'] = value
+        if self.__properties['block_type'] == 'storage':
+            raise ValueError('Cannot update storage_id')
+        else:
+            self.__properties['storage_id'] = value
 
     @property
     def data(self):
