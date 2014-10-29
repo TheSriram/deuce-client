@@ -52,12 +52,18 @@ class InvalidApiObjectInstance(TypeError):
 
 
 class InvalidVaultInstance(InvalidApiObjectInstance):
-    """Invalid Vault Object Instnace
+    """Invalid Vault Object Instance
     """
     pass
 
 
 class InvalidBlockInstance(InvalidApiObjectInstance):
-    """Invalid Vault Object Instnace
+    """Invalid Block Object Instance
+    """
+    pass
+
+
+class InvalidBlockType(TypeError):
+    """Invalid Block Type
     """
     pass

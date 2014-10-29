@@ -694,9 +694,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         block = create_block()
-        uuids = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fdc',
-                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdd',
-                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fde']
+        uuids = sorted([str(uuid.uuid4()) for _ in range(3)])
         data = [block[0] + '_' + uuid for uuid in uuids]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
@@ -706,7 +704,7 @@ class ClientTest(TestCase):
                                body=expected_data,
                                status=200)
         blocks = client.GetBlockStorageList(self.vault,
-            marker=block[0] + '_' + '09f074cd-36db-4a1f-9d09-ecf64dbe4fdc')
+            marker=block[0] + '_' + uuids[0])
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
@@ -715,11 +713,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         block = create_block()
-        uuids = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fdc',
-                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdd',
-                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fde',
-                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fdf',
-                 '09f074cd-36db-4a1f-9d09-ecf64dbe4fe0']
+        uuids = sorted([str(uuid.uuid4()) for _ in range(5)])
         data = [block[0] + '_' + uuid for uuid in uuids]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
@@ -739,9 +733,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         block = create_block()
-        uuids = ['09f074cd-36db-4a1f-9d09-ecf64dbe4fde',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fdf',
-                '09f074cd-36db-4a1f-9d09-ecf64dbe4fe0']
+        uuids = sorted([str(uuid.uuid4()) for _ in range(3)])
         data = [block[0] + '_' + uuid for uuid in uuids]
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
@@ -753,7 +745,7 @@ class ClientTest(TestCase):
 
         blocks = client.GetBlockStorageList(self.vault,
             limit=3,
-            marker=block[0] + '_' + '09f074cd-36db-4a1f-9d09-ecf64dbe4fde')
+            marker=block[0] + '_' + uuids[0])
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate

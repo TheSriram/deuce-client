@@ -25,7 +25,7 @@ class StorageBlocks(dict):
     def __getitem__(self, key):
         return dict.__getitem__(self, key)
 
-    @validate(key=StorageBlockIdRule)
+    @validate(key=StorageBlockIdRule, val=StorageBlockType)
     def __setitem__(self, key, val):
         if isinstance(val, Block):
             return dict.__setitem__(self, key, val)

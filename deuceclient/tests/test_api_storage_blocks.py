@@ -9,6 +9,17 @@ import deuceclient.common.validation as val
 from deuceclient.tests import *
 
 
+class InvalidStorageBlock(object):
+
+    def __init__(self):
+        self._block_type = 'storage'
+        self.storage_id = create_storage_block()
+
+    @property
+    def block_type(self):
+        return self._block_type
+
+
 class StorageBlocksTest(TestCase):
 
     def setUp(self):
@@ -83,6 +94,13 @@ class StorageBlocksTest(TestCase):
 
         with self.assertRaises(TypeError):
             blocks[block.storage_id] = 'what\'s up doc?'
+
+    def test_add_invalid_block_instance(self):
+        block = InvalidStorageBlock()
+        blocks = api.StorageBlocks(project_id=self.project_id,
+                                  vault_id=self.vault_id)
+        with self.assertRaises(TypeError):
+            blocks[block.storage_id] = block
 
     def test_repr(self):
         blocks = api.StorageBlocks(project_id=self.project_id,

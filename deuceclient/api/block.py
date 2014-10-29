@@ -66,11 +66,16 @@ class Block(object):
     def block_id(self):
         return self.__properties['block_id']
 
+    @property
+    def block_type(self):
+        return self.__properties['block_type']
+
     @block_id.setter
     @validate(value=MetadataBlockIdRule)
     def block_id(self, value):
         if self.__properties['block_type'] == 'metadata':
-            raise ValueError('Cannot update block_id')
+            raise ValueError('Cannot update block_id '
+                             'for metadata blocks')
         else:
             self.__properties['block_id'] = value
 
@@ -82,7 +87,8 @@ class Block(object):
     @validate(value=StorageBlockIdRule)
     def storage_id(self, value):
         if self.__properties['block_type'] == 'storage':
-            raise ValueError('Cannot update storage_id')
+            raise ValueError('Cannot update storage_id '
+                             'for storage blocks')
         else:
             self.__properties['storage_id'] = value
 
