@@ -144,7 +144,7 @@ class TestUniformSplitter(TestCase):
         ]
 
         for count in counts:
-            reader = make_reader(11 * 1024 * 1024)
+            reader = make_reader(11 * 1024 * 1024, use_temp_file=True)
 
             splitter = UniformSplitter(self.project_id,
                                        self.vault_id,

@@ -7,6 +7,7 @@ import io
 import os
 import random
 import time
+import tempfile
 from time import sleep as slowsleep
 from unittest import TestCase
 import uuid
@@ -143,7 +144,7 @@ def create_storage_block():
     return '{0}'.format(str(uuid.uuid4()))
 
 
-def make_reader(data_size):
+def make_reader(data_size, use_temp_file=False):
     """Make a reader that can be used for testing
 
     :param data_size: number of bytes to contain in the buffer
@@ -151,7 +152,15 @@ def make_reader(data_size):
     """
     # Create an byte-stream reader with a buffer of null bytes
     # of the requested size
-    return io.BytesIO(bytes(data_size))
+    data = bytes(data_size)
+
+    if use_temp_file:
+        tempf = tempfile.NamedTemporaryFile()
+        tempf.write(data)
+        tempf.seek(0)
+        return tempf
+    else:
+        return io.BytesIO(data)
 
 
 class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):

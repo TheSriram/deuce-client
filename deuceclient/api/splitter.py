@@ -45,10 +45,20 @@ class FileSplitterBase(object):
 
     @input_stream.setter
     def input_stream(self, input_io):
-        if self.state is None and 'read' in dir(input_io):
-            self.__input_stream = input_io
-        elif 'read' not in dir(input_io):
-            raise TypeError('input_io must have a read method')
+        def __has_read_function(input_source):
+            retValue = True
+            try:
+                input_source.read(0)
+            except AttributeError:
+                retValue = False
+
+            return retValue
+
+        if self.state is None:
+            if __has_read_function(input_io):
+                self.__input_stream = input_io
+            else:
+                raise TypeError('input_io must have a read method')
         else:
             raise RuntimeError('Invalid state to set new input_stream')
 
