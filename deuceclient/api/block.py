@@ -1,12 +1,20 @@
 """
 Deuce Client - Block API
 """
+import hashlib
+
 from stoplight import validate
 
 from deuceclient.common.validation import *
 
 
 class Block(object):
+
+    @staticmethod
+    def make_id(data):
+        sha1 = hashlib.sha1()
+        sha1.update(data)
+        return sha1.hexdigest().lower()
 
     # TODO: Add a validator for data, ref_count, ref_modified
     @validate(project_id=ProjectIdRule,

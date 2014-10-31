@@ -3,6 +3,7 @@ Tests - Deuce Client - Testing Support
 """
 import datetime
 import hashlib
+import io
 import os
 import random
 import time
@@ -140,6 +141,17 @@ def create_file():
 
 def create_storage_block():
     return '{0}'.format(str(uuid.uuid4()))
+
+
+def make_reader(data_size):
+    """Make a reader that can be used for testing
+
+    :param data_size: number of bytes to contain in the buffer
+    :returns: File-like object that can be read using read(count)
+    """
+    # Create an byte-stream reader with a buffer of null bytes
+    # of the requested size
+    return io.BytesIO(bytes(data_size))
 
 
 class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):

@@ -439,7 +439,8 @@ class DeuceClient(Command):
         res = requests.post(self.Uri,
                             data=json.dumps(block_assignment_data),
                             headers=self.Headers)
-        self.__log_response_data(res, jsondata=True, fn='Assign Blocks To File')
+        self.__log_response_data(res, jsondata=True,
+                                 fn='Assign Blocks To File')
         if res.status_code == 200:
             block_list_to_upload = [block_id
                                     for block_id in res.json()]

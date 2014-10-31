@@ -2,6 +2,7 @@
 Tests - Deuce Client - API Block
 """
 import datetime
+import os
 from unittest import TestCase
 
 import deuceclient.api as api
@@ -19,6 +20,17 @@ class BlockTest(TestCase):
         self.vault_id = create_vault_name()
         self.block = create_block()
         self.storage_id = create_storage_block()
+
+    def test_make_block_id(self):
+        data = os.urandom(100)
+
+        block_id = api.Block.make_id(data)
+        self.assertIsNotNone(block_id)
+
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          block_id,
+                          data=data)
 
     def test_create_block(self):
         block = api.Block(self.project_id,
