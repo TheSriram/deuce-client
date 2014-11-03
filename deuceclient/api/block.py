@@ -71,7 +71,7 @@ class Block(object):
         return self.__properties['block_type']
 
     @block_id.setter
-    @validate(value=MetadataBlockIdRule)
+    @validate(value=MetadataBlockIdRuleNoneOkay)
     def block_id(self, value):
         if self.__properties['block_type'] == 'metadata':
             raise ValueError('Cannot update block_id '

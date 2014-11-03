@@ -604,9 +604,11 @@ class DeuceClient(Command):
         if res.status_code == 204:
             block.ref_modified = res.headers['X-Ref-Modified']
             block.ref_count = res.headers['X-Block-Reference-Count']
-            block.block_id = res.headers['X-Block-ID']
+            block.block_id = None if res.headers['X-Block-ID'] == \
+                'None' else res.headers['X-Block-ID']
             block.block_size = res.headers['X-Block-Size']
-            block.block_orphaned = bool(res.headers['X-Block-Orphaned'])
+            block.block_orphaned = \
+                json.loads(res.headers['X-Block-Orphaned'].lower())
             return block
         else:
             raise RuntimeError(

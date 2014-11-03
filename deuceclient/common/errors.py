@@ -63,7 +63,7 @@ class InvalidBlockInstance(InvalidApiObjectInstance):
     pass
 
 
-class InvalidBlockType(TypeError):
+class InvalidBlockType(InvalidApiObjectInstance):
     """Invalid Block Type
     """
     pass

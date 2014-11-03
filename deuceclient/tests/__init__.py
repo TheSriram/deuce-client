@@ -150,6 +150,10 @@ def create_storage_block():
     return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
 
 
+def create_storage_block_from_block_id(block_id):
+    return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
+
+
 class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
 
     def __init__(self, *args, **kwargs):
