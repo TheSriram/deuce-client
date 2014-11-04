@@ -1,5 +1,5 @@
 """
-Testing - Deuce Client - API - Vault
+Tests - Deuce Client - API - Vault
 """
 from unittest import TestCase
 
@@ -12,7 +12,7 @@ from deuceclient.tests import *
 class VaultTest(TestCase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(VaultTest, self).setUp()
 
         self.vault_id = create_vault_name()
         self.project_id = create_project_name()

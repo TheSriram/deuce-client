@@ -13,10 +13,10 @@ from deuceclient.tests import *
 class ClientDeuceFileCreationTests(ClientTestBase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(ClientDeuceFileCreationTests, self).setUp()
 
     def tearDown(self):
-        super(self.__class__, self).tearDown()
+        super(ClientDeuceFileCreationTests, self).tearDown()
 
     @httpretty.activate
     def test_file_creation(self):

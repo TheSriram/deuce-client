@@ -41,9 +41,12 @@ class RackspaceAuthentication(
             log = logging.getLogger(__name__)
             log.debug('No AuthURL specified. Using {0:}'.format(auth_url))
 
-        super().__init__(userid=userid, usertype=usertype,
-                         credentials=credentials, auth_method=auth_method,
-                         datacenter=datacenter, auth_url=auth_url)
+        super(RackspaceAuthentication, self).__init__(userid=userid,
+                                                      usertype=usertype,
+                                                      credentials=credentials,
+                                                      auth_method=auth_method,
+                                                      datacenter=datacenter,
+                                                      auth_url=auth_url)
 
     @staticmethod
     def _management_url(*args, **kwargs):
@@ -62,4 +65,4 @@ class RackspaceAuthentication(
         # NOTE(TheSriram): The exceptions thrown if any, would still
         # bear OpenstackAuthentication class in the message.
         RackspaceAuthentication.patch_management_url()
-        return super(self.__class__, self).get_client()
+        return super(RackspaceAuthentication, self).get_client()

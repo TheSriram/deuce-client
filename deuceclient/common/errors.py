@@ -45,6 +45,12 @@ class ParameterConstraintError(DeuceClientExceptions):
     pass
 
 
+class IterableContentError(DeuceClientExceptions):
+    """Iterable Content Exception
+    """
+    pass
+
+
 class InvalidApiObjectInstance(TypeError):
     """Parameter Type Error
     """
@@ -65,5 +71,16 @@ class InvalidBlockInstance(InvalidApiObjectInstance):
 
 class InvalidBlockType(InvalidApiObjectInstance):
     """Invalid Block Type
+    """
+    pass
+
+
+class InvalidStorageBlockType(InvalidBlockType):
+    """Invalid Storage Block Type
+    """
+    pass
+
+class InvalidMetadataBlockType(InvalidBlockType):
+    """Invalid Storage Block Type
     """
     pass

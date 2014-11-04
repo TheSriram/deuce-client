@@ -1,5 +1,5 @@
 """
-Deuce Client OpenStack Authentication Tests
+Tests - Deuce Client - Auth - OpenStack Authentication
 """
 import datetime
 import time

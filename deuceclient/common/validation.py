@@ -3,7 +3,7 @@ Deuce Client: Validation Functionality
 """
 import re
 
-from stoplight import Rule, ValidationFailed, validation_function
+from stoplight import Rule, ValidationFailed, validation_function, validate
 
 import deuceclient.common.errors as errors
 
@@ -28,27 +28,27 @@ LIMIT_REGEX = re.compile(
 @validation_function
 def val_project_id(value):
     if not PROJECT_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid project id {0}'.format(value))
+        raise ValidationFailed('Invalid project id ({0})'.format(value))
 
     if len(value) > PROJECT_ID_MAX_LEN:
-        raise ValidationFailed('Project ID exceeded max len {0}'.format(
+        raise ValidationFailed('Project ID exceeded max len ({0})'.format(
             VAULT_ID_MAX_LEN))
 
 
 @validation_function
 def val_vault_id(value):
     if not VAULT_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid vault id {0}'.format(value))
+        raise ValidationFailed('Invalid vault id ({0})'.format(value))
 
     if len(value) > VAULT_ID_MAX_LEN:
-        raise ValidationFailed('Vault ID exceeded max len {0}'.format(
+        raise ValidationFailed('Vault ID exceeded max len ({0})'.format(
             VAULT_ID_MAX_LEN))
 
 
 @validation_function
 def val_file_id(value):
     if not FILE_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid File ID {0}'.format(value))
+        raise ValidationFailed('Invalid File ID ({0})'.format(value))
 
 
 @validation_function
@@ -56,48 +56,72 @@ def val_file_block_offset(value):
     if isinstance(value, int):
         if value < 0:
             raise ValidationFailed(
-                'Invalid File Block Offset {0}'.format(value))
+                'Invalid File Block Offset ({0})'.format(value))
     else:
-        raise ValidationFailed('Invalid File Block Offset {0}'.format(value))
+        raise ValidationFailed('Invalid File Block Offset ({0})'.format(value))
 
 
 @validation_function
 def val_metadata_block_id(value):
+    if not (isinstance(value, str) or isinstance(value, bytes)):
+        raise ValidationFailed('Invalid Block ID ({0}) Type {1})'
+                               .format(value, type(value)))
     if not METADATA_BLOCK_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid Block ID {0}'.format(value))
+        raise ValidationFailed('Invalid Block ID ({0})'.format(value))
 
 
 @validation_function
 def val_metadata_block_id_iterable(values):
     for value in values:
-        val_metadata_block_id(value)
+        val_metadata_block_id()(value)
+
+
+@validation_function
+def val_metadata_block_id_offset_iterable(values):
+    for mbid, offset in values:
+        val_metadata_block_id()(mbid)
+        val_offset_numeric()(offset)
 
 
 @validation_function
 def val_storage_block_id(value):
+    if not (isinstance(value, str) or isinstance(value, bytes)):
+        raise ValidationFailed('Invalid Storage Block ID ({0}) Type {1})'
+                               .format(value, type(value)))
     if not STORAGE_BLOCK_ID_REGEX.match(value):
-        raise ValidationFailed('Invalid Storage Block ID {0}'.format(value))
+        raise ValidationFailed('Invalid Storage Block ID ({0})'.format(value))
 
 
 @validation_function
 def val_storage_block_id_iterable(values):
     for value in values:
-        val_storage_block_id(value)
+        val_storage_block_id()(value)
 
 
 @validation_function
 def val_offset(value):
     if not OFFSET_REGEX.match(value):
-        raise ValidationFailed('Invalid offset {0}'.format(value))
+        raise ValidationFailed('Invalid offset ({0})'.format(value))
+
+
+@validation_function
+def val_offset_numeric(value):
+    if isinstance(value, int):
+        if value < 0:
+            raise ValidationFailed('Invalid offset ({0})'.format(value))
+    else:
+        raise ValidationFailed('Invalid offset ({0})'.format(value))
 
 
 @validation_function
 def val_limit(value):
     if isinstance(value, int):
         if value < 0:
-            raise ValidationFailed('Invalid Limit {0}'.format(value))
+            raise ValidationFailed('Invalid Limit ({0}) - cannot be negative'
+                .format(value))
     else:
-        raise ValidationFailed('Invalid limit {0}'.format(value))
+        raise ValidationFailed('Invalid limit ({0}) - invalid type'
+            .format(value))
 
 
 @validation_function
@@ -111,7 +135,8 @@ def val_bool(value):
 def val_block_type_storage(value):
     try:
         if not value.block_type == 'storage':
-            raise ValidationFailed('Invalid block type {0}'.format(value))
+            raise ValidationFailed('Invalid block type {0}'
+                .format(value.block_type))
     except AttributeError:
         raise ValidationFailed('Invalid instance: {0}'.format(value))
 
@@ -120,7 +145,8 @@ def val_block_type_storage(value):
 def val_block_type_metadata(value):
     try:
         if not value.block_type == 'metadata':
-            raise ValidationFailed('Invalid block type {0}'.format(value))
+            raise ValidationFailed('Invalid block type {0}'
+                .format(value.block_type))
     except AttributeError:
         raise ValidationFailed('Invalid instance: {0}'.format(value))
 
@@ -131,19 +157,18 @@ def _abort(error_code):
         200: errors.InvalidVault,
         300: errors.InvalidFiles,
         400: errors.InvalidBlocks,
-        403: errors.InvalidBlockType,
+        403: errors.InvalidMetadataBlockType,
         500: errors.InvalidStorageBlocks,
+        503: errors.InvalidStorageBlockType,
         600: errors.ParameterConstraintError,
+        700: errors.IterableContentError
     }
     raise abort_errors[error_code]
 
 
 # Parameter Rules
-
-OffsetRule = Rule(val_offset(), lambda: _abort(600))
-LimitRule = Rule(val_limit(), lambda: _abort(600))
-LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))
 BoolRule = Rule(val_bool(), lambda: _abort(600))
+
 
 ProjectIdRule = Rule(val_project_id(), lambda: _abort(100))
 
@@ -153,26 +178,41 @@ VaultIdRuleNoneOkay = Rule(val_vault_id(none_ok=True), lambda: _abort(200))
 MetadataBlockIdRule = Rule(val_metadata_block_id(), lambda: _abort(400))
 MetadataBlockIdRuleNoneOkay = Rule(val_metadata_block_id(none_ok=True),
                                    lambda: _abort(400))
-
 MetadataBlockIdIterableRule = Rule(val_metadata_block_id_iterable(),
                                    lambda: _abort(400))
 MetadataBlockIdIterableRuleNoneOkay = Rule(val_metadata_block_id_iterable(
                                            none_ok=True),
                                            lambda: _abort(400))
 MetadataBlockType = Rule(val_block_type_metadata(), lambda: _abort(403))
+MetadataBlockIdOffsetIterableRule = \
+    Rule(val_metadata_block_id_offset_iterable(),
+         lambda: _abort(700))
+MetadataBlockIdOffsetIterableRuleNoneOkay = \
+    Rule(val_metadata_block_id_offset_iterable(none_ok=True),
+         lambda: _abort(700))
 
 StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
                                   lambda: _abort(500))
 StorageBlockIdIterableRule = Rule(val_storage_block_id_iterable(),
-                                  lambda: _abort(400))
+                                  lambda: _abort(500))
 StorageBlockIdIterableRuleNoneOkay = Rule(val_storage_block_id_iterable(
                                           none_ok=True),
-                                          lambda: _abort(400))
-StorageBlockType = Rule(val_block_type_storage(), lambda: _abort(403))
+                                          lambda: _abort(500))
+StorageBlockType = Rule(val_block_type_storage(), lambda: _abort(503))
 
 FileIdRule = Rule(val_file_id(), lambda: _abort(300))
 FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
                           lambda: _abort(300))
 
 FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
+
+
+OffsetRule = Rule(val_offset(), lambda: _abort(600))
+OffsetRuleNoneOkay = Rule(val_offset(none_ok=True), lambda: _abort(600))
+OffsetNumericRule = Rule(val_offset_numeric(), lambda: _abort(600))
+OffsetNumericRuleNoneOkay = Rule(val_offset_numeric(none_ok=True),
+                                 lambda: _abort(600))
+
+LimitRule = Rule(val_limit(), lambda: _abort(600))
+LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))

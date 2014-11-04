@@ -1,5 +1,5 @@
 """
-Deuce Client Authentication Tests
+Tests - Deuce Client - Auth - Authentication Base
 """
 import abc
 import mock

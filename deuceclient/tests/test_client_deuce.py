@@ -13,10 +13,10 @@ from deuceclient.tests import *
 class DeuceClientTests(ClientTestBase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(DeuceClientTests, self).setUp()
 
     def tearDown(self):
-        super(self.__class__, self).tearDown()
+        super(DeuceClientTests, self).tearDown()
 
     """
     Keeping temporarily for merge purposes

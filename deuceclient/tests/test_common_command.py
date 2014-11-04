@@ -1,5 +1,5 @@
 """
-Deuce Client Common/Command Tests
+Tests - Deuce Client - Common - Command
 """
 import mock
 from unittest import TestCase
