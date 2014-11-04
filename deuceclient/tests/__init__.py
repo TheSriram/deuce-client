@@ -150,9 +150,9 @@ def make_reader(data_size, use_temp_file=False):
     :param data_size: number of bytes to contain in the buffer
     :returns: File-like object that can be read using read(count)
     """
-    # Create an byte-stream reader with a buffer of null bytes
+    # Create an byte-stream reader with a buffer of random bytes
     # of the requested size
-    data = bytes(data_size)
+    data = bytes(os.urandom(data_size))
 
     if use_temp_file:
         tempf = tempfile.NamedTemporaryFile()

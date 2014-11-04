@@ -45,17 +45,23 @@ class FileSplitterBase(object):
 
     @input_stream.setter
     def input_stream(self, input_io):
-        def __has_read_function(input_source):
-            retValue = True
+        def __has_read(input_source):
+            returnValue = False
             try:
-                input_source.read(0)
+                # if this is set up as an if-block then coverage fails
+                # even though we go through all the use-cases. Leaving as-is
+                # until we have a better solution and need it; the if-block
+                # solution is really only to catch the issue should python
+                # change and not raise an exception but instead do the better
+                # thing of returning None...not likely going to happen
+                getattr(input_io, 'read')
+                returnValue = True
             except AttributeError:
-                retValue = False
-
-            return retValue
+                returnValue = False
+            return returnValue
 
         if self.state is None:
-            if __has_read_function(input_io):
+            if __has_read(input_io):
                 self.__input_stream = input_io
             else:
                 raise TypeError('input_io must have a read method')
