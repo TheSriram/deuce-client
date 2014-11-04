@@ -2,7 +2,6 @@
 Deuce Client - Utils - File Splitter - Uniform File Splitter
 """
 import logging
-import os
 
 from stoplight import validate
 
