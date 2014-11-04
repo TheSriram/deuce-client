@@ -145,12 +145,9 @@ def create_file():
     return '{0}'.format(str(uuid.uuid4()))
 
 
-def create_storage_block():
-    block_id = hashlib.sha1(bytes(random.randrange(1000))).hexdigest()
-    return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
-
-
-def create_storage_block_from_block_id(block_id):
+def create_storage_block(block_id=None):
+    if not block_id:
+        block_id = hashlib.sha1(bytes(random.randrange(1000))).hexdigest()
     return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
 
 

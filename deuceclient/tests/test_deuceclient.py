@@ -694,7 +694,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         block = create_block()
-        data = sorted([create_storage_block_from_block_id(block[0])
+        data = sorted([create_storage_block(block[0])
                        for _ in range(3)])
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
@@ -713,7 +713,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         block = create_block()
-        data = sorted([create_storage_block_from_block_id(block[0])
+        data = sorted([create_storage_block(block[0])
                        for _ in range(5)])
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,
@@ -733,7 +733,7 @@ class ClientTest(TestCase):
                                                       self.apihost,
                                                       sslenabled=True)
         block = create_block()
-        data = sorted([create_storage_block_from_block_id(block[0])
+        data = sorted([create_storage_block(block[0])
                        for _ in range(3)])
         expected_data = json.dumps(data)
         httpretty.register_uri(httpretty.GET,

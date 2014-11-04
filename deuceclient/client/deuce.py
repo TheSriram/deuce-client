@@ -499,11 +499,14 @@ class DeuceClient(Command):
 
     @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
     def DownloadBlockStorageData(self, vault, block):
+        """Download a block directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param block: instance of deuce.api.block.Block
+        :return: instance of deuce.api.block.Block if expected
+                 status code is returned, Runtime Error raised
+                 if that's not the case.
         """
-            Gets the data associated with the block id provided
-            vault - exisiting vault, eg 'v1'
-            storage_block id - sha1 + '_' + uuid
-            """
         url = api_v1.get_storage_block_path(vault.vault_id,
                                             block.storage_id)
         self.ReInit(self.sslenabled, url)
@@ -526,8 +529,12 @@ class DeuceClient(Command):
 
     @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
     def DeleteBlockStorage(self, vault, block):
-        """
-        Delete the block from block storage in a given vault.
+        """Delete a block directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param block: instance of deuce.api.block.Block
+        :return: True if expected status code is returned,
+                 Runtime Error raised if that's not the case.
         """
         url = api_v1.get_storage_block_path(vault.vault_id,
                                             block.storage_id)
@@ -547,8 +554,13 @@ class DeuceClient(Command):
     @validate(vault=VaultInstanceRule, marker=StorageBlockIdRuleNoneOkay,
               limit=LimitRuleNoneOkay)
     def GetBlockStorageList(self, vault, marker=None, limit=None):
-        """
-        Return the list of blocks in the vault
+        """List blocks directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param marker: string
+        :param limit: string
+        :return: True if expected status code is returned,
+                 Runtime Error raised if that's not the case.
         """
         url = api_v1.get_storage_blocks_path(vault.vault_id)
         if marker is not None or limit is not None:
@@ -591,8 +603,13 @@ class DeuceClient(Command):
 
     @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
     def HeadBlockStorage(self, vault, block):
-        """
-        Head the block from block storage in a given vault.
+        """Head a block directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param block: instance of deuce.api.block.Block
+        :return: instance of deuce.api.block.Block if expected
+                 status code is returned, Runtime Error raised
+                 if that's not the case.
         """
 
         url = api_v1.get_storage_block_path(vault.vault_id,
