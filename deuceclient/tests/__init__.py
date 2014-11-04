@@ -7,9 +7,12 @@ import os
 import random
 import time
 from time import sleep as slowsleep
+from unittest import TestCase
 import uuid
 
+import deuceclient
 import deuceclient.auth.base
+import deuceclient.api.vault as api_vault
 
 
 # NOTE(TheSriram): Let's monkey patch sleep to get tests
@@ -203,3 +206,31 @@ class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
 
     def _AuthTenantId(self):
         return self.__tenantid
+
+
+class ClientTestBase(TestCase):
+
+    def setUp(self):
+        super(ClientTestBase, self).setUp()
+        self.deuceclient_version = deuceclient.version()
+        self.apihost = 'deuce-api-test'
+        self.uripath = '/'
+        self.expected_agent = 'Deuce-Client/{0:}'.format(
+            self.deuceclient_version)
+        self.expected_uri = "https://" + self.apihost + self.uripath
+        self.authenticator = FakeAuthenticator(userid='cheshirecat',
+                                               usertype='username',
+                                               credentials='alice',
+                                               auth_method='password',
+                                               datacenter='wonderland',
+                                               auth_url='down.the.rabbit.hole')
+
+        self.vault = api_vault.Vault(create_project_name(),
+                                     create_vault_name())
+
+    def tearDown(self):
+        super(ClientTestBase, self).tearDown()
+
+    @property
+    def vault_name(self):
+        return self.vault.vault_id
