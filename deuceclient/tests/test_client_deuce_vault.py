@@ -24,8 +24,10 @@ class ClientDeuceVaultTests(ClientTestBase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.PUT,
-                            get_vault_url(self.apihost, self.vault.vault_id),
-                            status=201)
+                               get_vault_url(
+                                   self.apihost,
+                                   self.vault.vault_id),
+                               status=201)
 
         vault = client.CreateVault(self.vault.vault_id)
         self.assertEqual(vault.vault_id, self.vault.vault_id)
@@ -46,10 +48,12 @@ class ClientDeuceVaultTests(ClientTestBase):
                                                       sslenabled=True)
 
         httpretty.register_uri(httpretty.PUT,
-                            get_vault_url(self.apihost, self.vault.vault_id),
-                            content_type='text/plain',
-                            body="mock failure",
-                            status=404)
+                               get_vault_url(
+                                   self.apihost,
+                                   self.vault.vault_id),
+                               content_type='text/plain',
+                               body="mock failure",
+                               status=404)
 
         with self.assertRaises(RuntimeError) as creation_error:
             client.CreateVault(self.vault.vault_id)
