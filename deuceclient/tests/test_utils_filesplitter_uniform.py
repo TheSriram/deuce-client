@@ -111,10 +111,13 @@ class TestUniformSplitter(TestCase):
                                    self.vault_id,
                                    reader)
 
+        running_offset = 0
         for _ in range(2):
-            block = splitter.get_block()
+            offset, block = splitter.get_block()
+            self.assertEqual(offset, running_offset)
             self.assertIsInstance(block, api.Block)
             self.assertEqual(splitter.chunk_size, len(block))
+            running_offset = running_offset + splitter.chunk_size
 
     def test_get_block_fail(self):
         reader = make_reader(0)
@@ -123,7 +126,8 @@ class TestUniformSplitter(TestCase):
                                    self.vault_id,
                                    reader)
 
-        block = splitter.get_block()
+        offset, block = splitter.get_block()
+        self.assertEqual(offset, 0)
         self.assertIsNone(block)
 
     def test_make_block(self):
@@ -144,7 +148,8 @@ class TestUniformSplitter(TestCase):
         ]
 
         for count in counts:
-            reader = make_reader(11 * 1024 * 1024, use_temp_file=True)
+            reader = make_reader(11 * 1024 * 1024,
+                                 use_temp_file=True)
 
             splitter = UniformSplitter(self.project_id,
                                        self.vault_id,
@@ -152,13 +157,16 @@ class TestUniformSplitter(TestCase):
             self.assertEqual(splitter.chunk_size,
                              (1024 * 1024))
 
+            running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, api.Blocks)
+            self.assertIsInstance(blocks, [].__class__)
             self.assertEqual(count, len(blocks))
-            for block_id, block in blocks.items():
+            for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
                 self.assertEqual(splitter.chunk_size,
                                  len(block))
+                self.assertEqual(offset, running_offset)
+                running_offset = running_offset + splitter.chunk_size
 
     def test_get_blocks_insufficient_data(self):
 
@@ -175,13 +183,16 @@ class TestUniformSplitter(TestCase):
             self.assertEqual(splitter.chunk_size,
                              (1024 * 1024))
 
+            running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, api.Blocks)
+            self.assertIsInstance(blocks, [].__class__)
             self.assertEqual((count - 1), len(blocks))
-            for block_id, block in blocks.items():
+            for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
                 self.assertEqual(splitter.chunk_size,
                                  len(block))
+                self.assertEqual(offset, running_offset)
+                running_offset = running_offset + splitter.chunk_size
 
     def test_get_blocks_insufficient_data_partial_block(self):
 
@@ -200,11 +211,104 @@ class TestUniformSplitter(TestCase):
             self.assertEqual(splitter.chunk_size,
                              (1024 * 1024))
 
+            running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, api.Blocks)
+            self.assertIsInstance(blocks, [].__class__)
             self.assertEqual(count, len(blocks))
-            for block_id, block in blocks.items():
+            for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
+                self.assertEqual(offset, running_offset)
+                running_offset = running_offset + splitter.chunk_size
+                # one block will be bytes_remainder bytes, the rest
+                # will be chunk_size bytes
+                if len(block) == bytes_remainder:
+                    pass
+                else:
+                    self.assertEqual(splitter.chunk_size,
+                                     len(block))
+
+    def test_get_blocks_sufficient_data_null_data(self):
+
+        counts = [
+            0, 1, 2, 5, 10
+        ]
+
+        for count in counts:
+            reader = make_reader(11 * 1024 * 1024,
+                                 use_temp_file=True,
+                                 null_data=True)
+
+            splitter = UniformSplitter(self.project_id,
+                                       self.vault_id,
+                                       reader)
+            self.assertEqual(splitter.chunk_size,
+                             (1024 * 1024))
+
+            running_offset = 0
+            blocks = splitter.get_blocks(count)
+            self.assertIsInstance(blocks, [].__class__)
+            self.assertEqual(count, len(blocks))
+            for offset, block in blocks:
+                self.assertIsInstance(block, api.Block)
+                self.assertEqual(splitter.chunk_size,
+                                 len(block))
+                self.assertEqual(offset, running_offset)
+                running_offset = running_offset + splitter.chunk_size
+
+    def test_get_blocks_insufficient_null_data(self):
+
+        counts = [
+            2, 5, 10
+        ]
+
+        for count in counts:
+            reader = make_reader((count - 1) * 1024 * 1024,
+                                 null_data=True)
+
+            splitter = UniformSplitter(self.project_id,
+                                       self.vault_id,
+                                       reader)
+            self.assertEqual(splitter.chunk_size,
+                             (1024 * 1024))
+
+            running_offset = 0
+            blocks = splitter.get_blocks(count)
+            self.assertIsInstance(blocks, [].__class__)
+            self.assertEqual((count - 1), len(blocks))
+            for offset, block in blocks:
+                self.assertIsInstance(block, api.Block)
+                self.assertEqual(splitter.chunk_size,
+                                 len(block))
+                self.assertEqual(offset, running_offset)
+                running_offset = running_offset + splitter.chunk_size
+
+    def test_get_blocks_insufficient_data_partial_block_null_data(self):
+
+        counts = [
+            2, 5, 10
+        ]
+
+        bytes_remainder = 1024
+
+        for count in counts:
+            reader = make_reader((((count - 1) * 1024 * 1024)
+                                 + bytes_remainder),
+                                 null_data=True)
+
+            splitter = UniformSplitter(self.project_id,
+                                       self.vault_id,
+                                       reader)
+            self.assertEqual(splitter.chunk_size,
+                             (1024 * 1024))
+
+            running_offset = 0
+            blocks = splitter.get_blocks(count)
+            self.assertIsInstance(blocks, [].__class__)
+            self.assertEqual(count, len(blocks))
+            for offset, block in blocks:
+                self.assertIsInstance(block, api.Block)
+                self.assertEqual(offset, running_offset)
+                running_offset = running_offset + splitter.chunk_size
                 # one block will be bytes_remainder bytes, the rest
                 # will be chunk_size bytes
                 if len(block) == bytes_remainder:

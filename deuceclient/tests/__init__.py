@@ -156,15 +156,22 @@ def create_storage_block(block_id=None):
     return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
 
 
-def make_reader(data_size, use_temp_file=False):
+def make_reader(data_size, use_temp_file=False, null_data=False):
     """Make a reader that can be used for testing
 
     :param data_size: number of bytes to contain in the buffer
+    :param use_temp_file: whether or not to use a temp file for the actual
+                          data store as this exercises code differently
+    :param null_data: bool - whether or not to use random data or data
+                      initialized to all zeros (useful for dedup testing)
     :returns: File-like object that can be read using read(count)
     """
     # Create an byte-stream reader with a buffer of random bytes
     # of the requested size
-    data = bytes(os.urandom(data_size))
+    if null_data:
+        data = bytes(bytes(data_size))
+    else:
+        data = bytes(os.urandom(data_size))
 
     if use_temp_file:
         tempf = tempfile.NamedTemporaryFile()

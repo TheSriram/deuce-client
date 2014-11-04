@@ -14,7 +14,7 @@ class FileSplitterBase(object):
 
     def __init__(self, project_id, vault_id, input_io):
         """
-        :param input_io: file-like object providing a read function
+        :param input_io: file-like object providing a read and tell functions
         """
         self.__project_id = project_id
         self.__vault_id = vault_id
@@ -55,6 +55,10 @@ class FileSplitterBase(object):
                 # change and not raise an exception but instead do the better
                 # thing of returning None...not likely going to happen
                 getattr(input_io, 'read')
+
+                # tell is used to determine the starting offset into the
+                # data stream that the block data was read from
+                getattr(input_io, 'tell')
                 returnValue = True
             except AttributeError:
                 returnValue = False
@@ -73,12 +77,11 @@ class FileSplitterBase(object):
 
         :returns: api.Blocks containing the data
         """
-        blocks = Blocks(self.project_id,
-                        self.vault_id)
+        blocks = []
 
         for block in [self.get_block() for _ in range(count)]:
-            if block is not None:
-                blocks[block.block_id] = block
+            if block[1] is not None:
+                blocks.append(block)
 
         return blocks
 
@@ -98,6 +101,8 @@ class FileSplitterBase(object):
     def get_block(self):
         """Get a block
 
-        :returns: api.Block containing the data
+        :returns: a tuple of (offset, api.Block) where the api.Block
+                  contains the data the data, and offset is the offset
+                  into the input_stream the block was read from
         """
         raise NotImplementedError()

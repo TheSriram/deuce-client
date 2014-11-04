@@ -2,6 +2,7 @@
 Deuce Client - Utils - File Splitter - Uniform File Splitter
 """
 import logging
+import os
 
 from stoplight import validate
 
@@ -45,13 +46,14 @@ class UniformSplitter(FileSplitterBase):
 
     def get_block(self):
         self._set_state('processing')
+        data_offset = self.input_stream.tell()
         data = self.input_stream.read(self.chunk_size)
 
         # If len(data) is 0, then we've reached the end of the data source;
         # so don't create a block and return None instead.
         # Keeps from creating empty blocks.
         if len(data):
-            return self._make_block(data)
+            return (data_offset, self._make_block(data))
         else:
             self._set_state(None)
-            return None
+            return (data_offset, None)
