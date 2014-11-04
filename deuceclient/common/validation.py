@@ -16,7 +16,9 @@ METADATA_BLOCK_ID_REGEX = re.compile('\\b[0-9a-f]{40}\\b')
 UUID_REGEX = re.compile(
     '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 FILE_ID_REGEX = UUID_REGEX
-STORAGE_BLOCK_ID_REGEX = UUID_REGEX
+STORAGE_BLOCK_ID_REGEX = re.compile(
+    METADATA_BLOCK_ID_REGEX.pattern[2:-2] + '_' + UUID_REGEX.pattern
+)
 OFFSET_REGEX = re.compile(
     '(?<![-.])\\b[0-9]+\\b(?!\\.[0-9])')
 LIMIT_REGEX = re.compile(
@@ -98,12 +100,38 @@ def val_limit(value):
         raise ValidationFailed('Invalid limit {0}'.format(value))
 
 
+@validation_function
+def val_bool(value):
+    if not isinstance(value, bool):
+        raise ValidationFailed('Invalid type {0} instead of '
+                               'Bool'.format(type(value)))
+
+
+@validation_function
+def val_block_type_storage(value):
+    try:
+        if not value.block_type == 'storage':
+            raise ValidationFailed('Invalid block type {0}'.format(value))
+    except AttributeError:
+        raise ValidationFailed('Invalid instance: {0}'.format(value))
+
+
+@validation_function
+def val_block_type_metadata(value):
+    try:
+        if not value.block_type == 'metadata':
+            raise ValidationFailed('Invalid block type {0}'.format(value))
+    except AttributeError:
+        raise ValidationFailed('Invalid instance: {0}'.format(value))
+
+
 def _abort(error_code):
     abort_errors = {
         100: errors.InvalidProject,
         200: errors.InvalidVault,
         300: errors.InvalidFiles,
         400: errors.InvalidBlocks,
+        403: errors.InvalidBlockType,
         500: errors.InvalidStorageBlocks,
         600: errors.ParameterConstraintError,
     }
@@ -111,6 +139,12 @@ def _abort(error_code):
 
 
 # Parameter Rules
+
+OffsetRule = Rule(val_offset(), lambda: _abort(600))
+LimitRule = Rule(val_limit(), lambda: _abort(600))
+LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))
+BoolRule = Rule(val_bool(), lambda: _abort(600))
+
 ProjectIdRule = Rule(val_project_id(), lambda: _abort(100))
 
 VaultIdRule = Rule(val_vault_id(), lambda: _abort(200))
@@ -119,11 +153,13 @@ VaultIdRuleNoneOkay = Rule(val_vault_id(none_ok=True), lambda: _abort(200))
 MetadataBlockIdRule = Rule(val_metadata_block_id(), lambda: _abort(400))
 MetadataBlockIdRuleNoneOkay = Rule(val_metadata_block_id(none_ok=True),
                                    lambda: _abort(400))
+
 MetadataBlockIdIterableRule = Rule(val_metadata_block_id_iterable(),
                                    lambda: _abort(400))
 MetadataBlockIdIterableRuleNoneOkay = Rule(val_metadata_block_id_iterable(
                                            none_ok=True),
                                            lambda: _abort(400))
+MetadataBlockType = Rule(val_block_type_metadata(), lambda: _abort(403))
 
 StorageBlockIdRule = Rule(val_storage_block_id(), lambda: _abort(500))
 StorageBlockIdRuleNoneOkay = Rule(val_storage_block_id(none_ok=True),
@@ -133,14 +169,10 @@ StorageBlockIdIterableRule = Rule(val_storage_block_id_iterable(),
 StorageBlockIdIterableRuleNoneOkay = Rule(val_storage_block_id_iterable(
                                           none_ok=True),
                                           lambda: _abort(400))
+StorageBlockType = Rule(val_block_type_storage(), lambda: _abort(403))
 
 FileIdRule = Rule(val_file_id(), lambda: _abort(300))
 FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
                           lambda: _abort(300))
 
 FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
-
-OffsetRule = Rule(val_offset(), lambda: _abort(600))
-
-LimitRule = Rule(val_limit(), lambda: _abort(600))
-LimitRuleNoneOkay = Rule(val_limit(none_ok=True), lambda: _abort(600))

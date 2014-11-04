@@ -203,10 +203,10 @@ def block_list(log, arguments):
 
         blocks = deuceclient.GetBlockList(vault,
                                           marker=arguments.marker,
-                                          limit=arguments.limit):
-            print('Block List:')
-            for block_id in blocks:
-                print('\t{0}'.format(vault.blocks[block_id]))
+                                          limit=arguments.limit)
+        print('Block List:')
+        for block_id in blocks:
+            print('\t{0}'.format(vault.blocks[block_id]))
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
