@@ -3,7 +3,11 @@ Deuce Client - (File) Splitter API
 """
 import abc
 
+from stoplight import validate
+
 from deuceclient.api import Block, Blocks
+from deuceclient.common import errors
+from deuceclient.common.validation import *
 
 
 class FileSplitterBase(object):
@@ -12,24 +16,25 @@ class FileSplitterBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    @validate(project_id=ProjectIdRule,
+              vault_id=VaultIdRule,
+              input_io=FileSplitterInputStreamRule)
     def __init__(self, project_id, vault_id, input_io):
         """
         :param input_io: file-like object providing a read and tell functions
         """
         self.__project_id = project_id
         self.__vault_id = vault_id
-        self.__input_stream = input_io
         self.__state = None
+        self.__input_stream = input_io
 
     @property
     def state(self):
         return self.__state
 
+    @validate(new_state=FileSplitterStateRule)
     def _set_state(self, new_state):
-        if new_state in (None, 'processing'):
-            self.__state = new_state
-        else:
-            raise ValueError('Invalid state - {0}'.format(new_state))
+        self.__state = new_state
 
     @property
     def project_id(self):
@@ -44,31 +49,10 @@ class FileSplitterBase(object):
         return self.__input_stream
 
     @input_stream.setter
+    @validate(input_io=FileSplitterInputStreamRule)
     def input_stream(self, input_io):
-        def __has_read(input_source):
-            returnValue = False
-            try:
-                # if this is set up as an if-block then coverage fails
-                # even though we go through all the use-cases. Leaving as-is
-                # until we have a better solution and need it; the if-block
-                # solution is really only to catch the issue should python
-                # change and not raise an exception but instead do the better
-                # thing of returning None...not likely going to happen
-                getattr(input_io, 'read')
-
-                # tell is used to determine the starting offset into the
-                # data stream that the block data was read from
-                getattr(input_io, 'tell')
-                returnValue = True
-            except AttributeError:
-                returnValue = False
-            return returnValue
-
         if self.state is None:
-            if __has_read(input_io):
-                self.__input_stream = input_io
-            else:
-                raise TypeError('input_io must have a read method')
+            self.__input_stream = input_io
         else:
             raise RuntimeError('Invalid state to set new input_stream')
 

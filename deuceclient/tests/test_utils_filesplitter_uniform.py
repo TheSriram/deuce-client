@@ -7,6 +7,7 @@ from unittest import TestCase
 import mock
 
 import deuceclient.api as api
+from deuceclient.common import errors
 from deuceclient.utils import UniformSplitter
 from deuceclient.tests import *
 
@@ -74,7 +75,7 @@ class TestUniformSplitter(TestCase):
                                    self.vault_id,
                                    reader)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(errors.ParameterConstraintError):
             splitter._set_state('bad state')
 
     def test_set_reader(self):
@@ -96,13 +97,33 @@ class TestUniformSplitter(TestCase):
         with self.assertRaises(RuntimeError):
             splitter.input_stream = reader
 
-        splitter._set_state(None)
-
+    def test_set_reader_no_read(self):
         class X(object):
-            pass
+            def tell():
+                pass
+
+        reader = make_reader(1)
+
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   reader)
 
         with self.assertRaises(TypeError):
             splitter.input_stream = X()
+
+    def test_set_reader_no_tell(self):
+        class Y(object):
+            def read():
+                pass
+
+        reader = make_reader(1)
+
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   reader)
+
+        with self.assertRaises(TypeError):
+            splitter.input_stream = Y()
 
     def test_get_block(self):
         reader = make_reader(10 * 1024 * 1024)
