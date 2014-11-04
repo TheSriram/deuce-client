@@ -5,6 +5,7 @@ from stoplight import validate
 
 from deuceclient.api.files import Files
 from deuceclient.api.blocks import Blocks
+from deuceclient.api.storageblocks import StorageBlocks
 from deuceclient.common.validation import *
 
 
@@ -19,6 +20,8 @@ class Vault(object):
             'statistics': None,
             'blocks': Blocks(project_id=project_id,
                              vault_id=vault_id),
+            'storageblocks': StorageBlocks(project_id=project_id,
+                                           vault_id=vault_id),
             'files': Files(project_id=project_id,
                            vault_id=vault_id)
         }
@@ -30,6 +33,10 @@ class Vault(object):
     @property
     def project_id(self):
         return self.__properties['project_id']
+
+    @property
+    def storageblocks(self):
+        return self.__properties['storageblocks']
 
     @property
     def status(self):

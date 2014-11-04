@@ -9,6 +9,8 @@ from stoplight import validate
 
 import deuceclient.api.afile as api_file
 import deuceclient.api.block as api_block
+import deuceclient.api.blocks as api_blocks
+import deuceclient.api.storageblocks as api_storageblocks
 import deuceclient.api.vault as api_vault
 import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
@@ -17,9 +19,11 @@ from deuceclient.common.validation_instance import *
 
 
 class DeuceClient(Command):
+
     """
     Object defining HTTP REST API calls for interacting with Deuce.
     """
+
     def __init__(self, authenticator, apihost, sslenabled=False):
         """Initialize the Deuce Client access
 
@@ -492,3 +496,140 @@ class DeuceClient(Command):
             raise RuntimeError(
                 'Failed to get Block list for File . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
+    def DownloadBlockStorageData(self, vault, block):
+        """Download a block directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param block: instance of deuce.api.block.Block
+        :return: instance of deuce.api.block.Block if expected
+                 status code is returned, Runtime Error raised
+                 if that's not the case.
+        """
+        url = api_v1.get_storage_block_path(vault.vault_id,
+                                            block.storage_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.get(self.Uri, headers=self.Headers)
+
+        if res.status_code == 200:
+            block.data = res.content
+            block.ref_modified = res.headers['X-Ref-Modified']
+            block.ref_count = res.headers['X-Block-Reference-Count']
+            block.block_id = res.headers['X-Block-ID']
+            return block
+        else:
+            raise RuntimeError(
+                'Failed to get Content for Storage Block Id: {0:}, Vault: {1:}'
+                'Error ({2:}): {3:}'.format(block.storage_id, vault.vault_id,
+                                            res.status_code,
+                                            res.text))
+
+    @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
+    def DeleteBlockStorage(self, vault, block):
+        """Delete a block directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param block: instance of deuce.api.block.Block
+        :return: True if expected status code is returned,
+                 Runtime Error raised if that's not the case.
+        """
+        url = api_v1.get_storage_block_path(vault.vault_id,
+                                            block.storage_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.delete(self.Uri, headers=self.Headers)
+        if res.status_code == 204:
+            return True
+        else:
+            raise RuntimeError(
+                'Failed to delete Block {0:} from BlockStorage, Vault {1:}'
+                'Error ({2:}): {3:}'.format(block.storage_id, vault.vault_id,
+                                            res.status_code,
+                                            res.text))
+
+    @validate(vault=VaultInstanceRule, marker=StorageBlockIdRuleNoneOkay,
+              limit=LimitRuleNoneOkay)
+    def GetBlockStorageList(self, vault, marker=None, limit=None):
+        """List blocks directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param marker: string
+        :param limit: string
+        :return: True if expected status code is returned,
+                 Runtime Error raised if that's not the case.
+        """
+        url = api_v1.get_storage_blocks_path(vault.vault_id)
+        if marker is not None or limit is not None:
+            # add the separator between the URL and the parameters
+            url = url + '?'
+
+            # Apply the marker
+            if marker is not None:
+                url = '{0:}marker={1:}'.format(url, marker)
+                # Apply a separator if the next item is not none
+                if limit is not None:
+                    url = url + '&'
+
+            # Apply the limit
+            if limit is not None:
+                url = '{0:}limit={1:}'.format(url, limit)
+
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.get(self.Uri, headers=self.Headers)
+
+        if res.status_code == 200:
+            block_list = api_storageblocks.StorageBlocks(
+                project_id=self.project_id,
+                vault_id=vault.vault_id)
+            blocks = {
+                storageblockid: api_block.Block(project_id=self.project_id,
+                                                vault_id=vault.vault_id,
+                                                storage_id=storageblockid,
+                                                block_type='storage')
+                for storageblockid in res.json()}
+            block_list.update(blocks)
+            vault.storageblocks.update(block_list)
+            return vault.storageblocks
+        else:
+            raise RuntimeError(
+                'Failed to get Block Storage list for Vault . '
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    @validate(vault=VaultInstanceRule, block=BlockInstanceRule)
+    def HeadBlockStorage(self, vault, block):
+        """Head a block directly from block storage
+
+        :param vault: instance of deuce.api.vault.Vault
+        :param block: instance of deuce.api.block.Block
+        :return: instance of deuce.api.block.Block if expected
+                 status code is returned, Runtime Error raised
+                 if that's not the case.
+        """
+
+        url = api_v1.get_storage_block_path(vault.vault_id,
+                                            block.storage_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data()
+        res = requests.head(self.Uri, headers=self.Headers)
+        if res.status_code == 204:
+            block.ref_modified = res.headers['X-Ref-Modified']
+            block.ref_count = res.headers['X-Block-Reference-Count']
+            block.block_id = None if res.headers['X-Block-ID'] == \
+                'None' else res.headers['X-Block-ID']
+            block.block_size = res.headers['X-Block-Size']
+            block.block_orphaned = \
+                json.loads(res.headers['X-Block-Orphaned'].lower())
+            return block
+        else:
+            raise RuntimeError(
+                'Failed to head Block {0:} from BlockStorage, Vault {1:}'
+                'Error ({2:}): {3:}'.format(block.storage_id, vault.vault_id,
+                                            res.status_code,
+                                            res.text))
