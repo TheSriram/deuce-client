@@ -103,6 +103,47 @@ class TestVaultRules(TestRulesBase):
                 self.normal_vault_id_with_none(case)
 
 
+class TestBlockTypes(TestRulesBase):
+
+    @validate(block=v.MetadataBlockType)
+    def utilize_metadata_block(self, block):
+        return True
+
+    @validate(block=v.StorageBlockType)
+    def utilize_storage_block(self, block):
+        return True
+
+    def setUp(self):
+
+        self.project_id = create_project_name()
+        self.vault_id = create_vault_name()
+
+        block_id, block_data, block_size = create_block()
+        self.metadata_block = api.Block(self.project_id,
+                                        self.vault_id,
+                                        block_id=block_id,
+                                        data=block_data,
+                                        block_type='metadata')
+        storage_id = create_storage_block(block_id)
+        self.storage_block = api.Block(self.project_id,
+                                       self.vault_id,
+                                       storage_id=storage_id,
+                                       data=block_data,
+                                       block_type='storage')
+
+    def test_metadata_block_type(self):
+        self.assertTrue(self.utilize_metadata_block(self.metadata_block))
+
+        with self.assertRaises(errors.InvalidMetadataBlockType):
+            self.utilize_metadata_block(self.storage_block)
+
+    def test_storage_block_type(self):
+        self.assertTrue(self.utilize_storage_block(self.storage_block))
+
+        with self.assertRaises(errors.InvalidStorageBlockType):
+            self.utilize_storage_block(self.metadata_block)
+
+
 class TestMetadataBlockRules(TestRulesBase):
 
     positive_cases = [
@@ -244,7 +285,7 @@ class TestMetadataBlockRules(TestRulesBase):
 
 class TestStorageBlockRules(TestRulesBase):
 
-    positive_cases = [str(uuid.uuid4()) for _ in range(0, 1000)]
+    positive_cases = [create_storage_block() for _ in range(0, 1000)]
 
     negative_cases = [
         '',
@@ -543,3 +584,34 @@ class TestLimitRules(TestRulesBase):
         for limit in negative_cases:
             with self.assertRaises(errors.ParameterConstraintError):
                 self.normal_limit_with_none(limit)
+
+
+class TestBoolRules(TestRulesBase):
+
+    positive_cases = [
+        True, False
+    ]
+
+    negative_cases = [
+        0, 1, None, 'alibaba'
+    ]
+
+    @validate(b=v.BoolRule)
+    def utilize_bool(self, b):
+        return True
+
+    def test_bool(self):
+        for b in self.__class__.positive_cases:
+            v.val_bool()(b)
+
+        for b in self.__class__.negative_cases:
+            with self.assertRaises(v.ValidationFailed):
+                v.val_bool()(b)
+
+    def test_bool_rule(self):
+        for b in self.__class__.positive_cases:
+            self.utilize_bool(b)
+
+        for b in self.__class__.negative_cases:
+            with self.assertRaises(errors.ParameterConstraintError):
+                self.utilize_bool(b)

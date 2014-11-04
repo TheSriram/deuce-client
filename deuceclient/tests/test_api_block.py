@@ -20,6 +20,11 @@ class BlockTest(TestCase):
         self.block = create_block()
         self.storage_id = create_storage_block()
 
+    def test_create_block_storageid_block_id_None(self):
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                            self.vault_id)
+
     def test_create_block(self):
         block = api.Block(self.project_id,
                           self.vault_id,
@@ -138,6 +143,51 @@ class BlockTest(TestCase):
         self.assertEqual(self.storage_id,
                          block.storage_id)
 
+    def test_set_block_type_invalid(self):
+        # Only accepted values for block_type are
+        # 'storage' and 'metadata'
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                              self.vault_id,
+                              storage_id=self.storage_id,
+                              block_type='bugs-bunny')
+
+    def test_update_block_storage_id_block_type_storage(self):
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          storage_id=self.storage_id,
+                          block_type='storage')
+
+        with self.assertRaises(ValueError):
+            block.storage_id = self.storage_id
+
+    def test_update_block_block_id_block_type_metadata(self):
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          block_id=self.block[0],
+                          block_type='metadata')
+
+        with self.assertRaises(ValueError):
+            block.block_id = self.block[0]
+
+    def test_block_block_id_block_type_storage(self):
+        # Block cannot be instantiated with block_type
+        # set to storage, if storage_id is None
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                              self.vault_id,
+                              block_id=self.block[0],
+                              block_type='storage')
+
+    def test_block_storage_id_block_type_metadata(self):
+        # Block cannot be instantiated with block_type
+        # set to metadata, if block_id is None
+        with self.assertRaises(ValueError):
+            block = api.Block(self.project_id,
+                              self.vault_id,
+                              storage_id=self.storage_id,
+                              block_type='metadata')
+
     def test_update_block_storage_id_invalid(self):
         block = api.Block(self.project_id,
                           self.vault_id,
@@ -241,3 +291,36 @@ class BlockTest(TestCase):
         self.assertIsNone(block.ref_modified)
         self.assertNotEqual(ref_modified,
                             block.ref_modified)
+
+    def test_modify_block_size(self):
+        block_size = 200
+        block = api.Block(self.project_id,
+                        self.vault_id,
+                        self.block[0],
+                        block_size=block_size)
+
+        self.assertIsNotNone(block.block_size)
+        self.assertEqual(block.block_size,
+                         block_size)
+
+        block.block_size = 300
+
+        self.assertIsNotNone(block.block_size)
+        self.assertNotEqual(block_size,
+                            block.ref_modified)
+
+    def test_modify_block_orphaned(self):
+        block_orphaned = False
+        block = api.Block(self.project_id,
+                        self.vault_id,
+                        self.block[0],
+                        block_orphaned=block_orphaned)
+
+        self.assertIsNotNone(block.block_orphaned)
+        self.assertEqual(block.block_orphaned,
+                         block_orphaned)
+
+        block.block_orphaned = True
+
+        self.assertIsNotNone(block.block_orphaned)
+        self.assertTrue(block.block_orphaned)

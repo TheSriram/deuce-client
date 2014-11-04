@@ -58,12 +58,29 @@ class InvalidApiObjectInstance(TypeError):
 
 
 class InvalidVaultInstance(InvalidApiObjectInstance):
-    """Invalid Vault Object Instnace
+    """Invalid Vault Object Instance
     """
     pass
 
 
 class InvalidBlockInstance(InvalidApiObjectInstance):
-    """Invalid Vault Object Instnace
+    """Invalid Block Object Instance
+    """
+    pass
+
+
+class InvalidBlockType(InvalidApiObjectInstance):
+    """Invalid Block Type
+    """
+    pass
+
+
+class InvalidStorageBlockType(InvalidBlockType):
+    """Invalid Storage Block Type
+    """
+    pass
+
+class InvalidMetadataBlockType(InvalidBlockType):
+    """Invalid Storage Block Type
     """
     pass

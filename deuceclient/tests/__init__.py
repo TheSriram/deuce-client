@@ -86,8 +86,18 @@ def get_blocks_url(apihost, vault):
     return 'https://{0}{1}'.format(apihost, get_blocks_path(vault))
 
 
+def get_storage_blocks_url(apihost, vault):
+    return 'https://{0}{1}'.format(apihost, get_storage_blocks_path(vault))
+
+
 def get_block_url(apihost, vault, block_id):
     return 'https://{0}{1}'.format(apihost, get_block_path(vault, block_id))
+
+
+def get_storage_block_url(apihost, vault, storage_block_id):
+    return 'https://{0}{1}'.format(apihost,
+                                   get_storage_block_path(vault,
+                                                          storage_block_id))
 
 
 def get_files_url(apihost, vault):
@@ -105,9 +115,9 @@ def get_file_blocks_url(apihost, vault, file_id):
 
 def get_file_block_url(apihost, vault, file_id, block_id):
     return 'https://{0}{1}'.format(apihost,
-                                   get_file_block_path(vault,
-                                                       file_id,
-                                                       block_id))
+                                   get_fileblock_path(vault,
+                                                      file_id,
+                                                      block_id))
 
 
 def get_block_id(data):
@@ -126,7 +136,7 @@ def create_blocks(block_count=1, block_size=100, uniform_sizes=False,
                   min_size=1, max_size=2000):
     block_sizes = []
     if uniform_sizes:
-        block_sizes = [blocksize for _ in range(block_count)]
+        block_sizes = [block_size for _ in range(block_count)]
     else:
         block_sizes = [random.randrange(min_size, max_size)
                        for block_size in range(block_count)]
@@ -138,8 +148,10 @@ def create_file():
     return '{0}'.format(str(uuid.uuid4()))
 
 
-def create_storage_block():
-    return '{0}'.format(str(uuid.uuid4()))
+def create_storage_block(block_id=None):
+    if not block_id:
+        block_id = hashlib.sha1(bytes(random.randrange(1000))).hexdigest()
+    return '{0}_{1}'.format(block_id, str(uuid.uuid4()))
 
 
 class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
@@ -190,7 +202,7 @@ class FakeAuthenticator(deuceclient.auth.base.AuthenticationBase):
             return self.GetToken()
 
         else:
-            return self.__access.auth_token
+            return self.__token_data['token']
 
     def _AuthTenantId(self):
         return self.__tenantid

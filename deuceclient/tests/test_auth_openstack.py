@@ -91,6 +91,7 @@ class FakeAccess(object):
         else:
             return 'token_{0:}'.format(str(uuid.uuid4()))
 
+    @property
     def expires(self):
         if self.__class__.expire_time is None:
             print('Raising exception')
@@ -374,7 +375,7 @@ class OpenStackAuthTest(TestCase,
 
                 self.assertIn('auth_method', str(auth_error))
 
-    def test_get_token_invalid_client(self):
+    def test_get_token_invalid_client_username_password(self):
         usertype = 'user_name'
         username = self.create_username()
 
@@ -393,6 +394,33 @@ class OpenStackAuthTest(TestCase,
             authengine = self.create_authengine(userid=username,
                                                 usertype=usertype,
                                                 credentials=apikey,
+                                                auth_method=auth_method,
+                                                datacenter=datacenter,
+                                                auth_url=auth_url)
+
+            with self.assertRaises(deuceclient.auth.AuthenticationError) \
+                    as auth_error:
+                authengine.GetToken(retry=0)
+
+    def test_get_token_invalid_client_tenant_id_token(self):
+        usertype = 'tenant_id'
+        username = self.create_tenant_id()
+
+        token = self.create_token()
+        auth_method = 'token'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        with mock.patch(
+            'deuceclient.auth.openstackauth.OpenStackAuthentication.get_client'
+        ) as mok_get_client:
+            mok_get_client.side_effect = \
+                deuceclient.auth.AuthenticationError('mock')
+
+            authengine = self.create_authengine(userid=username,
+                                                usertype=usertype,
+                                                credentials=token,
                                                 auth_method=auth_method,
                                                 datacenter=datacenter,
                                                 auth_url=auth_url)
@@ -459,7 +487,7 @@ class OpenStackAuthTest(TestCase,
                     as auth_error:
                 authengine.GetToken(retry=FakeAccess.raise_until - 1)
 
-    def test_get_token_success(self):
+    def test_get_token_success_username_password(self):
         usertype = 'user_name'
         username = self.create_username()
 
@@ -509,6 +537,62 @@ class OpenStackAuthTest(TestCase,
             authengine = self.create_authengine(userid=username,
                                                 usertype=usertype,
                                                 credentials=apikey,
+                                                auth_method=auth_method,
+                                                datacenter=datacenter,
+                                                auth_url=auth_url)
+
+            token = authengine.GetToken(retry=FakeAccess.raise_until)
+
+    def test_get_token_success_tenantid_token(self):
+        usertype = 'tenant_id'
+        username = self.create_tenant_id()
+
+        token = self.create_token()
+        auth_method = 'token'
+
+        datacenter = 'test'
+        auth_url = 'http://identity.api.rackspacecloud.com'
+
+        # Because the mock strings are so long, we're going to store them
+        # in variables here to keep the mocking statements short
+        mok_ky_base = 'keystoneclient'
+
+        mok_ky_httpclient = '{0:}.httpclient.HTTPClient'.format(mok_ky_base)
+        mok_ky_auth = '{0:}.authenticate'.format(mok_ky_httpclient)
+
+        mok_ky_v2_client = '{0:}.v2_0.client.Client'.format(mok_ky_base)
+        mok_ky_v2_rawtoken = '{0:}.get_raw_token_from_identity_service'\
+            .format(mok_ky_v2_client)
+
+        mok_ky_discover = '{0:}.discover'.format(mok_ky_base)
+        mok_ky_discovery = '{0:}.Discover'.format(mok_ky_discover)
+        mok_ky_discovery_init = '{0:}.__init__'.format(mok_ky_discovery)
+        mok_ky_discover_client = '{0:}.create_client'.format(mok_ky_discovery)
+
+        mok_ky_discover_int = '{0:}._discover'.format(mok_ky_base)
+        mok_ky_discover_version = '{0:}.get_version_data'\
+            .format(mok_ky_discover_int)
+
+        with mock.patch(mok_ky_auth) as keystone_auth_mock,\
+                mock.patch(mok_ky_v2_client) as keystone_v2_client,\
+                mock.patch(mok_ky_v2_rawtoken) as keystone_raw_token_mock,\
+                mock.patch(mok_ky_discover_version) as keystone_discover_ver,\
+                mock.patch(mok_ky_discover_client) as keystone_discover_cli:
+
+            keystone_auth_mock.return_value = True
+
+            keystone_discover_ver.return_value = \
+                self.keystone_discovery_version_data
+            keystone_discover_cli.return_value = FakeClient()
+            keystone_v2_client.return_value = FakeClient()
+
+            FakeAccess.raise_until = 4
+            FakeAccess.raise_counter = 0
+            keystone_raw_token_mock.return_value = FakeAccess()
+
+            authengine = self.create_authengine(userid=username,
+                                                usertype=usertype,
+                                                credentials=token,
                                                 auth_method=auth_method,
                                                 datacenter=datacenter,
                                                 auth_url=auth_url)
@@ -802,12 +886,12 @@ class OpenStackAuthTest(TestCase,
 
             token = authengine.GetToken(retry=FakeAccess.raise_until)
             FakeAccess.expire_time = None
-            expire_time = authengine.AuthExpirationTime()
+            expire_time = authengine.AuthExpirationTime
             self.assertIsNotNone(expire_time)
 
             FakeAccess.expire_time = 'howdy'
 
-            expire_time = authengine.AuthExpirationTime()
+            expire_time = authengine.AuthExpirationTime
             self.assertEqual(expire_time, FakeAccess.expire_time)
 
             FakeAccess.expire_time = None
