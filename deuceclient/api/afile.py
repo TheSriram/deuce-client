@@ -115,6 +115,9 @@ class File(object):
         else:
             base_offset = len(self)
 
+        added_blocks = []
         for block_offset, block in splitter.get_blocks(count):
             self.add_block(block)
             self.assign_block(block.block_id, block_offset)
+            added_blocks.append((block, block_offset))
+        return added_blocks

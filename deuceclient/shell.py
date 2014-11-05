@@ -14,6 +14,7 @@ import deuceclient.auth.nonauth as noauth
 import deuceclient.auth.openstackauth as openstackauth
 import deuceclient.auth.rackspaceauth as rackspaceauth
 import deuceclient.client.deuce as client
+import deuceclient.utils
 
 
 class ProgramArgumentError(ValueError):
@@ -256,6 +257,34 @@ def file_create(log, arguments):
         print('Error: {0}'.format(str(ex)))
 
 
+def file_upload(log, arguments):
+    """
+    Upload a file
+    """
+    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        file_id = arguments.file_id
+        if file_id is None:
+            file_id = deuceclient.CreateFile(vault)
+        else:
+            vault.add_file(file_id)
+
+        file_splitter = UniformSplitter(vault.project_id,
+                                        vault.vault_id,
+                                        arguments.content)
+        while True:
+            block_list = vault.files[file_id].assign_from_data_source(
+                file_splitter, append=True, count=10)
+            if len(block_list):
+                deuceclient.
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
+
+
 """
 Disabling - underlying functionality relies on being able to have actual
             blocks in the local Vault object
@@ -382,6 +411,24 @@ def main():
 
     file_create_parser = file_subparsers.add_parser('create')
     file_create_parser.set_defaults(func=file_create)
+
+    file_upload_parser = file_subparsers.add_parser('upload')
+    file_upload_parser.add_argument('--file-id',
+                                    default=None,
+                                    required=False,
+                                    type=str,
+                                    help='File ID in the Vault for the new '
+                                    'file. One will be created if not '
+                                    'specified.')
+    file_upload_parser.add_argument('--content',
+                                    default=None,
+                                    required=True,
+                                    type=argparser.FileType('r'),
+                                    help='File to upload')
+    file_upload_parser.set_defaults(func=file_upload)
+
+    # file_upload_parser = file_subparsers.add_parser('delete')
+    # file_upload_parser.set_defaults(func=file_delete)
 
     """
     file_assign_parser = file_subparsers.add_parser('assign_data')

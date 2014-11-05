@@ -82,3 +82,20 @@ class VaultTest(TestCase):
         vault.statistics = statistic
 
         self.assertEqual(statistic, vault.statistics)
+
+    def test_add_file(self):
+
+        file_id = create_file()
+
+        vault = api.Vault(self.project_id, self.vault_id)
+
+        vault.add_file(file_id)
+
+    def test_add_file_failure(self):
+
+        file_id = 'wax-on-wax-off'
+
+        vault = api.Vault(self.project_id, self.vault_id)
+
+        with self.assertRaises(errors.InvalidFiles):
+            vault.add_file(file_id)

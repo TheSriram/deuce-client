@@ -34,12 +34,12 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
+            # block = api.Block(project_id=self.vault.project_id,
+            #                  vault_id=self.vault.vault_id,
+            #                  block_id=block_id,
+            #                  data=block_data)
+            # self.vault.blocks[block_id] = block
+            # self.vault.files[file_id].blocks[block_id] = block
             self.vault.files[file_id].offsets[running_offset] = block_id
 
             block_list.append((block_id, running_offset))
@@ -49,9 +49,9 @@ class ClientDeuceFileTests(ClientTestBase):
         data = ['status']
 
         httpretty.register_uri(httpretty.POST,
-                               get_file_url(self.apihost,
-                                            self.vault.vault_id,
-                                            file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=200)
 
@@ -74,12 +74,12 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
+            # block = api.Block(project_id=self.vault.project_id,
+            #                  vault_id=self.vault.vault_id,
+            #                  block_id=block_id,
+            #                  data=block_data)
+            # self.vault.blocks[block_id] = block
+            # self.vault.files[file_id].blocks[block_id] = block
             self.vault.files[file_id].offsets[running_offset] = block_id
 
             running_offset = running_offset + block_size
@@ -87,9 +87,9 @@ class ClientDeuceFileTests(ClientTestBase):
         data = ['status']
 
         httpretty.register_uri(httpretty.POST,
-                               get_file_url(self.apihost,
-                                            self.vault.vault_id,
-                                            file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                body=json.dumps(data),
                                status=200)
 
@@ -158,6 +158,7 @@ class ClientDeuceFileTests(ClientTestBase):
                                       file_id,
                                       block_list)
 
+    """
     @httpretty.activate
     def test_file_assign_blocks_not_in_vault_blocklist(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
@@ -221,6 +222,7 @@ class ClientDeuceFileTests(ClientTestBase):
             client.AssignBlocksToFile(self.vault,
                                       file_id,
                                       block_list)
+    """
 
     @httpretty.activate
     def test_file_assign_blocks_not_in_files_offsetlist(self):
@@ -238,12 +240,12 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
+            # block = api.Block(project_id=self.vault.project_id,
+            #                  vault_id=self.vault.vault_id,
+            #                  block_id=block_id,
+            #                  data=block_data)
+            # self.vault.blocks[block_id] = block
+            # self.vault.files[file_id].blocks[block_id] = block
 
             block_list.append((block_id, running_offset))
 
@@ -270,12 +272,12 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
+            # block = api.Block(project_id=self.vault.project_id,
+            #                  vault_id=self.vault.vault_id,
+            #                  block_id=block_id,
+            #                  data=block_data)
+            # self.vault.blocks[block_id] = block
+            # self.vault.files[file_id].blocks[block_id] = block
             block_id2, block_data2, block_size2 = create_block()
 
             self.vault.files[file_id].offsets[running_offset] = block_id2
@@ -303,12 +305,12 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
+            # block = api.Block(project_id=self.vault.project_id,
+            #                  vault_id=self.vault.vault_id,
+            #                  block_id=block_id,
+            #                  data=block_data)
+            # self.vault.blocks[block_id] = block
+            # self.vault.files[file_id].blocks[block_id] = block
 
             running_offset = running_offset + block_size
 
@@ -316,6 +318,7 @@ class ClientDeuceFileTests(ClientTestBase):
             client.AssignBlocksToFile(self.vault,
                                       file_id)
 
+    """Disabled Test - not sure it's valid any more
     @httpretty.activate
     def test_file_assign_blocks_no_blocklist_no_fileblocks(self):
         client = deuceclient.client.deuce.DeuceClient(self.authenticator,
@@ -330,11 +333,11 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
+            # block = api.Block(project_id=self.vault.project_id,
+            #                   vault_id=self.vault.vault_id,
+            #                   block_id=block_id,
+            #                  data=block_data)
+            # self.vault.blocks[block_id] = block
 
             self.vault.files[file_id].offsets[running_offset] = block_id
 
@@ -358,12 +361,6 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
 
             block_id2, block_data2, block_size2 = create_block()
 
@@ -374,6 +371,7 @@ class ClientDeuceFileTests(ClientTestBase):
         with self.assertRaises(KeyError):
             client.AssignBlocksToFile(self.vault,
                                       file_id)
+    """
 
     @httpretty.activate
     def test_file_assign_blocks_failed(self):
@@ -390,12 +388,6 @@ class ClientDeuceFileTests(ClientTestBase):
 
         running_offset = 0
         for block_id, block_data, block_size in create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].blocks[block_id] = block
             self.vault.files[file_id].offsets[running_offset] = block_id
 
             block_list.append((block_id, running_offset))
@@ -403,9 +395,9 @@ class ClientDeuceFileTests(ClientTestBase):
             running_offset = running_offset + block_size
 
         httpretty.register_uri(httpretty.POST,
-                               get_file_url(self.apihost,
-                                            self.vault.vault_id,
-                                            file_id),
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
