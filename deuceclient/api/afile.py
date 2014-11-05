@@ -4,6 +4,7 @@ Deuce Client - File API
 from stoplight import validate
 
 from deuceclient.api.blocks import Blocks
+from deuceclient.api.splitter import FileSplitterBase
 from deuceclient.common.validation import *
 
 
@@ -20,8 +21,27 @@ class File(object):
             'blocks': Blocks(project_id=project_id,
                              vault_id=vault_id),
             'offsets': {},
+            'maximum_offset': 0,
             'url': url
         }
+
+    @validate(offset=OffsetNumericRule)
+    def _update_maximum_offset(self, offset):
+        self.__properties['maximum_offset'] = max(
+            self.__properties['maximum_offset'],
+            offset)
+
+    def __len__(self):
+        returnValue = 0
+        if len(self.offsets):
+            returnValue = self.__properties['maximum_offset']
+            try:
+                block_at_offset = self.get_block_for_offset(returnValue)
+                the_block = self.blocks[block_at_offset]
+                returnValue = returnValue + len(the_block)
+            except KeyError:
+                pass
+        return returnValue
 
     @property
     def project_id(self):
@@ -52,10 +72,16 @@ class File(object):
     def offsets(self):
         return self.__properties['offsets']
 
+    @validate(block=MetadataBlockType)
+    def add_block(self, block):
+        if block.block_id not in self.blocks:
+            self.blocks[block.block_id] = block
+
     @validate(block_id=MetadataBlockIdRule, offset=FileBlockOffsetRule)
     def assign_block(self, block_id, offset):
         if block_id in self.blocks:
             self.offsets[str(offset)] = block_id
+            self._update_maximum_offset(offset)
         else:
             raise errors.InvalidBlocks(
                 'Unable to find block id {0} for file {1}'.format(
@@ -72,3 +98,23 @@ class File(object):
             if block == block_id:
                 offsets.append(int(offset))
         return offsets
+
+    @validate(append=BoolRule,
+              count=IntRule)
+    def assign_from_data_source(self, splitter, append=False, count=1):
+        if not isinstance(splitter, FileSplitterBase):
+            raise errors.InvalidFileSplitterType(
+                'splitter must be deuceclient.api.splitter.FileSplitterBase')
+
+        base_offset = 0
+
+        if not append:
+            if len(self.blocks):
+                raise errors.InvalidContentError('File has data already')
+
+        else:
+            base_offset = len(self)
+
+        for block_offset, block in splitter.get_blocks(count):
+            self.add_block(block)
+            self.assign_block(block.block_id, block_offset)

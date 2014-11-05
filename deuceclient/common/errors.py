@@ -51,6 +51,12 @@ class IterableContentError(DeuceClientExceptions):
     pass
 
 
+class InvalidContentError(DeuceClientExceptions):
+    """Content of object is invalid for desired operation
+    """
+    pass
+
+
 class InvalidApiObjectInstance(TypeError):
     """Parameter Type Error
     """
@@ -83,5 +89,11 @@ class InvalidStorageBlockType(InvalidBlockType):
 
 class InvalidMetadataBlockType(InvalidBlockType):
     """Invalid Storage Block Type
+    """
+    pass
+
+
+class InvalidFileSplitterType(InvalidApiObjectInstance):
+    """Invalid File Splitter Type
     """
     pass

@@ -10,6 +10,7 @@ import deuceclient.api as api
 import deuceclient.common.validation_instance as val_instance
 import deuceclient.common.errors as errors
 from deuceclient.tests import *
+from deuceclient.utils import UniformSplitter
 
 
 class ValidationInstanceTests(TestCase):
@@ -48,3 +49,16 @@ class ValidationInstanceTests(TestCase):
 
         with self.assertRaises(errors.InvalidBlockInstance):
             check_block(block.block_id)
+
+    def test_file_splitter_instance(self):
+        reader = make_reader(100, null_data=True)
+        splitter = UniformSplitter(self.project_id, self.vault_id, reader)
+
+        @validate(value=val_instance.FileSplitterInstanceRule)
+        def check_splitter(value):
+            return True
+
+        self.assertTrue(check_splitter(splitter))
+
+        with self.assertRaises(errors.InvalidFileSplitterType):
+            check_splitter(self.project_id)

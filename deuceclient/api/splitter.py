@@ -5,7 +5,7 @@ import abc
 
 from stoplight import validate
 
-from deuceclient.api import Block, Blocks
+from deuceclient.api.block import Block
 from deuceclient.common import errors
 from deuceclient.common.validation import *
 
@@ -56,10 +56,11 @@ class FileSplitterBase(object):
         else:
             raise RuntimeError('Invalid state to set new input_stream')
 
+    @validate(count=IntRule)
     def get_blocks(self, count):
         """Get a series of blocks
 
-        :returns: api.Blocks containing the data
+        :returns: list of tuples containing the offset and block
         """
         blocks = []
 
