@@ -15,15 +15,15 @@ class ClientDeuceBlockTests(ClientTestBase):
     def setUp(self):
         super(ClientDeuceBlockTests, self).setUp()
 
+        self.client = deuceclient.client.deuce.DeuceClient(self.authenticator,
+                                                           self.apihost,
+                                                           sslenabled=True)
+
     def tearDown(self):
         super(ClientDeuceBlockTests, self).tearDown()
 
     @httpretty.activate
     def test_block_list(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
 
@@ -34,16 +34,12 @@ class ClientDeuceBlockTests(ClientTestBase):
                                body=expected_data,
                                status=200)
 
-        self.assertTrue(client.GetBlockList(self.vault))
+        self.assertTrue(self.client.GetBlockList(self.vault))
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_with_marker(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         block_id, block_data, block_size = create_block()
 
         data = [block[0] for block in create_blocks(block_count=1)]
@@ -56,16 +52,12 @@ class ClientDeuceBlockTests(ClientTestBase):
                                body=expected_data,
                                status=200)
 
-        self.assertTrue(client.GetBlockList(self.vault, marker=block_id))
+        self.assertTrue(self.client.GetBlockList(self.vault, marker=block_id))
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_with_marker_and_limit(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         block_id, block_data, block_size = create_block()
 
         data = [block[0] for block in create_blocks(block_count=5)]
@@ -78,19 +70,15 @@ class ClientDeuceBlockTests(ClientTestBase):
                                body=expected_data,
                                status=200)
 
-        self.assertTrue(client.GetBlockList(self.vault,
-                                            marker=block_id,
-                                            limit=5))
+        self.assertTrue(self.client.GetBlockList(self.vault,
+                                                 marker=block_id,
+                                                 limit=5))
         self.assertEqual(len(data), len(self.vault.blocks))
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
     @httpretty.activate
     def test_block_list_with_limit(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         data = [block[0] for block in create_blocks(block_count=5)]
         expected_data = json.dumps(data)
 
@@ -101,29 +89,21 @@ class ClientDeuceBlockTests(ClientTestBase):
                                body=expected_data,
                                status=200)
 
-        self.assertTrue(client.GetBlockList(self.vault, limit=5))
+        self.assertTrue(self.client.GetBlockList(self.vault, limit=5))
         self.assertEqual(5, len(self.vault.blocks))
         self.assertEqual(len(data), len(self.vault.blocks))
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
     def test_block_list_bad_vault(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
 
         with self.assertRaises(TypeError):
-            client.GetBlockList(self.vault.vault_id)
+            self.client.GetBlockList(self.vault.vault_id)
 
     @httpretty.activate
     def test_block_list_failure(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         httpretty.register_uri(httpretty.GET,
                                get_blocks_url(self.apihost,
                                               self.vault.vault_id),
@@ -132,14 +112,10 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as stats_error:
-            client.GetBlockList(self.vault)
+            self.client.GetBlockList(self.vault)
 
     @httpretty.activate
     def test_blocks_upload(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blocks = []
         for block_id, blockdata, block_size in [create_block()
                                                 for _ in range(5)]:
@@ -155,27 +131,19 @@ class ClientDeuceBlockTests(ClientTestBase):
                                               self.vault.vault_id),
                                status=201)
 
-        self.assertTrue(client.UploadBlocks(self.vault, blocks))
+        self.assertTrue(self.client.UploadBlocks(self.vault, blocks))
 
     def test_blocks_upload_no_blocks_in_vault(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blocks = []
         for block_id, blockdata, block_size in [create_block()
                                                 for _ in range(5)]:
             blocks.append(block_id)
 
         with self.assertRaises(KeyError):
-            client.UploadBlocks(self.vault, blocks)
+            self.client.UploadBlocks(self.vault, blocks)
 
     @httpretty.activate
     def test_blocks_upload_failed(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blocks = []
         for block_id, blockdata, block_size in [create_block()
                                                 for _ in range(5)]:
@@ -192,14 +160,10 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=404)
 
         with self.assertRaises(RuntimeError):
-            client.UploadBlocks(self.vault, blocks)
+            self.client.UploadBlocks(self.vault, blocks)
 
     @httpretty.activate
     def test_block_upload(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -212,13 +176,9 @@ class ClientDeuceBlockTests(ClientTestBase):
                                              block_id),
                                status=201)
 
-        self.assertTrue(client.UploadBlock(self.vault, block))
+        self.assertTrue(self.client.UploadBlock(self.vault, block))
 
     def test_block_upload_bad_vault(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -226,13 +186,9 @@ class ClientDeuceBlockTests(ClientTestBase):
                           data=blockdata)
 
         with self.assertRaises(TypeError):
-            client.UploadBlock(self.vault.vault_id, block)
+            self.client.UploadBlock(self.vault.vault_id, block)
 
     def test_block_upload_bad_block(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -240,14 +196,10 @@ class ClientDeuceBlockTests(ClientTestBase):
                           data=blockdata)
 
         with self.assertRaises(TypeError):
-            client.UploadBlock(self.vault, block.block_id)
+            self.client.UploadBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_upload_failed(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -261,14 +213,10 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as upload_error:
-            client.UploadBlock(self.vault, block)
+            self.client.UploadBlock(self.vault, block)
 
     @httpretty.activate
     def test_block_deletion(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -281,13 +229,9 @@ class ClientDeuceBlockTests(ClientTestBase):
                                              blockid),
                                status=204)
 
-        self.assertTrue(client.DeleteBlock(self.vault, block))
+        self.assertTrue(self.client.DeleteBlock(self.vault, block))
 
     def test_block_deletion_bad_vault(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -295,13 +239,9 @@ class ClientDeuceBlockTests(ClientTestBase):
                           data=blockdata)
 
         with self.assertRaises(TypeError):
-            client.DeleteBlock(self.vault.vault_id, block)
+            self.client.DeleteBlock(self.vault.vault_id, block)
 
     def test_block_deletion_bad_block(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -309,14 +249,10 @@ class ClientDeuceBlockTests(ClientTestBase):
                           data=blockdata)
 
         with self.assertRaises(TypeError):
-            client.DeleteBlock(self.vault, block.block_id)
+            self.client.DeleteBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_deletion_failed(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -332,14 +268,10 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.DeleteBlock(self.vault, block)
+            self.client.DeleteBlock(self.vault, block)
 
     @httpretty.activate
     def test_block_download(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -353,41 +285,29 @@ class ClientDeuceBlockTests(ClientTestBase):
                                body=blockdata,
                                status=200)
 
-        self.assertTrue(client.DownloadBlock(self.vault, block))
+        self.assertTrue(self.client.DownloadBlock(self.vault, block))
         self.assertEqual(block.data, blockdata)
 
     def test_block_download_bad_vault(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
                           block_id=blockid)
 
         with self.assertRaises(TypeError):
-            client.DownloadBlock(self.vault.vault_id, block)
+            self.client.DownloadBlock(self.vault.vault_id, block)
 
     def test_block_download_bad_block(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
                           block_id=blockid)
 
         with self.assertRaises(TypeError):
-            client.DownloadBlock(self.vault, block.block_id)
+            self.client.DownloadBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_download_failed(self):
-        client = deuceclient.client.deuce.DeuceClient(self.authenticator,
-                                                      self.apihost,
-                                                      sslenabled=True)
-
         blockid, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
@@ -402,4 +322,4 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
-            client.DownloadBlock(self.vault, block)
+            self.client.DownloadBlock(self.vault, block)
