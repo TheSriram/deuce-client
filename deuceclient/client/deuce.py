@@ -66,13 +66,20 @@ class DeuceClient(Command):
             self.log.debug('Response from %s', fn)
 
         self.log.debug('status: %s', response.status_code)
+        self.log.debug('json data: %s', jsondata)
         if jsondata:
             try:
                 self.log.debug('content: %s', response.json())
             except:
                 self.log.debug('content: %s', response.text)
         else:
-            self.log.debug('content: %s', response.text)
+            if response.text:
+                if len(response.text):
+                    self.log.debug('content: %s', response.text)
+                else:  # pragma: no cover
+                    self.log.debug('content: zero-length')
+            else:
+                self.log.debug('content: NONE')
 
     @property
     def project_id(self):
@@ -458,11 +465,11 @@ class DeuceClient(Command):
             if len(block_ids) == 0:
                 raise ValueError('block_ids must be iterable')
             for block_id, offset in block_ids:
-                if offset not in vault.files[file_id].offsets:
+                if str(offset) not in vault.files[file_id].offsets:
                     raise KeyError(
                         'block offset {0} must be assigned in the File'.
-                        format(block_id[1]))
-                if vault.files[file_id].offsets[offset] != block_id:
+                        format(offset))
+                if vault.files[file_id].offsets[str(offset)] != block_id:
                     raise ValueError(
                         'specified offset {0} must match the block {1}'.
                         format(offset, block_id))

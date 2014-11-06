@@ -14,7 +14,7 @@ import deuceclient.auth.nonauth as noauth
 import deuceclient.auth.openstackauth as openstackauth
 import deuceclient.auth.rackspaceauth as rackspaceauth
 import deuceclient.client.deuce as client
-import deuceclient.utils
+import deuceclient.utils as utils
 
 
 class ProgramArgumentError(ValueError):
@@ -272,18 +272,31 @@ def file_upload(log, arguments):
         else:
             vault.add_file(file_id)
 
-        file_splitter = UniformSplitter(vault.project_id,
-                                        vault.vault_id,
-                                        arguments.content)
+        file_splitter = utils.UniformSplitter(vault.project_id,
+                                              vault.vault_id,
+                                              arguments.content)
+
         while True:
+
             block_list = vault.files[file_id].assign_from_data_source(
                 file_splitter, append=True, count=10)
+
             if len(block_list):
-                blocks_to_upload = deuceclient.AssignBlocksToFile(vault,
-                                                                  file_id,
-                                                                  block_list)
+                assignment_list = []
+
+                for block, block_offset in block_list:
+                    assignment_list.append((block.block_id, block_offset))
+
+                blocks_to_upload = \
+                    deuceclient.AssignBlocksToFile(vault,
+                                                   file_id,
+                                                   assignment_list)
 
                 if len(blocks_to_upload):
+                    for block, offset in block_list:
+                        if block.block_id in blocks_to_upload:
+                            vault.blocks[block.block_id] = block
+
                     deuceclient.UploadBlocks(vault, blocks_to_upload)
 
             else:
@@ -291,34 +304,14 @@ def file_upload(log, arguments):
 
         deuceclient.FinalizeFile(vault, file_id)
 
+        file_url = vault.files[file_id].url
+
+        print('Uploaded File')
+        print('\tFile ID: {0}'.format(file_id))
+        print('\tURL: {0}'.format(file_url))
+
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
-
-
-"""
-Disabling - underlying functionality relies on being able to have actual
-            blocks in the local Vault object
-def file_assign_blocks(log, arguments):
-    " " "
-    Assign blocks to a file
-    NEED to check the way value is passed in the command line,
-    right now it does not accept it.
-    " " "
-    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
-
-    try:
-        vault = deuceclient.GetVault(arguments.vault_name)
-
-        for
-
-    except Exception as ex:
-        print('Error: {0}'.format(str(ex))
-
-    result = deuceclient.AssignBlocksToFile(arguments.vaultname,
-                                            arguments.fileid,
-                                            arguments.value)
-    print(result)
-"""
 
 
 def main():
@@ -433,28 +426,12 @@ def main():
     file_upload_parser.add_argument('--content',
                                     default=None,
                                     required=True,
-                                    type=argparser.FileType('r'),
+                                    type=argparse.FileType('rb'),
                                     help='File to upload')
     file_upload_parser.set_defaults(func=file_upload)
 
-    # file_upload_parser = file_subparsers.add_parser('delete')
-    # file_upload_parser.set_defaults(func=file_delete)
-
-    """
-    file_assign_parser = file_subparsers.add_parser('assign_data')
-    file_assign_parser.add_argument('--fileid',
-                                    default=None,
-                                    required=True,
-                                    type=str,
-                                    help="File to assign it to.")
-    file_assign_parser.add_argument('--value',
-                                    default=None,
-                                    required=True,
-                                    type=dict,
-                                    help="Value passed in as a dict of tuples"
-                                         "(blockid, offset, size)")
-    file_assign_parser.set_defaults(func=file_assign_blocks)
-    """
+    # file_delete_parser = file_subparsers.add_parser('delete')
+    # file_delete_parser.set_defaults(func=file_delete)
 
     arguments = arg_parser.parse_args()
 

@@ -77,3 +77,17 @@ class ClientDeuceInitTests(ClientTestBase):
         self.client._DeuceClient__log_response_data(response,
                                                     jsondata=False,
                                                     fn='shortcake')
+
+    @httpretty.activate
+    def test_log_response_zero_length_content(self):
+        resp_uri = 'http://log.response/'
+
+        httpretty.register_uri(httpretty.GET,
+                               resp_uri,
+                               content_type="application/json",
+                               body='',
+                               status=200)
+        response = requests.get(resp_uri)
+        self.client._DeuceClient__log_response_data(response,
+                                                    jsondata=False,
+                                                    fn='bears')

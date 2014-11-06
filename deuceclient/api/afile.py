@@ -41,6 +41,7 @@ class File(object):
                 returnValue = returnValue + len(the_block)
             except KeyError:
                 pass
+
         return returnValue
 
     @property
@@ -79,13 +80,8 @@ class File(object):
 
     @validate(block_id=MetadataBlockIdRule, offset=FileBlockOffsetRule)
     def assign_block(self, block_id, offset):
-        if block_id in self.blocks:
-            self.offsets[str(offset)] = block_id
-            self._update_maximum_offset(offset)
-        else:
-            raise errors.InvalidBlocks(
-                'Unable to find block id {0} for file {1}'.format(
-                    self.file_id, block_id))
+        self.offsets[str(offset)] = block_id
+        self._update_maximum_offset(offset)
 
     @validate(offset=FileBlockOffsetRule)
     def get_block_for_offset(self, offset):
@@ -112,12 +108,16 @@ class File(object):
             if len(self.blocks):
                 raise errors.InvalidContentError('File has data already')
 
-        else:
-            base_offset = len(self)
-
         added_blocks = []
         for block_offset, block in splitter.get_blocks(count):
+
             self.add_block(block)
-            self.assign_block(block.block_id, block_offset)
-            added_blocks.append((block, block_offset))
+
+            if append:
+                actual_offset = len(self)
+            else:
+                actual_offset = block_offset
+
+            self.assign_block(block.block_id, actual_offset)
+            added_blocks.append((block, actual_offset))
         return added_blocks

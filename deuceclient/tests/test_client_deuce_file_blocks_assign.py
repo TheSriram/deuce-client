@@ -33,13 +33,7 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            # block = api.Block(project_id=self.vault.project_id,
-            #                  vault_id=self.vault.vault_id,
-            #                  block_id=block_id,
-            #                  data=block_data)
-            # self.vault.blocks[block_id] = block
-            # self.vault.files[file_id].blocks[block_id] = block
-            self.vault.files[file_id].offsets[running_offset] = block_id
+            self.vault.files[file_id].offsets[str(running_offset)] = block_id
 
             block_list.append((block_id, running_offset))
 
@@ -69,13 +63,7 @@ class ClientDeuceFileTests(ClientTestBase):
         running_offset = 0
         for block_id, block_data, block_size in \
                 create_blocks(5):
-            # block = api.Block(project_id=self.vault.project_id,
-            #                  vault_id=self.vault.vault_id,
-            #                  block_id=block_id,
-            #                  data=block_data)
-            # self.vault.blocks[block_id] = block
-            # self.vault.files[file_id].blocks[block_id] = block
-            self.vault.files[file_id].offsets[running_offset] = block_id
+            self.vault.files[file_id].offsets[str(running_offset)] = block_id
 
             running_offset = running_offset + block_size
 
@@ -137,64 +125,6 @@ class ClientDeuceFileTests(ClientTestBase):
                                            file_id,
                                            block_list)
 
-    """
-    @httpretty.activate
-    def test_file_assign_blocks_not_in_vault_blocklist(self):
-        file_id = create_file()
-        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
-                                             vault_id=self.vault.vault_id,
-                                             file_id=file_id)
-
-        block_list = []
-
-        running_offset = 0
-        for block_id, block_data, block_size in \
-                create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.files[file_id].blocks[block_id] = block
-            self.vault.files[file_id].offsets[running_offset] = block_id
-
-            block_list.append((block_id, running_offset))
-
-            running_offset = running_offset + block_size
-
-        with self.assertRaises(KeyError):
-            self.client.AssignBlocksToFile(self.vault,
-                                           file_id,
-                                           block_list)
-
-    @httpretty.activate
-    def test_file_assign_blocks_not_in_files_blocklist(self):
-        file_id = create_file()
-        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
-                                             vault_id=self.vault.vault_id,
-                                             file_id=file_id)
-
-        block_list = []
-
-        running_offset = 0
-        for block_id, block_data, block_size in \
-                create_blocks(5):
-            block = api.Block(project_id=self.vault.project_id,
-                              vault_id=self.vault.vault_id,
-                              block_id=block_id,
-                              data=block_data)
-            self.vault.blocks[block_id] = block
-            self.vault.files[file_id].offsets[running_offset] = block_id
-
-            block_list.append((block_id, running_offset))
-
-            running_offset = running_offset + block_size
-
-        with self.assertRaises(KeyError):
-            self.client.AssignBlocksToFile(self.vault,
-                                           file_id,
-                                           block_list)
-    """
-
     @httpretty.activate
     def test_file_assign_blocks_not_in_files_offsetlist(self):
         file_id = create_file()
@@ -231,7 +161,7 @@ class ClientDeuceFileTests(ClientTestBase):
                 create_blocks(5):
             block_id2, block_data2, block_size2 = create_block()
 
-            self.vault.files[file_id].offsets[running_offset] = block_id2
+            self.vault.files[file_id].offsets[str(running_offset)] = block_id2
 
             block_list.append((block_id, running_offset))
 
@@ -259,47 +189,6 @@ class ClientDeuceFileTests(ClientTestBase):
             self.client.AssignBlocksToFile(self.vault,
                                            file_id)
 
-    """Disabled Test - not sure it's valid any more
-    @httpretty.activate
-    def test_file_assign_blocks_no_blocklist_no_fileblocks(self):
-        file_id = create_file()
-        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
-                                             vault_id=self.vault.vault_id,
-                                             file_id=file_id)
-
-        running_offset = 0
-        for block_id, block_data, block_size in \
-                create_blocks(5):
-            self.vault.files[file_id].offsets[running_offset] = block_id
-
-            running_offset = running_offset + block_size
-
-        with self.assertRaises(ValueError):
-            self.client.AssignBlocksToFile(self.vault,
-                                           file_id)
-
-    @httpretty.activate
-    def test_file_assign_blocks_no_blocklist_not_in_fileblocks(self):
-        file_id = create_file()
-        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
-                                             vault_id=self.vault.vault_id,
-                                             file_id=file_id)
-
-        running_offset = 0
-        for block_id, block_data, block_size in \
-                create_blocks(5):
-
-            block_id2, block_data2, block_size2 = create_block()
-
-            self.vault.files[file_id].offsets[running_offset] = block_id2
-
-            running_offset = running_offset + block_size
-
-        with self.assertRaises(KeyError):
-            self.client.AssignBlocksToFile(self.vault,
-                                           file_id)
-    """
-
     @httpretty.activate
     def test_file_assign_blocks_failed(self):
         file_id = create_file()
@@ -311,7 +200,7 @@ class ClientDeuceFileTests(ClientTestBase):
 
         running_offset = 0
         for block_id, block_data, block_size in create_blocks(5):
-            self.vault.files[file_id].offsets[running_offset] = block_id
+            self.vault.files[file_id].offsets[str(running_offset)] = block_id
 
             block_list.append((block_id, running_offset))
 

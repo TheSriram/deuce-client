@@ -89,14 +89,6 @@ class FileTest(TestCase):
         self.assertEqual(a_file.blocks, {})
         self.assertEqual(len(a_file), 0)
 
-        offset = 0
-        offsets = {}
-        for block_data in self.block_data:
-            sha1, data, size = block_data[0]
-            with self.assertRaises(errors.InvalidBlocks):
-                a_file.assign_block(sha1, offset)
-            offset = offset + size
-
         last_offset = 0
         offset = 0
         offsets = {}
@@ -179,10 +171,32 @@ class FileTest(TestCase):
                                        count=1)
         self.assertEqual(len(a_file), (1 * splitter.chunk_size))
 
+    def test_assign_from_data_source_no_append(self):
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   make_reader(11 * 1024 * 1024))
+
+        a_file.assign_from_data_source(splitter,
+                                       append=False,
+                                       count=1)
+        self.assertEqual(len(a_file), (1 * splitter.chunk_size))
+
         with self.assertRaises(errors.InvalidContentError):
             a_file.assign_from_data_source(splitter,
                                            append=False,
                                            count=1)
+
+    def test_assign_from_data_source_with_append(self):
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   make_reader(11 * 1024 * 1024))
+
+        a_file.assign_from_data_source(splitter,
+                                       append=False,
+                                       count=1)
+        self.assertEqual(len(a_file), (1 * splitter.chunk_size))
 
         a_file.assign_from_data_source(splitter,
                                        append=True,
