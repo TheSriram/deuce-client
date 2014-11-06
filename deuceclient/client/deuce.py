@@ -416,6 +416,9 @@ class DeuceClient(Command):
 
         :returns: True on success
         """
+        if file_id not in vault.files:
+            raise KeyError('file_id must specify a file in the provided Vault')
+
         url = api_v1.get_file_path(vault.vault_id, file_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()

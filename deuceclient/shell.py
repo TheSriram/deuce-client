@@ -279,7 +279,17 @@ def file_upload(log, arguments):
             block_list = vault.files[file_id].assign_from_data_source(
                 file_splitter, append=True, count=10)
             if len(block_list):
-                deuceclient.
+                blocks_to_upload = deuceclient.AssignBlocksToFile(vault,
+                                                                  file_id,
+                                                                  block_list)
+
+                if len(blocks_to_upload):
+                    deuceclient.UploadBlocks(vault, blocks_to_upload)
+
+            else:
+                break
+
+        deuceclient.FinalizeFile(vault, file_id)
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
