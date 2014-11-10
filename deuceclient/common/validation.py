@@ -189,6 +189,7 @@ def _abort(error_code):
         503: errors.InvalidStorageBlockType,
         600: errors.ParameterConstraintError,
         601: TypeError,  # Generic Type Error
+        602: AttributeError,  # Generic Attribute Error
         700: errors.IterableContentError
     }
     raise abort_errors[error_code]
@@ -238,7 +239,7 @@ FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
 FileSplitterStateRule = Rule(file_splitter_state_validation(none_ok=True),
                              lambda: _abort(600))
 FileSplitterInputStreamRule = Rule(file_splitter_input_stream_validation(),
-                                   lambda: _abort(601))
+                                   lambda: _abort(602))
 
 OffsetRule = Rule(val_offset(), lambda: _abort(600))
 OffsetRuleNoneOkay = Rule(val_offset(none_ok=True), lambda: _abort(600))

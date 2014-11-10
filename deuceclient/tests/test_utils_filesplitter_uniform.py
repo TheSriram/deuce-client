@@ -108,7 +108,7 @@ class TestUniformSplitter(TestCase):
                                    self.vault_id,
                                    reader)
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(AttributeError):
             splitter.input_stream = X()
 
     def test_set_reader_no_tell(self):
@@ -122,7 +122,7 @@ class TestUniformSplitter(TestCase):
                                    self.vault_id,
                                    reader)
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(AttributeError):
             splitter.input_stream = Y()
 
     def test_get_block(self):
@@ -206,7 +206,7 @@ class TestUniformSplitter(TestCase):
 
             running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, [].__class__)
+            self.assertIsInstance(blocks, list)
             self.assertEqual((count - 1), len(blocks))
             for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
