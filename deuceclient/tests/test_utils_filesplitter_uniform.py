@@ -180,7 +180,7 @@ class TestUniformSplitter(TestCase):
 
             running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, [].__class__)
+            self.assertIsInstance(blocks, list)
             self.assertEqual(count, len(blocks))
             for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
@@ -234,7 +234,7 @@ class TestUniformSplitter(TestCase):
 
             running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, [].__class__)
+            self.assertIsInstance(blocks, list)
             self.assertEqual(count, len(blocks))
             for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
@@ -267,7 +267,7 @@ class TestUniformSplitter(TestCase):
 
             running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, [].__class__)
+            self.assertIsInstance(blocks, list)
             self.assertEqual(count, len(blocks))
             for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
@@ -294,7 +294,7 @@ class TestUniformSplitter(TestCase):
 
             running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, [].__class__)
+            self.assertIsInstance(blocks, list)
             self.assertEqual((count - 1), len(blocks))
             for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
@@ -324,7 +324,7 @@ class TestUniformSplitter(TestCase):
 
             running_offset = 0
             blocks = splitter.get_blocks(count)
-            self.assertIsInstance(blocks, [].__class__)
+            self.assertIsInstance(blocks, list)
             self.assertEqual(count, len(blocks))
             for offset, block in blocks:
                 self.assertIsInstance(block, api.Block)
