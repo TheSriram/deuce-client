@@ -45,17 +45,25 @@ class DeuceClient(Command):
         self.headers['X-Auth-Token'] = self.authenticator.AuthToken
         self.headers['X-Project-ID'] = self.project_id
 
-    def __log_request_data(self):
+    def __log_request_data(self, fn=None, headers=None):
         """Log the information about the request
         """
+        if fn is not None:
+            self.log.debug('Performing %s', fn)
         self.log.debug('host: %s', self.apihost)
         self.log.debug('body: %s', self.Body)
-        self.log.debug('headers: %s', self.Headers)
+        if headers is None:
+            self.log.debug('headers: %s', self.Headers)
+        else:
+            self.log.debug('headers: %s', headers)
         self.log.debug('uri: %s', self.Uri)
 
-    def __log_response_data(self, response, jsondata=False):
+    def __log_response_data(self, response, jsondata=False, fn=None):
         """Log the information about the response
         """
+        if fn is not None:
+            self.log.debug('Response from %s', fn)
+
         self.log.debug('status: %s', response.status_code)
         if jsondata:
             try:
@@ -85,14 +93,14 @@ class DeuceClient(Command):
         self.ReInit(self.sslenabled, path)
 
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Create Vault')
         res = requests.put(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_response_data(res, jsondata=False, fn='Create Vault')
 
         if res.status_code == 201:
             vault = api_vault.Vault(project_id=self.project_id,
                                     vault_id=vault_name)
-            vault.status = "created"
+            vault.status = 'created'
             return vault
         else:
             raise RuntimeError(
@@ -112,7 +120,7 @@ class DeuceClient(Command):
         if self.VaultExists(vault_name):
             vault = api_vault.Vault(project_id=self.project_id,
                                     vault_id=vault_name)
-            vault.status = "valid"
+            vault.status = 'valid'
             return vault
         else:
             raise RuntimeError('Failed to find a Vault with the name {0:}'
@@ -131,9 +139,9 @@ class DeuceClient(Command):
         path = api_v1.get_vault_path(vault.vault_id)
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Delete Vault')
         res = requests.delete(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_response_data(res, jsondata=False, fn='Delete Vault')
 
         if res.status_code == 204:
             vault.status = 'deleted'
@@ -161,9 +169,9 @@ class DeuceClient(Command):
         path = api_v1.get_vault_path(vault_id)
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Vault Exists')
         res = requests.head(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_response_data(res, jsondata=False, fn='Vault Exists')
 
         if res.status_code == 204:
             if isinstance(vault, api_vault.Vault):
@@ -193,9 +201,9 @@ class DeuceClient(Command):
         path = api_v1.get_vault_path(vault.vault_id)
         self.ReInit(self.sslenabled, path)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Get Vault Statistics')
         res = requests.get(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=True)
+        self.__log_response_data(res, jsondata=True, fn='Get Vault Statistics')
 
         if res.status_code == 200:
             vault.statistics = res.json()
@@ -238,9 +246,9 @@ class DeuceClient(Command):
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Get Block List')
         res = requests.get(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=True)
+        self.__log_response_data(res, jsondata=True, fn='Get Block List')
 
         if res.status_code == 200:
             block_ids = []
@@ -269,13 +277,13 @@ class DeuceClient(Command):
         url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
         headers = {}
         headers.update(self.Headers)
         headers['content-type'] = 'application/octet-stream'
         headers['content-length'] = len(block)
-        res = requests.put(self.Uri, headers=self.Headers, data=block.data)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_request_data(headers=headers, fn='Upload Block')
+        res = requests.put(self.Uri, headers=headers, data=block.data)
+        self.__log_response_data(res, jsondata=False, fn='Upload Block')
         if res.status_code == 201:
             return True
         else:
@@ -298,9 +306,9 @@ class DeuceClient(Command):
         url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Delete Block')
         res = requests.delete(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_response_data(res, jsondata=False, fn='Delete Block')
         if res.status_code == 204:
             return True
         else:
@@ -322,9 +330,9 @@ class DeuceClient(Command):
         url = api_v1.get_block_path(vault.vault_id, block.block_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Download Block')
         res = requests.get(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_response_data(res, jsondata=False, fn='Download Block')
 
         if res.status_code == 200:
             block.data = res.content
@@ -345,9 +353,9 @@ class DeuceClient(Command):
         url = api_v1.get_files_path(vault.vault_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Create File')
         res = requests.post(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=False)
+        self.__log_response_data(res, jsondata=False, fn='Create File')
         if res.status_code == 201:
             new_file = api_file.File(project_id=self.project_id,
                                      vault_id=vault.vault_id,
@@ -413,7 +421,7 @@ class DeuceClient(Command):
         url = api_v1.get_file_path(vault.vault_id, file_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Assign Blocks To File')
 
         """
         File Block Assignment Takes a JSON body containing the following:
@@ -435,7 +443,8 @@ class DeuceClient(Command):
         res = requests.post(self.Uri,
                             data=json.dumps(block_assignment_data),
                             headers=self.Headers)
-        self.__log_response_data(res, jsondata=True)
+        self.__log_response_data(res, jsondata=True,
+                                 fn='Assign Blocks To File')
         if res.status_code == 200:
             block_list_to_upload = [block_id
                                     for block_id in res.json()]
@@ -483,9 +492,9 @@ class DeuceClient(Command):
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Get File Block List')
         res = requests.get(self.Uri, headers=self.Headers)
-        self.__log_response_data(res, jsondata=True)
+        self.__log_response_data(res, jsondata=True, fn='Get File Block List')
 
         if res.status_code == 200:
             block_ids = []

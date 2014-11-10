@@ -80,6 +80,7 @@ class InvalidStorageBlockType(InvalidBlockType):
     """
     pass
 
+
 class InvalidMetadataBlockType(InvalidBlockType):
     """Invalid Storage Block Type
     """

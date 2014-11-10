@@ -4,7 +4,6 @@ Ben's Deuce Testing Client
 """
 from __future__ import print_function
 import argparse
-import hashlib
 import json
 import logging
 import pprint
@@ -223,9 +222,7 @@ def block_upload(log, arguments):
 
         data = arguments.block_content.read()
 
-        sha1 = hashlib.sha1()
-        sha1.update(data.encode())
-        block_id = sha1.hexdigest().lower()
+        block_id = api.Block.make_id(data.encode())
 
         block = api.Block(project_id=auth_engine.AuthTenantId,
                           vault_id=arguments.vault_name,

@@ -3,7 +3,7 @@ Deuce Client: Validation Functionality
 """
 import re
 
-from stoplight import Rule, ValidationFailed, validation_function, validate
+from stoplight import Rule, ValidationFailed, validation_function
 
 import deuceclient.common.errors as errors
 
@@ -151,6 +151,33 @@ def val_block_type_metadata(value):
         raise ValidationFailed('Invalid instance: {0}'.format(value))
 
 
+@validation_function
+def file_splitter_state_validation(value):
+    if value not in (None, 'processing'):
+        raise ValidationFailed('Invalid state {0}'.format(value))
+
+
+@validation_function
+def file_splitter_input_stream_validation(value):
+    # if this is set up as an if-block then coverage fails
+    # even though we go through all the use-cases. Leaving as-is
+    # until we have a better solution and need it; the if-block
+    # solution is really only to catch the issue should python
+    # change and not raise an exception but instead do the better
+    # thing of returning None...not likely going to happen
+    try:
+        getattr(value, 'read')
+    except AttributeError:
+        raise ValidationFailed('input stream must have read method')
+
+    try:
+        # tell is used to determine the starting offset into the
+        # data stream that the block data was read from
+        getattr(value, 'tell')
+    except AttributeError:
+        raise ValidationFailed('input stream must have tell method')
+
+
 def _abort(error_code):
     abort_errors = {
         100: errors.InvalidProject,
@@ -161,6 +188,8 @@ def _abort(error_code):
         500: errors.InvalidStorageBlocks,
         503: errors.InvalidStorageBlockType,
         600: errors.ParameterConstraintError,
+        601: TypeError,  # Generic Type Error
+        602: AttributeError,  # Generic Attribute Error
         700: errors.IterableContentError
     }
     raise abort_errors[error_code]
@@ -207,6 +236,10 @@ FileIdRuleNoneOkay = Rule(val_file_id(none_ok=True),
 
 FileBlockOffsetRule = Rule(val_file_block_offset(), lambda: _abort(600))
 
+FileSplitterStateRule = Rule(file_splitter_state_validation(none_ok=True),
+                             lambda: _abort(600))
+FileSplitterInputStreamRule = Rule(file_splitter_input_stream_validation(),
+                                   lambda: _abort(602))
 
 OffsetRule = Rule(val_offset(), lambda: _abort(600))
 OffsetRuleNoneOkay = Rule(val_offset(none_ok=True), lambda: _abort(600))
