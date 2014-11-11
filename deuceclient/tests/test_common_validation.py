@@ -615,3 +615,34 @@ class TestBoolRules(TestRulesBase):
         for b in self.__class__.negative_cases:
             with self.assertRaises(errors.ParameterConstraintError):
                 self.utilize_bool(b)
+
+
+class TestIntRules(TestRulesBase):
+
+    positive_cases = [
+        -1, 0, 1, 1000, -1000
+    ]
+
+    negative_cases = [
+        None, 'r', 'd', 'p'
+    ]
+
+    @validate(i=v.IntRule)
+    def utilize_int(self, i):
+        return True
+
+    def test_int(self):
+        for i in self.__class__.positive_cases:
+            v.val_int()(i)
+
+        for i in self.__class__.negative_cases:
+            with self.assertRaises(v.ValidationFailed):
+                v.val_int()(i)
+
+    def test_int_rule(self):
+        for i in self.__class__.positive_cases:
+            self.utilize_int(i)
+
+        for i in self.__class__.negative_cases:
+            with self.assertRaises(errors.ParameterConstraintError):
+                self.utilize_int(i)

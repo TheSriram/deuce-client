@@ -3,6 +3,7 @@ Deuce Client - Vault API
 """
 from stoplight import validate
 
+from deuceclient.api.afile import File
 from deuceclient.api.files import Files
 from deuceclient.api.blocks import Blocks
 from deuceclient.api.storageblocks import StorageBlocks
@@ -80,3 +81,10 @@ class Vault(object):
     @property
     def files(self):
         return self.__properties['files']
+
+    @validate(file_id=FileIdRule)
+    def add_file(self, file_id, file_url=None):
+        self.files[file_id] = File(self.project_id,
+                                   self.vault_id,
+                                   file_id=file_id,
+                                   url=file_url)

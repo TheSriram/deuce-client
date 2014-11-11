@@ -5,6 +5,7 @@ import json
 import requests
 import logging
 
+import msgpack
 from stoplight import validate
 
 import deuceclient.api.afile as api_file
@@ -65,13 +66,20 @@ class DeuceClient(Command):
             self.log.debug('Response from %s', fn)
 
         self.log.debug('status: %s', response.status_code)
+        self.log.debug('json data: %s', jsondata)
         if jsondata:
             try:
                 self.log.debug('content: %s', response.json())
             except:
                 self.log.debug('content: %s', response.text)
         else:
-            self.log.debug('content: %s', response.text)
+            if response.text:
+                if len(response.text):
+                    self.log.debug('content: %s', response.text)
+                else:  # pragma: no cover
+                    self.log.debug('content: zero-length')
+            else:
+                self.log.debug('content: NONE')
 
     @property
     def project_id(self):
@@ -292,6 +300,43 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault=VaultInstanceRule,
+              block_ids=MetadataBlockIdIterableRule)
+    def UploadBlocks(self, vault, block_ids):
+        """Upload a series of blocks at the same time
+
+        :param vault: vault to upload the blocks into
+        :param block_ids: block ids in the vault to upload,
+                          must be an iterable object
+        :returns: True on success
+        """
+        url = api_v1.get_blocks_path(vault.vault_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        headers = {}
+        headers.update(self.Headers)
+        headers['Content-Type'] = 'application/msgpack'
+
+        block_data = []
+        for block_id in block_ids:
+            block = vault.blocks[block_id]
+
+            block_data.append((block_id, block.data))
+
+        contents = dict(block_data)
+        body = msgpack.packb(contents)
+        self.__log_request_data(fn='Upload Multiple Blocks - msgpack')
+        res = requests.post(self.Uri, headers=headers, data=body)
+        self.__log_response_data(res,
+                                 jsondata=False,
+                                 fn='Upload Multiple Blocks - msgpack')
+        if res.status_code == 201:
+            return True
+        else:
+            raise RuntimeError(
+                'Failed to upload blocks to Vault. '
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    @validate(vault=VaultInstanceRule,
               block=BlockInstanceRule)
     def DeleteBlock(self, vault, block):
         """Delete the block from the vault.
@@ -369,6 +414,35 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault=VaultInstanceRule,
+              file_id=FileIdRule)
+    def FinalizeFile(self, vault, file_id):
+        """Finalize the file in the vault
+
+        :param vault: vault containing the file
+        :param file_id: file_id of the file to finalize
+
+        :returns: True on success
+        """
+        if file_id not in vault.files:
+            raise KeyError('file_id must specify a file in the provided Vault')
+
+        url = api_v1.get_file_path(vault.vault_id, file_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        headers = {}
+        headers.update(self.Headers)
+        headers['X-File-Length'] = len(vault.files[file_id])
+        self.__log_request_data(fn='Finalize File')
+        res = requests.post(self.Uri, headers=headers)
+        self.__log_response_data(res, jsondata=True, fn='Finalize File')
+        if res.status_code in (200, 204):
+            return True
+        else:
+            raise RuntimeError(
+                'Failed to finalize file. Details: {0}'
+                .format(res.json()))
+
+    @validate(vault=VaultInstanceRule,
               file_id=FileIdRule,
               block_ids=MetadataBlockIdOffsetIterableRuleNoneOkay)
     def AssignBlocksToFile(self, vault, file_id, block_ids=None):
@@ -391,34 +465,19 @@ class DeuceClient(Command):
             if len(block_ids) == 0:
                 raise ValueError('block_ids must be iterable')
             for block_id, offset in block_ids:
-                if block_id not in vault.blocks:
-                    raise KeyError(
-                        'block_id {0} must specify a block in the Vault'.
-                        format(block_id))
-                if block_id not in vault.files[file_id].blocks:
-                    raise KeyError(
-                        'block_id {0} must specify a block in the File'.
-                        format(block_id))
-                if offset not in vault.files[file_id].offsets:
+                if str(offset) not in vault.files[file_id].offsets:
                     raise KeyError(
                         'block offset {0} must be assigned in the File'.
-                        format(block_id[1]))
-                if vault.files[file_id].offsets[offset] != block_id:
+                        format(offset))
+                if vault.files[file_id].offsets[str(offset)] != block_id:
                     raise ValueError(
                         'specified offset {0} must match the block {1}'.
                         format(offset, block_id))
         else:
             if len(vault.files[file_id].offsets) == 0:
                 raise ValueError('File must have offsets specified')
-            if len(vault.files[file_id].blocks) == 0:
-                raise ValueError('File must have blocks specified')
-            for offset, block_id in vault.files[file_id].offsets.items():
-                if block_id not in vault.files[file_id].blocks:
-                    raise KeyError(
-                        'block_id {0} found in offset list but not in '
-                        'the block list'.format(block_id))
 
-        url = api_v1.get_file_path(vault.vault_id, file_id)
+        url = api_v1.get_fileblocks_path(vault.vault_id, file_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
         self.__log_request_data(fn='Assign Blocks To File')

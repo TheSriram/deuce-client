@@ -7,6 +7,7 @@ import deuceclient.api as api
 import deuceclient.common.errors as errors
 import deuceclient.common.validation as val
 from deuceclient.tests import *
+from deuceclient.utils import UniformSplitter
 
 
 class FileTest(TestCase):
@@ -44,6 +45,7 @@ class FileTest(TestCase):
         self.assertEqual(a_file.offsets, {})
         self.assertEqual(a_file.blocks, {})
         self.assertEqual(a_file.url, test_url)
+        self.assertEqual(len(a_file), 0)
 
     def test_create_file_no_file_id(self):
         a_file = api.File(self.project_id, self.vault_id)
@@ -85,26 +87,36 @@ class FileTest(TestCase):
         self.assertEqual(a_file.file_id, self.file_id)
         self.assertEqual(a_file.offsets, {})
         self.assertEqual(a_file.blocks, {})
+        self.assertEqual(len(a_file), 0)
 
-        offset = 0
-        offsets = {}
-        for block_data in self.block_data:
-            sha1, data, size = block_data[0]
-            with self.assertRaises(errors.InvalidBlocks):
-                a_file.assign_block(sha1, offset)
-            offset = offset + size
-
+        last_offset = 0
         offset = 0
         offsets = {}
         for block_data in self.block_data:
             sha1, data, size = block_data[0]
             block = api.Block(self.project_id, self.vault_id, sha1, data=data)
-            a_file.blocks[sha1] = block
+            a_file.add_block(block)
+            a_file.add_block(block)
             a_file.assign_block(sha1, offset)
             offsets[offset] = sha1
+            last_offset = offset
+            offset = offset + size
+            self.assertEqual(len(a_file), offset)
+
+        self.assertEqual(len(offsets), len(self.block_data))
+        self.assertEqual(len(offsets), len(a_file.offsets))
 
         for k, v in offsets.items():
             self.assertEqual(a_file.get_block_for_offset(k), v)
+
+        # Remove the last block, thus shortening the file but also
+        # failing to update maximum offset in the process so len(a_file)
+        # should fail on the key error
+        del a_file.blocks[a_file.get_block_for_offset(last_offset)]
+        del a_file.offsets[str(last_offset)]
+
+        self.assertEqual(a_file._File__properties['maximum_offset'],
+                         len(a_file))
 
     def test_get_block_offsets(self):
         a_file = api.File(self.project_id, self.vault_id, self.file_id)
@@ -140,3 +152,54 @@ class FileTest(TestCase):
 
         with self.assertRaises(errors.ParameterConstraintError):
             a_file.assign_block(sha1, -1)
+
+    def test_assign_from_data_source_bad_splitter(self):
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
+        with self.assertRaises(errors.InvalidFileSplitterType):
+            a_file.assign_from_data_source(self.project_id,
+                                           append=False,
+                                           count=1)
+
+    def test_assign_from_data_source(self):
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   make_reader(11 * 1024 * 1024))
+
+        a_file.assign_from_data_source(splitter,
+                                       append=False,
+                                       count=1)
+        self.assertEqual(len(a_file), (1 * splitter.chunk_size))
+
+    def test_assign_from_data_source_no_append(self):
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   make_reader(11 * 1024 * 1024))
+
+        a_file.assign_from_data_source(splitter,
+                                       append=False,
+                                       count=1)
+        self.assertEqual(len(a_file), (1 * splitter.chunk_size))
+
+        with self.assertRaises(errors.InvalidContentError):
+            a_file.assign_from_data_source(splitter,
+                                           append=False,
+                                           count=1)
+
+    def test_assign_from_data_source_with_append(self):
+        a_file = api.File(self.project_id, self.vault_id, self.file_id)
+        splitter = UniformSplitter(self.project_id,
+                                   self.vault_id,
+                                   make_reader(11 * 1024 * 1024))
+
+        a_file.assign_from_data_source(splitter,
+                                       append=False,
+                                       count=1)
+        self.assertEqual(len(a_file), (1 * splitter.chunk_size))
+
+        a_file.assign_from_data_source(splitter,
+                                       append=True,
+                                       count=1)
+
+        self.assertEqual(len(a_file), (2 * splitter.chunk_size))

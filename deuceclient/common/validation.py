@@ -132,6 +132,13 @@ def val_bool(value):
 
 
 @validation_function
+def val_int(value):
+    if not isinstance(value, int):
+        raise ValidationFailed('Invalid type {0} instead of int'
+                               .format(type(value)))
+
+
+@validation_function
 def val_block_type_storage(value):
     try:
         if not value.block_type == 'storage':
@@ -197,6 +204,7 @@ def _abort(error_code):
 
 # Parameter Rules
 BoolRule = Rule(val_bool(), lambda: _abort(600))
+IntRule = Rule(val_int(), lambda: _abort(600))
 
 
 ProjectIdRule = Rule(val_project_id(), lambda: _abort(100))
