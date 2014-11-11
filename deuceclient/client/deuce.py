@@ -1,6 +1,7 @@
 """
 Deuce API
 """
+import datetime
 import json
 import requests
 import logging
@@ -412,6 +413,53 @@ class DeuceClient(Command):
             raise RuntimeError(
                 'Failed to create File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    @validate(vault=VaultInstanceRule,
+              file_id=FileIdRule)
+    def DownloadFile(self, vault, file_id, output_file, chunk_size=512*1024):
+        """Download a file
+
+        :param vault: vault to download the file from
+        :param file_id: file id within the vault to download
+        :param output_file: local fully qualified (absolute) file name to
+                            store the file in
+        :returns: True on success
+        """
+        url = api_v1.get_file_path(vault.vault_id, file_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data(fn='Download File')
+        res = requests.get(self.Uri, headers=self.Headers, stream=True)
+        if res.status_code == 200:
+            try:
+                download_start_time = datetime.datetime.utcnow()
+                downloaded_bytes = 0
+                with open(output_file, 'wb') as output:
+                    for chunk in res.iter_content(chunk_size=chunk_size):
+                        output.write(chunk)
+                        downloaded_bytes = downloaded_bytes + len(chunk)
+                        res.raise_for_status()
+                download_end_time = datetime.datetime.utcnow()
+
+                download_time = download_end_time - download_start_time
+                download_rate = downloaded_bytes
+                if download_time.seconds > 0:
+                    download_rate = downloaded_bytes / download_time.seconds
+
+                log = logging.getLogger(__name__)
+                log.info("Downloaded {0:} bytes in {1:} seconds for {2:} bps, {3:} kbps, {4:} mbps"
+                         .format(downloaded_bytes, download_time, download_rate,
+                                 download_rate/1024, download_rate/1024/1024))
+
+            except Exception as ex:
+                raise RuntimeError(
+                    'Failed to Download File. '
+                    'Error: {0:} '.format(ex))
+        else:
+            raise RuntimeError(
+                'Failed to Download File. '
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
 
     @validate(vault=VaultInstanceRule,
               file_id=FileIdRule)
