@@ -443,8 +443,8 @@ class DeuceClient(Command):
 
                 download_time = download_end_time - download_start_time
                 download_rate = downloaded_bytes
-                if download_time.seconds > 0:
-                    download_rate = downloaded_bytes / download_time.seconds
+                if download_time.total_seconds() > 0.0:  # pragma: no cover
+                    download_rate = downloaded_bytes / download_time.total_seconds()
 
                 log = logging.getLogger(__name__)
                 log.info('Downloaded {0:} bytes in {1:} seconds for {2:} bps, '
@@ -453,6 +453,9 @@ class DeuceClient(Command):
                                  download_rate,
                                  download_rate / 1024,
                                  download_rate / 1024 / 1024))
+
+                # succeeded in downloading the file
+                return True
 
             except Exception as ex:
                 raise RuntimeError(
