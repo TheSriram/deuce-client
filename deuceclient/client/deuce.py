@@ -432,8 +432,8 @@ class DeuceClient(Command):
         res = requests.get(self.Uri, headers=self.Headers, stream=True)
         if res.status_code == 200:
             try:
-                download_start_time = datetime.datetime.utcnow()
                 downloaded_bytes = 0
+                download_start_time = datetime.datetime.utcnow()
                 with open(output_file, 'wb') as output:
                     for chunk in res.iter_content(chunk_size=chunk_size):
                         output.write(chunk)
@@ -442,9 +442,8 @@ class DeuceClient(Command):
                 download_end_time = datetime.datetime.utcnow()
 
                 download_time = download_end_time - download_start_time
-                download_rate = downloaded_bytes
-                if download_time.total_seconds() > 0.0:  # pragma: no cover
-                    download_rate = downloaded_bytes / download_time.total_seconds()
+                download_rate = downloaded_bytes / download_time\
+                    .total_seconds()
 
                 log = logging.getLogger(__name__)
                 log.info('Downloaded {0:} bytes in {1:} seconds for {2:} bps, '
