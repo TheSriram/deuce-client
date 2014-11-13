@@ -314,6 +314,24 @@ def file_upload(log, arguments):
         print('Error: {0}'.format(str(ex)))
 
 
+def file_download(log, arguments):
+    """
+    Download a file
+    """
+    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        file_id = arguments.file_id
+        filename = arguments.file_name
+
+        deuceclient.DownloadFile(vault, file_id, filename)
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
+
+
 def main():
     arg_parser = argparse.ArgumentParser(
         description="Cloud Backup Agent Status")
@@ -429,6 +447,20 @@ def main():
                                     type=argparse.FileType('rb'),
                                     help='File to upload')
     file_upload_parser.set_defaults(func=file_upload)
+
+    file_download_parser = file_subparsers.add_parser('download')
+    file_download_parser.add_argument('--file-id',
+                                      default=None,
+                                      required=True,
+                                      type=str,
+                                      help='File ID in the Vault for the '
+                                      'file.')
+    file_download_parser.add_argument('--file-name',
+                                      default=None,
+                                      required=True,
+                                      type=str,
+                                      help='File name to store the file in')
+    file_download_parser.set_defaults(func=file_download)
 
     # file_delete_parser = file_subparsers.add_parser('delete')
     # file_delete_parser.set_defaults(func=file_delete)
