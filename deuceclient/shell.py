@@ -320,16 +320,16 @@ def file_download(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    # try:
-    vault = deuceclient.GetVault(arguments.vault_name)
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
 
-    file_id = arguments.file_id
-    filename = arguments.file_name
+        file_id = arguments.file_id
+        filename = arguments.file_name
 
-    deuceclient.DownloadFile(vault, file_id, filename)
+        deuceclient.DownloadFile(vault, file_id, filename)
 
-    # except Exception as ex:
-    #    print('Error: {0}'.format(str(ex)))
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
 
 
 def main():
