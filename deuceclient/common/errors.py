@@ -63,6 +63,12 @@ class InvalidApiObjectInstance(TypeError):
     pass
 
 
+class InvalidProjectInstance(InvalidApiObjectInstance):
+    """Invalid Project Object Instance
+    """
+    pass
+
+
 class InvalidVaultInstance(InvalidApiObjectInstance):
     """Invalid Vault Object Instance
     """

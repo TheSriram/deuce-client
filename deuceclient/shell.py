@@ -137,6 +137,31 @@ def __api_operation_prep(log, arguments):
     return (auth_engine, deuce, uri)
 
 
+def vault_list(log, arguments):
+    """
+    Create a vault with the given name
+    """
+    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    # We need to authenticate to get the project id
+    auth_engine.AuthToken
+
+    project = api.Project(auth_engine.AuthTenantId)
+
+    vault_marker = None
+    while deuceclient.ListVaults(project, vault_marker):
+        vault_marker = project.marker
+        if vault_marker is None:
+            break
+
+    if len(project):
+        print('Vaults:')
+        for vault_id in project:
+            print('\t{0:}'.format(vault_id))
+    else:
+        print('Failed to find any Vaults')
+
+
 def vault_create(log, arguments):
     """
     Create a vault with the given name
@@ -252,6 +277,23 @@ def file_create(log, arguments):
         print('Created File')
         print('\tFile ID: {0}'.format(file_id))
         print('\tURL: {0}'.format(file_url))
+
+    except Exception as ex:
+        print('Error: {0}'.format(str(ex)))
+
+
+def file_delete(log, arguments):
+    """
+    Delete a file
+    """
+    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        if deuceclient.DeleteFile(vault, arguments.file_id):
+            print('Delete filed {0:} from Vault {1:}'
+                  .format(arguments.file_id, arguments.vault_name))
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
@@ -391,6 +433,9 @@ def main():
     vault_delete_parser = vault_subparsers.add_parser('delete')
     vault_delete_parser.set_defaults(func=vault_delete)
 
+    vault_list_parser = vault_subparsers.add_parser('list')
+    vault_list_parser.set_defaults(func=vault_list)
+
     block_parser = sub_argument_parser.add_parser('blocks')
     block_parser.add_argument('--vault-name',
                               default=None,
@@ -462,8 +507,13 @@ def main():
                                       help='File name to store the file in')
     file_download_parser.set_defaults(func=file_download)
 
-    # file_delete_parser = file_subparsers.add_parser('delete')
-    # file_delete_parser.set_defaults(func=file_delete)
+    file_delete_parser = file_subparsers.add_parser('delete')
+    file_delete_parser.add_argument('--file-id',
+                                    default=None,
+                                    required=False,
+                                    type=str,
+                                    help='File ID in the Vault to be deleted')
+    file_delete_parser.set_defaults(func=file_delete)
 
     arguments = arg_parser.parse_args()
 

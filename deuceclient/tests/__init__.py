@@ -14,6 +14,7 @@ import uuid
 
 import deuceclient
 import deuceclient.auth.base
+import deuceclient.api.project as api_project
 import deuceclient.api.vault as api_vault
 
 
@@ -36,8 +37,12 @@ def get_base_path():
     return '/v1.0'
 
 
+def get_vault_base_path():
+    return '{0}/vaults'.format(get_base_path())
+
+
 def get_vault_path(vault_name):
-    return '{0}/vaults/{1}'.format(get_base_path(), vault_name)
+    return '{0}/{1}'.format(get_vault_base_path(), vault_name)
 
 
 def get_blocks_path(vault_name):
@@ -78,6 +83,10 @@ def get_fileblock_path(vault_name, file_id, block_id):
 
 def get_deuce_url(apihost):
     return 'https://{0}{1}'.format(apihost, get_base_path())
+
+
+def get_vaults_url(apihost):
+    return 'https://{0}{1}'.format(apihost, get_vault_base_path())
 
 
 def get_vault_url(apihost, vault):
@@ -253,6 +262,7 @@ class ClientTestBase(TestCase):
                                                datacenter='wonderland',
                                                auth_url='down.the.rabbit.hole')
 
+        self.project = api_project.Project(create_project_name())
         self.vault = api_vault.Vault(create_project_name(),
                                      create_vault_name())
 
