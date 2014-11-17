@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Ben's Deuce Testing Client
+Deuce Client Command-line Interface
 """
 from __future__ import print_function
 import argparse
