@@ -62,3 +62,9 @@ class Blocks(dict):
         # to get validation of each entry in the incoming dictionary
         for k, v in dict(*args, **kwargs).items():
             self[k] = v
+
+    def add(self, block):
+        if isinstance(block, Block):
+            self[block.block_id] = block
+        else:
+            raise TypeError('block must be instance of deuceclient.api.Block')

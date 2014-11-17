@@ -403,7 +403,7 @@ class DeuceClient(Command):
                 'Failed to delete Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
-    @validate(vault=VaultInstanceRule, blocks_ids=MetadataBlockIdIterableRule)
+    @validate(vault=VaultInstanceRule, block_ids=MetadataBlockIdIterableRule)
     def DeleteBlocks(self, vault, block_ids):
         """Delete a list of blocks from the vault.
 
@@ -414,7 +414,7 @@ class DeuceClient(Command):
         """
         def do_delete_block(block_id):
             try:
-                return self.DeleteBlock(vault, block_id)
+                return self.DeleteBlock(vault, vault.blocks[block_id])
             except Exception as ex:
                 self.log.debug('Delete Blocks: Failed to delete block '
                                '({0}) - Exception {1}'.format(block_id,
