@@ -410,16 +410,18 @@ class DeuceClient(Command):
         :param vault: vault to upload the blocks into
         :param block_ids: block ids in the vault to upload,
                           must be an iterable object
-        :returns: list of booleans to denote the result of each block
+        :returns: list of tuples of the block id and a boolean to denote the
+                  result of its deletion
         """
         def do_delete_block(block_id):
             try:
-                return self.DeleteBlock(vault, vault.blocks[block_id])
+                return (block_id, self.DeleteBlock(vault,
+                                                   vault.blocks[block_id]))
             except Exception as ex:
                 self.log.debug('Delete Blocks: Failed to delete block '
                                '({0}) - Exception {1}'.format(block_id,
                                                               str(ex)))
-                return False
+                return (block_id, False)
         return [do_delete_block(blockid) for blockid in block_ids]
 
     @validate(vault=VaultInstanceRule,

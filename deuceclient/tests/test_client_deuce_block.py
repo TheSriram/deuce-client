@@ -231,12 +231,13 @@ class ClientDeuceBlockTests(ClientTestBase):
                                 get_block_url(self.apihost,
                                               self.vault.vault_id,
                                               block_id),
-                                status=204) for block_id in self.vault.blocks]
+                                status=204) for block_id in
+            self.vault.blocks.keys()]
 
         results = self.client.DeleteBlocks(self.vault,
                                            self.vault.blocks.keys())
         self.assertEqual(len(results), count)
-        for r in results:
+        for block_id, r in results:
             self.assertTrue(r)
 
     @httpretty.activate
@@ -255,13 +256,51 @@ class ClientDeuceBlockTests(ClientTestBase):
                                 get_block_url(self.apihost,
                                               self.vault.vault_id,
                                               block_id),
-                                status=404) for block_id in self.vault.blocks]
+                                status=404) for block_id in
+            self.vault.blocks.keys()]
 
         results = self.client.DeleteBlocks(self.vault,
                                            self.vault.blocks.keys())
         self.assertEqual(len(results), count)
-        for r in results:
+        for block_id, r in results:
             self.assertFalse(r)
+
+    @httpretty.activate
+    def test_block_list_deletion_mixed(self):
+        count = 5
+        for blockid, blockdata, block_size in [create_block()
+                                               for _ in range(count)]:
+            self.vault.blocks.add(api.Block(project_id=self.vault.project_id,
+                                            vault_id=self.vault.vault_id,
+                                            block_id=blockid,
+                                            data=blockdata))
+        self.assertEqual(len(self.vault.blocks), count)
+        self.assertEqual(len(self.vault.blocks.keys()), count)
+
+        expected_results = {}
+        count = 0
+        for block_id in self.vault.blocks.keys():
+            if count % 2 == 0:
+                httpretty.register_uri(httpretty.DELETE,
+                                    get_block_url(self.apihost,
+                                                  self.vault.vault_id,
+                                                  block_id),
+                                    status=204)
+                expected_results[block_id] = True
+            else:
+                httpretty.register_uri(httpretty.DELETE,
+                                    get_block_url(self.apihost,
+                                                  self.vault.vault_id,
+                                                  block_id),
+                                    status=404)
+                expected_results[block_id] = False
+            count = count + 1
+
+        results = self.client.DeleteBlocks(self.vault,
+                                           self.vault.blocks.keys())
+        self.assertEqual(len(results), count)
+        for block_id, r in results:
+            self.assertEqual(r, expected_results[block_id])
 
     @httpretty.activate
     def test_block_deletion(self):
