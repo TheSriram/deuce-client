@@ -100,6 +100,25 @@ class BlocksTest(TestCase):
         with self.assertRaises(TypeError):
             blocks[block.block_id] = block
 
+    def test_add_block_alternate(self):
+        block = api.Block(self.project_id,
+                          self.vault_id,
+                          self.block[0])
+
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
+        blocks.add(block)
+
+        self.assertEqual(block,
+                         blocks[block.block_id])
+
+    def test_add_block_alternate_invalid_block_instance(self):
+        block = InvalidMetadataBlock()
+        blocks = api.Blocks(project_id=self.project_id,
+                            vault_id=self.vault_id)
+        with self.assertRaises(TypeError):
+            blocks.add(block)
+
     def test_repr(self):
         blocks = api.Blocks(project_id=self.project_id,
                             vault_id=self.vault_id)

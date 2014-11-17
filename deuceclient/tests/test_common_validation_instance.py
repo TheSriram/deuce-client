@@ -26,6 +26,18 @@ class ValidationInstanceTests(TestCase):
     def tearDown(self):
         super(ValidationInstanceTests, self).tearDown()
 
+    def test_project_intnace(self):
+        project = api.Project(self.project_id)
+
+        @validate(value=val_instance.ProjectInstanceRule)
+        def check_project(value):
+            return True
+
+        self.assertTrue(check_project(project))
+
+        with self.assertRaises(errors.InvalidProjectInstance):
+            check_project(project.project_id)
+
     def test_vault_instance(self):
         vault = api.Vault(self.project_id, self.vault_id)
 

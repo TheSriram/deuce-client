@@ -10,9 +10,13 @@ def get_base_path():
     return '/v1.0'
 
 
+def get_vault_base_path():
+    return '{0}/vaults'.format(get_base_path())
+
+
 @validate(vault_id=VaultIdRule)
 def get_vault_path(vault_id):
-    return '{0}/vaults/{1}'.format(get_base_path(),
+    return '{0}/{1}'.format(get_vault_base_path(),
                             vault_id)
 
 

@@ -51,6 +51,115 @@ class ClientDeuceVaultTests(ClientTestBase):
             self.client.CreateVault(self.vault.vault_id)
 
     @httpretty.activate
+    def test_list_vault_failed(self):
+        httpretty.register_uri(httpretty.GET,
+                               get_vaults_url(
+                                   self.apihost),
+                               content_type='application/json',
+                               body="mock failure",
+                               status=404)
+
+        with self.assertRaises(RuntimeError) as listing_error:
+            self.client.ListVaults(self.project)
+
+    @httpretty.activate
+    def test_list_vault_success_no_marker(self):
+        vault_list = {
+            vault_name: {'url': get_vault_url(self.apihost,
+                                              vault_name)} for vault_name in [
+                'vault_{0:}'.format(x) for x in range(10)]
+        }
+        httpretty.register_uri(httpretty.GET,
+                               get_vaults_url(
+                                   self.apihost),
+                               content_type='application/json',
+                               body=json.dumps(vault_list),
+                               status=200)
+
+        self.assertTrue(self.client.ListVaults(self.project))
+
+        for vault_name in vault_list.keys():
+            self.assertIn(vault_name, self.project)
+
+        for vault_name in self.project:
+            self.assertIn(vault_name, vault_list.keys())
+
+    @httpretty.activate
+    def test_list_vault_success_no_marker_with_data(self):
+        vault_list = {
+            vault_name: {'url': get_vault_url(self.apihost,
+                                              vault_name)} for vault_name in [
+                'vault_{0:}'.format(x) for x in range(10)]
+        }
+        httpretty.register_uri(httpretty.GET,
+                               get_vaults_url(
+                                   self.apihost),
+                               content_type='application/json',
+                               body=json.dumps(vault_list),
+                               status=200)
+        self.project['vault_0'] = api_vault.Vault(self.project.project_id,
+                                                  'vault_0')
+
+        self.assertTrue(self.client.ListVaults(self.project))
+
+        for vault_name in vault_list.keys():
+            self.assertIn(vault_name, self.project)
+
+        for vault_name in self.project:
+            self.assertIn(vault_name, vault_list.keys())
+
+    @httpretty.activate
+    def test_list_vault_success_with_marker_no_batch(self):
+        vault_list = {
+            vault_name: {'url': get_vault_url(self.apihost,
+                                              vault_name)} for vault_name in [
+                'vault_{0:}'.format(x) for x in range(10)]
+        }
+        httpretty.register_uri(httpretty.GET,
+                               get_vaults_url(
+                                   self.apihost),
+                               content_type='application/json',
+                               body=json.dumps(vault_list),
+                               status=200)
+
+        self.assertTrue(self.client.ListVaults(self.project, 'vault_0'))
+
+        for vault_name in vault_list.keys():
+            self.assertIn(vault_name, self.project)
+
+        for vault_name in self.project:
+            self.assertIn(vault_name, vault_list.keys())
+
+    @httpretty.activate
+    def test_list_vault_success_with_marker_with_batch(self):
+        vault_list = {
+            vault_name: {'url': get_vault_url(self.apihost,
+                                              vault_name)} for vault_name in [
+                'vault_{0:}'.format(x) for x in range(10)]
+        }
+        vault_list2 = {
+            vault_name: {'url': get_vault_url(self.apihost,
+                                              vault_name)} for vault_name in [
+                'vault_{0:}'.format(10 + x) for x in range(10)]
+        }
+        next_batch = '{0}?marker=vault_11&limit=10'.format(
+            get_vault_base_path())
+        httpretty.register_uri(httpretty.GET,
+                               get_vaults_url(
+                                   self.apihost),
+                               content_type='application/json',
+                               adding_headers={
+                                   'x-next-batch': next_batch
+                               },
+                               body=json.dumps(vault_list),
+                               status=200)
+
+        self.assertTrue(self.client.ListVaults(self.project, 'vault_0'))
+
+        for vault_name in vault_list.keys():
+            self.assertIn(vault_name, self.project)
+
+    @httpretty.activate
     def test_get_vault(self):
         httpretty.register_uri(httpretty.HEAD,
                                get_vault_url(self.apihost,

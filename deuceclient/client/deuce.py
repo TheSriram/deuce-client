@@ -5,6 +5,7 @@ import datetime
 import json
 import requests
 import logging
+from urllib.parse import urlparse, parse_qs
 
 import msgpack
 from stoplight import validate
@@ -87,6 +88,46 @@ class DeuceClient(Command):
         """Return the project id to use
         """
         return self.authenticator.AuthTenantId
+
+    @validate(project=ProjectInstanceRule, marker=VaultIdRuleNoneOkay)
+    def ListVaults(self, project, marker=None):
+        """List vaults for the user
+        :returns: deuceclient.api.Projects instance containing the vaults
+        :raises: RuntimeError on failure
+        """
+        path = api_v1.get_vault_base_path()
+
+        if marker is not None:
+            self.ReInit(self.sslenabled,
+                        '{0:}?marker={1:}'.format(path, marker))
+        else:
+            self.ReInit(self.sslenabled, path)
+
+        self.__update_headers()
+        self.__log_request_data(fn='List Vaults')
+        res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=True, fn='List Vaults')
+
+        if res.status_code == 200:
+            for vault_name, vault_data in res.json().items():
+                if vault_name not in project:
+                    project[vault_name] = api_vault.Vault(
+                        project_id=project.project_id,
+                        vault_id=vault_name)
+                    project[vault_name].status = 'valid'
+            if 'x-next-batch' in res.headers:
+                parsed_url = urlparse(res.headers['x-next-batch'])
+
+                qs = parse_qs(parsed_url[4])
+                project.marker = qs['marker'][0]
+            else:
+                project.marker = None
+
+            return True
+        else:
+            raise RuntimeError(
+                'Failed to List Vaults. '
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault_name=VaultIdRule)
     def CreateVault(self, vault_name):
@@ -362,6 +403,27 @@ class DeuceClient(Command):
                 'Failed to delete Vault. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule, block_ids=MetadataBlockIdIterableRule)
+    def DeleteBlocks(self, vault, block_ids):
+        """Delete a list of blocks from the vault.
+
+        :param vault: vault to upload the blocks into
+        :param block_ids: block ids in the vault to upload,
+                          must be an iterable object
+        :returns: list of tuples of the block id and a boolean to denote the
+                  result of its deletion
+        """
+        def do_delete_block(block_id):
+            try:
+                return (block_id, self.DeleteBlock(vault,
+                                                   vault.blocks[block_id]))
+            except Exception as ex:
+                self.log.debug('Delete Blocks: Failed to delete block '
+                               '({0}) - Exception {1}'.format(block_id,
+                                                              str(ex)))
+                return (block_id, False)
+        return [do_delete_block(blockid) for blockid in block_ids]
+
     @validate(vault=VaultInstanceRule,
               block=BlockInstanceRule)
     def DownloadBlock(self, vault, block):
@@ -411,7 +473,28 @@ class DeuceClient(Command):
             return new_file.file_id
         else:
             raise RuntimeError(
-                'Failed to create File. '
+                'Failed to Create File. '
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
+
+    @validate(vault=VaultInstanceRule,
+              file_id=FileIdRule)
+    def DeleteFile(self, vault, file_id):
+        """Delete a file
+
+        :param vault: vault to download the file from
+        :param file_id: file id within the vault to be deleted
+        """
+        url = api_v1.get_file_path(vault.vault_id, file_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data(fn='Delete File')
+        res = requests.delete(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False, fn='Delete File')
+        if res.status_code == 204:
+            return True
+        else:
+            raise RuntimeError(
+                'Failed to Delete File. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault=VaultInstanceRule,
@@ -550,6 +633,11 @@ class DeuceClient(Command):
             block_assignment_data = [(block_id, offset)
                                      for offset, block_id in
                                      vault.files[file_id].offsets.items()]
+
+        self.log.debug('Assigning blocks to offset:')
+        for block_id, offset in block_assignment_data:
+            self.log.debug('Offset, Block -> {0:}, {1:}'.format(offset,
+                                                                block_id))
 
         res = requests.post(self.Uri,
                             data=json.dumps(block_assignment_data),
