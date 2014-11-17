@@ -142,7 +142,7 @@ class ClientDeuceVaultTests(ClientTestBase):
                                               vault_name)} for vault_name in [
                 'vault_{0:}'.format(10 + x) for x in range(10)]
         }
-        next_batch = '{0}?marker=vault_11&limit=1000'.format(
+        next_batch = '{0}?marker=vault_11&limit=10'.format(
             get_vault_base_path())
         httpretty.register_uri(httpretty.GET,
                                get_vaults_url(
