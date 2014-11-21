@@ -82,7 +82,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                status=200)
         blocks = self.client.GetBlockStorageList(self.vault)
         self.assertIsNone(self.vault.storageblocks.marker)
-        self.assertEqual(set(blocks.keys()), set(data))
+        self.assertEqual(blocks, data)
 
     @httpretty.activate
     def test_storage_block_list_with_next_batch(self):
@@ -103,7 +103,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
         blocks = self.client.GetBlockStorageList(self.vault)
         self.assertIsNotNone(self.vault.storageblocks.marker)
         self.assertEqual(self.vault.storageblocks.marker, data[0])
-        self.assertEqual(set(blocks.keys()), set(data))
+        self.assertEqual(blocks, data)
 
     @httpretty.activate
     def test_storage_block_list_error(self):
@@ -130,7 +130,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
         blocks = self.client.GetBlockStorageList(self.vault,
                                                  marker=data[0])
         self.assertIsNone(self.vault.storageblocks.marker)
-        self.assertEqual(set(blocks.keys()), set(data))
+        self.assertEqual(blocks, data)
 
     @httpretty.activate
     def test_storage_block_list_with_limit(self):
@@ -148,7 +148,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
         blocks = self.client.GetBlockStorageList(self.vault,
                                                  limit=5)
         self.assertIsNone(self.vault.storageblocks.marker)
-        self.assertEqual(set(blocks.keys()), set(data))
+        self.assertEqual(blocks, data)
 
     @httpretty.activate
     def test_storage_block_list_with_limit_and_marker(self):
@@ -167,7 +167,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                                  limit=3,
                                                  marker=data[0])
         self.assertIsNone(self.vault.storageblocks.marker)
-        self.assertEqual(set(blocks.keys()), set(data))
+        self.assertEqual(blocks, data)
 
     @httpretty.activate
     def test_head_storage_block_non_existent(self):

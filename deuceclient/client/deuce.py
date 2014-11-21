@@ -831,7 +831,7 @@ class DeuceClient(Command):
             else:
                 vault.storageblocks.marker = None
 
-            return vault.storageblocks
+            return [storageblockid for storageblockid in res.json()]
         else:
             raise RuntimeError(
                 'Failed to get Block Storage list for Vault . '
