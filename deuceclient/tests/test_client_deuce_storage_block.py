@@ -2,6 +2,7 @@
 Tests - Deuce Client - Client - Deuce - Storage Block
 """
 import json
+import urllib.parse
 
 import httpretty
 
@@ -80,6 +81,28 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                body=expected_data,
                                status=200)
         blocks = self.client.GetBlockStorageList(self.vault)
+        self.assertIsNone(self.vault.storageblocks.marker)
+        self.assertEqual(set(blocks.keys()), set(data))
+
+    @httpretty.activate
+    def test_storage_block_list_with_next_batch(self):
+        data = [create_storage_block() for _ in range(10)]
+        expected_data = json.dumps(data)
+
+        url = get_storage_blocks_url(self.apihost, self.vault.vault_id)
+        url_params = urllib.parse.urlencode({'marker': data[0]})
+        next_batch = '{0}?{1}'.format(url, url_params)
+        httpretty.register_uri(httpretty.GET,
+                               url,
+                               content_type='application/octet-stream',
+                               adding_headers={
+                                   'x-next-batch': next_batch
+                               },
+                               body=expected_data,
+                               status=200)
+        blocks = self.client.GetBlockStorageList(self.vault)
+        self.assertIsNotNone(self.vault.storageblocks.marker)
+        self.assertEqual(self.vault.storageblocks.marker, data[0])
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
@@ -106,6 +129,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                status=200)
         blocks = self.client.GetBlockStorageList(self.vault,
                                                  marker=data[0])
+        self.assertIsNone(self.vault.storageblocks.marker)
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
@@ -123,6 +147,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
 
         blocks = self.client.GetBlockStorageList(self.vault,
                                                  limit=5)
+        self.assertIsNone(self.vault.storageblocks.marker)
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate
@@ -141,6 +166,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
         blocks = self.client.GetBlockStorageList(self.vault,
                                                  limit=3,
                                                  marker=data[0])
+        self.assertIsNone(self.vault.storageblocks.marker)
         self.assertEqual(set(blocks.keys()), set(data))
 
     @httpretty.activate

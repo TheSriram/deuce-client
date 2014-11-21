@@ -2,6 +2,7 @@
 Tests - Deuce Client - Client - Deuce - Block
 """
 import json
+import urllib.parse
 
 import httpretty
 
@@ -35,6 +36,30 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=200)
 
         self.assertTrue(self.client.GetBlockList(self.vault))
+        self.assertIsNone(self.vault.blocks.marker)
+        for block_id in data:
+            self.assertIn(block_id, self.vault.blocks)
+
+    @httpretty.activate
+    def test_block_list_with_next_batch(self):
+        data = [block[0] for block in create_blocks(block_count=1)]
+        expected_data = json.dumps(data)
+
+        url = get_blocks_url(self.apihost, self.vault.vault_id)
+        url_params = urllib.parse.urlencode({'marker': data[0]})
+        next_batch = '{0}?{1}'.format(url, url_params)
+        httpretty.register_uri(httpretty.GET,
+                               url,
+                               content_type='application/json',
+                               adding_headers={
+                                   'x-next-batch': next_batch
+                               },
+                               body=expected_data,
+                               status=200)
+
+        self.assertTrue(self.client.GetBlockList(self.vault))
+        self.assertIsNotNone(self.vault.blocks.marker)
+        self.assertEqual(self.vault.blocks.marker, data[0])
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
@@ -53,6 +78,7 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=200)
 
         self.assertTrue(self.client.GetBlockList(self.vault, marker=block_id))
+        self.assertIsNone(self.vault.blocks.marker)
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
@@ -74,6 +100,7 @@ class ClientDeuceBlockTests(ClientTestBase):
                                                  marker=block_id,
                                                  limit=5))
         self.assertEqual(len(data), len(self.vault.blocks))
+        self.assertIsNone(self.vault.blocks.marker)
         for block_id in data:
             self.assertIn(block_id, self.vault.blocks)
 
@@ -90,6 +117,7 @@ class ClientDeuceBlockTests(ClientTestBase):
                                status=200)
 
         self.assertTrue(self.client.GetBlockList(self.vault, limit=5))
+        self.assertIsNone(self.vault.blocks.marker)
         self.assertEqual(5, len(self.vault.blocks))
         self.assertEqual(len(data), len(self.vault.blocks))
         for block_id in data:

@@ -226,12 +226,18 @@ def block_list(log, arguments):
     try:
         vault = deuceclient.GetVault(arguments.vault_name)
 
-        blocks = deuceclient.GetBlockList(vault,
-                                          marker=arguments.marker,
-                                          limit=arguments.limit)
+        marker = arguments.marker
         print('Block List:')
-        for block_id in blocks:
-            print('\t{0}'.format(vault.blocks[block_id]))
+        while True:
+            blocks = deuceclient.GetBlockList(vault,
+                                              marker=marker,
+                                              limit=arguments.limit)
+            for block_id in blocks:
+                print('\t{0}'.format(vault.blocks[block_id]))
+
+            marker = vault.blocks.marker
+            if marker is None:
+                break
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
@@ -519,7 +525,7 @@ def main():
 
     # If the caller provides a log configuration then use it
     # Otherwise we'll add our own little configuration as a default
-    # That captures stdout and outputs to output/integration-slave-server.out
+    # That captures stdout and outputs to .deuce_client-py.log
     if arguments.logconfig is not None:
         logging.config.fileConfig(arguments.logconfig)
     else:

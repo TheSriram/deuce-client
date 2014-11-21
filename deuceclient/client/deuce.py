@@ -67,6 +67,7 @@ class DeuceClient(Command):
         if fn is not None:
             self.log.debug('Response from %s', fn)
 
+        self.log.debug('headers: %s', response.headers)
         self.log.debug('status: %s', response.status_code)
         self.log.debug('json data: %s', jsondata)
         if jsondata:
@@ -307,6 +308,15 @@ class DeuceClient(Command):
                                                             vault.vault_id,
                                                             block_entry)
                 block_ids.append(block_entry)
+
+            if 'x-next-batch' in res.headers:
+                parsed_url = urlparse(res.headers['x-next-batch'])
+
+                qs = parse_qs(parsed_url[4])
+                vault.blocks.marker = qs['marker'][0]
+            else:
+                vault.blocks.marker = None
+
             return block_ids
         else:
             raise RuntimeError(
@@ -700,7 +710,15 @@ class DeuceClient(Command):
             for block_id, offset in res.json():
                 vault.files[file_id].offsets[offset] = block_id
                 block_ids.append(block_id)
-            return block_ids
+
+            next_marker = None
+            if 'x-next-batch' in res.headers:
+                parsed_url = urlparse(res.headers['x-next-batch'])
+
+                qs = parse_qs(parsed_url[4])
+                next_marker = qs['marker'][0]
+
+            return (block_ids, next_marker)
         else:
             raise RuntimeError(
                 'Failed to get Block list for File . '
@@ -804,6 +822,15 @@ class DeuceClient(Command):
                 for storageblockid in res.json()}
             block_list.update(blocks)
             vault.storageblocks.update(block_list)
+
+            if 'x-next-batch' in res.headers:
+                parsed_url = urlparse(res.headers['x-next-batch'])
+
+                qs = parse_qs(parsed_url[4])
+                vault.storageblocks.marker = qs['marker'][0]
+            else:
+                vault.storageblocks.marker = None
+
             return vault.storageblocks
         else:
             raise RuntimeError(
