@@ -738,8 +738,11 @@ class DeuceClient(Command):
                                             block.storage_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Download Block Storage Data')
         res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res,
+                                 jsondata=False,
+                                 fn='Download Block Storage Data')
 
         if res.status_code == 200:
             block.data = res.content
@@ -767,8 +770,11 @@ class DeuceClient(Command):
                                             block.storage_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Delete Block Storage')
         res = requests.delete(self.Uri, headers=self.Headers)
+        self.__log_response_data(res,
+                                 jsondata=False,
+                                 fn='Delete Block Storage')
         if res.status_code == 204:
             return True
         else:
@@ -807,8 +813,11 @@ class DeuceClient(Command):
 
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Get Block Storage List')
         res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res,
+                                 jsondata=True,
+                                 fn='Get Block Storage List')
 
         if res.status_code == 200:
             block_list = api_storageblocks.StorageBlocks(
@@ -852,8 +861,11 @@ class DeuceClient(Command):
                                             block.storage_id)
         self.ReInit(self.sslenabled, url)
         self.__update_headers()
-        self.__log_request_data()
+        self.__log_request_data(fn='Head Block in Storage')
         res = requests.head(self.Uri, headers=self.Headers)
+        self.__log_response_data(res,
+                                 jsondata=True,
+                                 fn='Head Block in Storage')
         if res.status_code == 204:
             block.ref_modified = res.headers['X-Ref-Modified']
             block.ref_count = res.headers['X-Block-Reference-Count']
