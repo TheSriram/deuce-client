@@ -192,7 +192,6 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                get_storage_block_url(self.apihost,
                                                      self.vault.vault_id,
                                                      storage_blockid),
-                               content_type='application/octet-stream',
                                adding_headers={
                                    'x-block-reference-count': 2,
                                    'x-ref-modified': datetime.datetime.max,

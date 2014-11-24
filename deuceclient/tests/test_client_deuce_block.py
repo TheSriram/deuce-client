@@ -2,7 +2,9 @@
 Tests - Deuce Client - Client - Deuce - Block
 """
 import json
+import random
 import urllib.parse
+import uuid
 
 import httpretty
 
@@ -207,20 +209,20 @@ class ClientDeuceBlockTests(ClientTestBase):
         self.assertTrue(self.client.UploadBlock(self.vault, block))
 
     def test_block_upload_bad_vault(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         with self.assertRaises(TypeError):
             self.client.UploadBlock(self.vault.vault_id, block)
 
     def test_block_upload_bad_block(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         with self.assertRaises(TypeError):
@@ -228,16 +230,16 @@ class ClientDeuceBlockTests(ClientTestBase):
 
     @httpretty.activate
     def test_block_upload_failed(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         httpretty.register_uri(httpretty.PUT,
                                get_block_url(self.apihost,
                                              self.vault.vault_id,
-                                             blockid),
+                                             block_id),
                                status=404)
 
         with self.assertRaises(RuntimeError) as upload_error:
@@ -246,11 +248,11 @@ class ClientDeuceBlockTests(ClientTestBase):
     @httpretty.activate
     def test_block_list_deletion(self):
         count = 5
-        for blockid, blockdata, block_size in [create_block()
+        for block_id, blockdata, block_size in [create_block()
                                                for _ in range(count)]:
             self.vault.blocks.add(api.Block(project_id=self.vault.project_id,
                                             vault_id=self.vault.vault_id,
-                                            block_id=blockid,
+                                            block_id=block_id,
                                             data=blockdata))
         self.assertEqual(len(self.vault.blocks), count)
         self.assertEqual(len(self.vault.blocks.keys()), count)
@@ -271,11 +273,11 @@ class ClientDeuceBlockTests(ClientTestBase):
     @httpretty.activate
     def test_block_list_deletion_failed(self):
         count = 5
-        for blockid, blockdata, block_size in [create_block()
+        for block_id, blockdata, block_size in [create_block()
                                                for _ in range(count)]:
             self.vault.blocks.add(api.Block(project_id=self.vault.project_id,
                                             vault_id=self.vault.vault_id,
-                                            block_id=blockid,
+                                            block_id=block_id,
                                             data=blockdata))
         self.assertEqual(len(self.vault.blocks), count)
         self.assertEqual(len(self.vault.blocks.keys()), count)
@@ -296,11 +298,11 @@ class ClientDeuceBlockTests(ClientTestBase):
     @httpretty.activate
     def test_block_list_deletion_mixed(self):
         count = 5
-        for blockid, blockdata, block_size in [create_block()
+        for block_id, blockdata, block_size in [create_block()
                                                for _ in range(count)]:
             self.vault.blocks.add(api.Block(project_id=self.vault.project_id,
                                             vault_id=self.vault.vault_id,
-                                            block_id=blockid,
+                                            block_id=block_id,
                                             data=blockdata))
         self.assertEqual(len(self.vault.blocks), count)
         self.assertEqual(len(self.vault.blocks.keys()), count)
@@ -332,35 +334,35 @@ class ClientDeuceBlockTests(ClientTestBase):
 
     @httpretty.activate
     def test_block_deletion(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         httpretty.register_uri(httpretty.DELETE,
                                get_block_url(self.apihost,
                                              self.vault.vault_id,
-                                             blockid),
+                                             block_id),
                                status=204)
 
         self.assertTrue(self.client.DeleteBlock(self.vault, block))
 
     def test_block_deletion_bad_vault(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         with self.assertRaises(TypeError):
             self.client.DeleteBlock(self.vault.vault_id, block)
 
     def test_block_deletion_bad_block(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         with self.assertRaises(TypeError):
@@ -368,16 +370,16 @@ class ClientDeuceBlockTests(ClientTestBase):
 
     @httpretty.activate
     def test_block_deletion_failed(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid,
+                          block_id=block_id,
                           data=blockdata)
 
         httpretty.register_uri(httpretty.DELETE,
                                get_block_url(self.apihost,
                                              self.vault.vault_id,
-                                             blockid),
+                                             block_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
@@ -387,15 +389,15 @@ class ClientDeuceBlockTests(ClientTestBase):
 
     @httpretty.activate
     def test_block_download(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid)
+                          block_id=block_id)
 
         httpretty.register_uri(httpretty.GET,
                                get_block_url(self.apihost,
                                              self.vault.vault_id,
-                                             blockid),
+                                             block_id),
                                content_type='text/plain',
                                body=blockdata,
                                status=200)
@@ -404,37 +406,91 @@ class ClientDeuceBlockTests(ClientTestBase):
         self.assertEqual(block.data, blockdata)
 
     def test_block_download_bad_vault(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid)
+                          block_id=block_id)
 
         with self.assertRaises(TypeError):
             self.client.DownloadBlock(self.vault.vault_id, block)
 
     def test_block_download_bad_block(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid)
+                          block_id=block_id)
 
         with self.assertRaises(TypeError):
             self.client.DownloadBlock(self.vault, block.block_id)
 
     @httpretty.activate
     def test_block_download_failed(self):
-        blockid, blockdata, block_size = create_block()
+        block_id, blockdata, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
                           vault_id=self.vault.vault_id,
-                          block_id=blockid)
+                          block_id=block_id)
 
         httpretty.register_uri(httpretty.GET,
                                get_block_url(self.apihost,
                                              self.vault.vault_id,
-                                             blockid),
+                                             block_id),
                                content_type='text/plain',
                                body="mock failure",
                                status=404)
 
         with self.assertRaises(RuntimeError) as deletion_error:
             self.client.DownloadBlock(self.vault, block)
+
+    @httpretty.activate
+    def test_block_head_non_existent(self):
+        block_id, block_data, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=block_id)
+
+        httpretty.register_uri(httpretty.HEAD,
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             block.block_id),
+                               content_type='text/plain',
+                               body='mocking error',
+                               status=404)
+
+        with self.assertRaises(RuntimeError):
+            self.client.HeadBlock(self.vault, block)
+
+    @httpretty.activate
+    def test_block_head(self):
+        block_id, block_data, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=block_id)
+
+        check_data = {
+            'storage-id': '{0}_{1}'.format(block_id, uuid.uuid4()),
+            'ref-count': random.randint(0, 100),
+            'ref-modified': datetime.datetime.max,
+        }
+
+        httpretty.register_uri(httpretty.HEAD,
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             block.block_id),
+                               adding_headers={
+                                   'x-block-reference-count':
+                                   check_data['ref-count'],
+                                   'x-ref-modified':
+                                   check_data['ref-modified'],
+                                   'x-storage-id': check_data['storage-id'],
+                                   'x-block-id': block_id,
+                                   'x-block-size': block_size,
+                               },
+                               status=204)
+
+        block = self.client.HeadBlock(self.vault, block)
+        self.assertEqual(block.ref_count, str(check_data['ref-count']))
+        self.assertEqual(block.ref_modified, str(check_data['ref-modified']))
+        self.assertEqual(block.storage_id, check_data['storage-id'])
+        self.assertEqual(block.block_id, block_id)
+        self.assertEqual(block.block_size, str(block_size))
+        self.assertFalse(block.block_orphaned)
