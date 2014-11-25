@@ -325,6 +325,43 @@ class DeuceClient(Command):
 
     @validate(vault=VaultInstanceRule,
               block=BlockInstanceRule)
+    def HeadBlock(self, vault, block):
+        """Head a block and get its information
+
+        :param vault: vault to upload the block into
+        :param block: block to be uploaded
+                      must be deuceclient.api.Block type
+
+        :returns: True on success
+        """
+        url = api_v1.get_block_path(vault.vault_id, block.block_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        headers = {}
+        headers.update(self.Headers)
+        headers['content-type'] = 'application/octet-stream'
+        headers['content-length'] = len(block)
+        self.__log_request_data(headers=headers, fn='Head Block')
+        res = requests.head(self.Uri, headers=headers)
+        self.__log_response_data(res, jsondata=False, fn='Head Block')
+        if res.status_code == 204:
+            block.ref_modified = res.headers['X-Ref-Modified']
+            block.ref_count = res.headers['X-Block-Reference-Count']
+            block.block_size = res.headers['X-Block-Size']
+            block.storage_id = None if res.headers['X-Storage-ID'] == \
+                'None' else res.headers['X-Storage-ID']
+
+            # Any block we get back here cannot be orphaned
+            block.block_orphaned = False
+            return block
+        else:
+            raise RuntimeError(
+                'Failed to Head Block {0:} in Vault {1}:. '
+                'Error ({2:}): {3:}'.format(block.block_id, vault.vault_id,
+                                            res.status_code, res.text))
+
+    @validate(vault=VaultInstanceRule,
+              block=BlockInstanceRule)
     def UploadBlock(self, vault, block):
         """Upload a block to the vault specified.
 
