@@ -340,14 +340,19 @@ class DeuceClient(Command):
         headers = {}
         headers.update(self.Headers)
         headers['content-type'] = 'application/octet-stream'
-        headers['content-length'] = len(block)
         self.__log_request_data(headers=headers, fn='Head Block')
         res = requests.head(self.Uri, headers=headers)
         self.__log_response_data(res, jsondata=False, fn='Head Block')
         if res.status_code == 204:
-            block.ref_modified = res.headers['X-Ref-Modified']
-            block.ref_count = res.headers['X-Block-Reference-Count']
-            block.block_size = res.headers['X-Block-Size']
+            block.ref_modified = int(res.headers['X-Ref-Modified'])\
+                if res.headers['X-Ref-Modified'] else 0
+
+            block.ref_count = int(res.headers['X-Block-Reference-Count'])\
+                if res.headers['X-Block-Reference-Count'] else 0
+
+            block.block_size = int(res.headers['X-Block-Size'])\
+                if res.headers['X-Block-Size'] else 0
+
             block.storage_id = None if res.headers['X-Storage-ID'] == \
                 'None' else res.headers['X-Storage-ID']
 
@@ -783,8 +788,12 @@ class DeuceClient(Command):
 
         if res.status_code == 200:
             block.data = res.content
-            block.ref_modified = res.headers['X-Ref-Modified']
-            block.ref_count = res.headers['X-Block-Reference-Count']
+            block.ref_modified = int(res.headers['X-Ref-Modified'])\
+                if res.headers['X-Ref-Modified'] else 0
+
+            block.ref_count = int(res.headers['X-Block-Reference-Count'])\
+                if res.headers['X-Block-Reference-Count'] else 0
+
             block.block_id = res.headers['X-Block-ID']
             return block
         else:
@@ -904,11 +913,18 @@ class DeuceClient(Command):
                                  jsondata=True,
                                  fn='Head Block in Storage')
         if res.status_code == 204:
-            block.ref_modified = res.headers['X-Ref-Modified']
-            block.ref_count = res.headers['X-Block-Reference-Count']
+            block.ref_modified = int(res.headers['X-Ref-Modified'])\
+                if res.headers['X-Ref-Modified'] else 0
+
+            block.ref_count = int(res.headers['X-Block-Reference-Count'])\
+                if res.headers['X-Block-Reference-Count'] else 0
+
             block.block_id = None if res.headers['X-Block-ID'] == \
                 'None' else res.headers['X-Block-ID']
-            block.block_size = res.headers['X-Block-Size']
+
+            block.block_size = int(res.headers['X-Block-Size'])\
+                if res.headers['X-Block-Size'] else 0
+
             block.block_orphaned = \
                 json.loads(res.headers['X-Block-Orphaned'].lower())
             return block
