@@ -469,7 +469,7 @@ class ClientDeuceBlockTests(ClientTestBase):
         check_data = {
             'storage-id': '{0}_{1}'.format(block_id, uuid.uuid4()),
             'ref-count': random.randint(0, 100),
-            'ref-modified': datetime.datetime.max,
+            'ref-modified': int(datetime.datetime.max.timestamp()),
         }
 
         httpretty.register_uri(httpretty.HEAD,
@@ -478,19 +478,19 @@ class ClientDeuceBlockTests(ClientTestBase):
                                              block.block_id),
                                adding_headers={
                                    'x-block-reference-count':
-                                   check_data['ref-count'],
+                                   str(check_data['ref-count']),
                                    'x-ref-modified':
-                                   check_data['ref-modified'],
+                                   str(check_data['ref-modified']),
                                    'x-storage-id': check_data['storage-id'],
                                    'x-block-id': block_id,
-                                   'x-block-size': block_size,
+                                   'x-block-size': str(block_size),
                                },
                                status=204)
 
         block = self.client.HeadBlock(self.vault, block)
-        self.assertEqual(block.ref_count, str(check_data['ref-count']))
-        self.assertEqual(block.ref_modified, str(check_data['ref-modified']))
+        self.assertEqual(block.ref_count, check_data['ref-count'])
+        self.assertEqual(block.ref_modified, check_data['ref-modified'])
         self.assertEqual(block.storage_id, check_data['storage-id'])
         self.assertEqual(block.block_id, block_id)
-        self.assertEqual(block.block_size, str(block_size))
+        self.assertEqual(block.block_size, block_size)
         self.assertFalse(block.block_orphaned)

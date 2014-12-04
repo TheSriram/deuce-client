@@ -27,6 +27,12 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
     def test_storage_block_download(self):
         storage_blockid = create_storage_block()
         blockid = hashlib.sha1(b'mock').hexdigest()
+
+        check_data = {
+            'ref-count': 2,
+            'ref-modified': int(datetime.datetime.max.timestamp()),
+        }
+
         httpretty.register_uri(httpretty.GET,
                                get_storage_block_url(self.apihost,
                                                      self.vault.vault_id,
@@ -34,8 +40,10 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                content_type='application/octet-stream',
                                body="mock",
                                adding_headers={
-                                   'x-block-reference-count': 2,
-                                   'x-ref-modified': datetime.datetime.max,
+                                   'x-block-reference-count':
+                                   str(check_data['ref-count']),
+                                   'x-ref-modified':
+                                   str(check_data['ref-modified']),
                                    'x-storage-id': storage_blockid,
                                    'x-block-id': blockid,
                                },
@@ -47,8 +55,9 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
         block = self.client.DownloadBlockStorageData(self.vault,
                                                      block_before)
         self.assertEqual(block.data, b"mock")
-        self.assertEqual(block.ref_count, '2')
-        self.assertEqual(block.ref_modified, str(datetime.datetime.max))
+        self.assertEqual(block.ref_count, check_data['ref-count'])
+        self.assertEqual(block.ref_modified,
+                         check_data['ref-modified'])
         self.assertEqual(block.storage_id, storage_blockid)
         self.assertEqual(block.block_id, blockid)
 
@@ -188,16 +197,26 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
     def test_head_storage_block(self):
         storage_blockid = create_storage_block()
         blockid = hashlib.sha1(b'mock').hexdigest()
+
+        check_data = {
+            'ref-count': 2,
+            'ref-modified': int(datetime.datetime.max.timestamp()),
+            'block-size': 200
+        }
+
         httpretty.register_uri(httpretty.HEAD,
                                get_storage_block_url(self.apihost,
                                                      self.vault.vault_id,
                                                      storage_blockid),
                                adding_headers={
-                                   'x-block-reference-count': 2,
-                                   'x-ref-modified': datetime.datetime.max,
+                                   'x-block-reference-count':
+                                   check_data['ref-count'],
+                                   'x-ref-modified':
+                                   check_data['ref-modified'],
                                    'x-storage-id': storage_blockid,
                                    'x-block-id': blockid,
-                                   'x-block-size': 200,
+                                   'x-block-size':
+                                   str(check_data['block-size']),
                                    'x-block-orphaned': True
                                },
                                status=204)
@@ -206,11 +225,11 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
                                  storage_id=storage_blockid,
                                  block_type='storage')
         block = self.client.HeadBlockStorage(self.vault, block_before)
-        self.assertEqual(block.ref_count, '2')
-        self.assertEqual(block.ref_modified, str(datetime.datetime.max))
+        self.assertEqual(block.ref_count, check_data['ref-count'])
+        self.assertEqual(block.ref_modified, check_data['ref-modified'])
         self.assertEqual(block.storage_id, storage_blockid)
         self.assertEqual(block.block_id, blockid)
-        self.assertEqual(block.block_size, '200')
+        self.assertEqual(block.block_size, check_data['block-size'])
         self.assertTrue(block.block_orphaned)
 
     @httpretty.activate
