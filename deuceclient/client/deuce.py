@@ -19,6 +19,7 @@ import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
 from deuceclient.common.validation import *
 from deuceclient.common.validation_instance import *
+from deuceclient.utils.misc import set_qs_on_url
 
 
 class DeuceClient(Command):
@@ -280,22 +281,28 @@ class DeuceClient(Command):
         :raises: RunTimeError on failure
         """
         url = api_v1.get_blocks_path(vault.vault_id)
-        if marker is not None or limit is not None:
-            # add the separator between the URL and the parameters
-            url = url + '?'
+        query_args = {}
 
-            # Apply the marker
-            if marker is not None:
-                url = '{0:}marker={1:}'.format(url, marker)
-                # Apply a comma if the next item is not none
-                if limit is not None:
-                    url = url + ','
+        if marker and limit:
+            query_args = {
+                'marker': marker,
+                'limit': limit,
+            }
 
-            # Apply the limit
-            if limit is not None:
-                url = '{0:}limit={1:}'.format(url, limit)
+        elif marker:
+            query_args = {
+                'marker': marker
+            }
+        elif limit:
+            query_args = {
+                'limit': limit
+            }
+        else:
+            pass
 
-        self.ReInit(self.sslenabled, url)
+        ret_url = set_qs_on_url(url, query_args)
+
+        self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='Get Block List')
         res = requests.get(self.Uri, headers=self.Headers)
@@ -726,22 +733,27 @@ class DeuceClient(Command):
 
         url = api_v1.get_fileblocks_path(vault.vault_id, file_id)
 
-        if marker is not None or limit is not None:
-            # add the separator between the URL and the parameters
-            url = url + '?'
+        query_args = {}
 
-            # Apply the marker
-            if marker is not None:
-                url = '{0:}marker={1:}'.format(url, marker)
-                # Apply a comma if the next item is not none
-                if limit is not None:
-                    url = url + ','
+        if marker and limit:
+            query_args = {
+                'marker': marker,
+                'limit': limit,
+            }
 
-            # Apply the limit
-            if limit is not None:
-                url = '{0:}limit={1:}'.format(url, limit)
+        elif marker:
+            query_args = {
+                'marker': marker
+            }
+        elif limit:
+            query_args = {
+                'limit': limit
+            }
+        else:
+            pass
 
-        self.ReInit(self.sslenabled, url)
+        ret_url = set_qs_on_url(url, query_args)
+        self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='Get File Block List')
         res = requests.get(self.Uri, headers=self.Headers)
@@ -842,22 +854,28 @@ class DeuceClient(Command):
                  Runtime Error raised if that's not the case.
         """
         url = api_v1.get_storage_blocks_path(vault.vault_id)
-        if marker is not None or limit is not None:
-            # add the separator between the URL and the parameters
-            url = url + '?'
+        query_args = {}
 
-            # Apply the marker
-            if marker is not None:
-                url = '{0:}marker={1:}'.format(url, marker)
-                # Apply a separator if the next item is not none
-                if limit is not None:
-                    url = url + '&'
+        if marker and limit:
+            query_args = {
+                'marker': marker,
+                'limit': limit,
+            }
 
-            # Apply the limit
-            if limit is not None:
-                url = '{0:}limit={1:}'.format(url, limit)
+        elif marker:
+            query_args = {
+                'marker': marker
+            }
+        elif limit:
+            query_args = {
+                'limit': limit
+            }
+        else:
+            pass
 
-        self.ReInit(self.sslenabled, url)
+        ret_url = set_qs_on_url(url, query_args)
+
+        self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='Get Block Storage List')
         res = requests.get(self.Uri, headers=self.Headers)
