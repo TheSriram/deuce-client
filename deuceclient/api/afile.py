@@ -1,6 +1,8 @@
 """
 Deuce Client - File API
 """
+import json
+
 from stoplight import validate
 
 from deuceclient.api.blocks import Blocks
@@ -24,6 +26,29 @@ class File(object):
             'maximum_offset': 0,
             'url': url
         }
+
+    def to_json(self):
+        return json.dumps({
+            'project_id': self.project_id,
+            'vault_id': self.vault_id,
+            'file_id': self.file_id,
+            'maximum_offset': self.__properties['maximum_offset'],
+            'url': self.url,
+            'offsets': json.dumps(self.offsets),
+            'blocks': self.blocks.to_json()
+        })
+
+    @staticmethod
+    def from_json(serialized_data):
+        json_data = json.loads(serialized_data)
+        new_file = File(json_data['project_id'],
+                        json_data['vault_id'],
+                        file_id=json_data['file_id'],
+                        url=json_data['url'])
+        new_file.__properties['maximum_offset'] = json_data['maximum_offset']
+        new_file.__properties['offsets'] = json.loads(json_data['offsets'])
+        new_file.blocks.from_json(json_data['blocks'])
+        return new_file
 
     @validate(offset=OffsetNumericRule)
     def _update_maximum_offset(self, offset):

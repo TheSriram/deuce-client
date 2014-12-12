@@ -1,6 +1,8 @@
 """
 Deuce Client - Storage Blocks API
 """
+import json
+
 from stoplight import validate
 
 from deuceclient.api.block import Block
@@ -20,6 +22,27 @@ class StorageBlocks(dict):
             'project_id': project_id,
             'vault_id': vault_id
         }
+
+    def to_json(self):
+        return json.dumps({
+            'marker': self.marker,
+            'project_id': self.project_id,
+            'vault_id': self.vault_id,
+            'blocks': {
+                block_id: self[block_id].to_json()
+                for block_id in self.keys()
+            }
+        })
+
+    def from_json(self, serialized_data):
+        json_data = json.loads(serialized_data)
+        self.marker = json_data['marker']
+        self.__properties['project_id'] = json_data['project_id']
+        self.__properties['vault_id'] = json_data['vault_id']
+        self.update({
+            k: Block.from_json(v)
+            for k, v in json_data['blocks']
+        })
 
     @validate(key=StorageBlockIdRule)
     def __getitem__(self, key):
