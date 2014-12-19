@@ -23,26 +23,35 @@ class Blocks(dict):
             'vault_id': vault_id
         }
 
-    def to_json(self):
-        return json.dumps({
+    def serialize(self):
+        return {
             'marker': self.marker,
             'project_id': self.project_id,
             'vault_id': self.vault_id,
             'blocks': {
-                block_id: self[block_id].to_json()
+                block_id: self[block_id].serialize()
                 for block_id in self.keys()
             }
-        })
+        }
 
-    def from_json(self, serialized_data):
-        json_data = json.loads(serialized_data)
-        self.marker = json_data['marker']
-        self.__properties['project_id'] = json_data['project_id']
-        self.__properties['vault_id'] = json_data['vault_id']
-        self.update({
-            k: Block.from_json(v)
-            for k, v in json_data['blocks'].items()
+    @staticmethod
+    def deserialize(serialized_data):
+        blocks = Blocks(serialized_data['project_id'],
+                        serialized_data['vault_id'])
+        blocks.marker = serialized_data['marker']
+        blocks.update({
+            k: Block.deserialize(v)
+            for k, v in serialized_data['blocks'].items()
         })
+        return blocks
+
+    def to_json(self):
+        return json.dumps(self.serialize())
+
+    @staticmethod
+    def from_json(serialized_data):
+        json_data = json.loads(serialized_data)
+        return Blocks.deserialize(json_data)
 
     @validate(key=MetadataBlockIdRule)
     def __getitem__(self, key):

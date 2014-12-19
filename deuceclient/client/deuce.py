@@ -22,6 +22,11 @@ from deuceclient.common.validation_instance import *
 from deuceclient.utils.misc import set_qs_on_url
 
 
+# Until urllib3 fixes its SSL warnings...
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
+
+
 class DeuceClient(Command):
 
     """
