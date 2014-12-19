@@ -233,7 +233,7 @@ def block_list(log, arguments):
                                               marker=marker,
                                               limit=arguments.limit)
             for block_id in blocks:
-                print('\t{0}'.format(vault.blocks[block_id]))
+                print('\t{0}'.format(vault.blocks[block_id].block_id))
 
             marker = vault.blocks.marker
             if marker is None:

@@ -1,6 +1,8 @@
 """
 Deuce Client - Vault API
 """
+import json
+
 from stoplight import validate
 
 from deuceclient.api.afile import File
@@ -26,6 +28,26 @@ class Vault(object):
             'files': Files(project_id=project_id,
                            vault_id=vault_id)
         }
+
+    def to_json(self):
+        return json.dumps({
+            'project_id': self.project_id,
+            'vault_id': self.vault_id,
+            'blocks': self.blocks.to_json(),
+            'storage_blocks': self.storageblocks.to_json(),
+            'files': self.files.to_json()
+        })
+
+    @staticmethod
+    def from_json(serialized_data):
+        json_data = json.loads(serialized_data)
+
+        vault = Vault(json_data['project_id'],
+                      json_data['vault_id'])
+        vault.blocks.from_json(json_data['blocks'])
+        vault.storageblocks.from_json(json_data['storage_blocks'])
+        vault.files.from_json(json_data['files'])
+        return vault
 
     @property
     def vault_id(self):
