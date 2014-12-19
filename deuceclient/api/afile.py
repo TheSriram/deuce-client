@@ -27,28 +27,37 @@ class File(object):
             'url': url
         }
 
-    def to_json(self):
-        return json.dumps({
+    def serialize(self):
+        return {
             'project_id': self.project_id,
             'vault_id': self.vault_id,
             'file_id': self.file_id,
             'maximum_offset': self.__properties['maximum_offset'],
             'url': self.url,
-            'offsets': json.dumps(self.offsets),
-            'blocks': self.blocks.to_json()
-        })
+            'offsets': self.offsets,
+            'blocks': self.blocks.serialize()
+        }
+
+    @staticmethod
+    def deserialize(serialized_data):
+        new_file = File(serialized_data['project_id'],
+                        serialized_data['vault_id'],
+                        file_id=serialized_data['file_id'],
+                        url=serialized_data['url'])
+        new_file.__properties['maximum_offset'] =\
+            serialized_data['maximum_offset']
+        new_file.__properties['offsets'] = serialized_data['offsets']
+        new_file.__properties['blocks'] = Blocks.deserialize(
+            serialized_data['blocks'])
+        return new_file
+
+    def to_json(self):
+        return json.dumps(self.serialize())
 
     @staticmethod
     def from_json(serialized_data):
         json_data = json.loads(serialized_data)
-        new_file = File(json_data['project_id'],
-                        json_data['vault_id'],
-                        file_id=json_data['file_id'],
-                        url=json_data['url'])
-        new_file.__properties['maximum_offset'] = json_data['maximum_offset']
-        new_file.__properties['offsets'] = json.loads(json_data['offsets'])
-        new_file.blocks.from_json(json_data['blocks'])
-        return new_file
+        return File.deserialize(json_data)
 
     @validate(offset=OffsetNumericRule)
     def _update_maximum_offset(self, offset):

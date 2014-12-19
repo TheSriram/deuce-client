@@ -63,8 +63,8 @@ class Block(object):
                 'block_type': block_type
             }
 
-    def to_json(self):
-        return json.dumps({
+    def serialize(self):
+        return {
             'project_id': self.project_id,
             'vault_id': self.vault_id,
             'block_id': self.block_id,
@@ -76,20 +76,27 @@ class Block(object):
             'block_size': self.block_size,
             'block_orphaned': self.block_orphaned,
             'block_type': self.block_type
-        })
+        }
+
+    @staticmethod
+    def deserialize(serialized_data):
+        return Block(serialized_data['project_id'],
+                     serialized_data['vault_id'],
+                     block_id=serialized_data['block_id'],
+                     storage_id=serialized_data['storage_id'],
+                     ref_count=serialized_data['references']['count'],
+                     ref_modified=serialized_data['references']['modified'],
+                     block_size=serialized_data['block_size'],
+                     block_orphaned=serialized_data['block_orphaned'],
+                     block_type=serialized_data['block_type'])
+
+    def to_json(self):
+        return json.dumps(self.serialize())
 
     @staticmethod
     def from_json(serialized_data):
         json_data = json.loads(serialized_data)
-        return Block(json_data['project_id'],
-                     json_data['vault_id'],
-                     block_id=json_data['block_id'],
-                     storage_id=json_data['storage_id'],
-                     ref_count=json_data['references']['count'],
-                     ref_modified=json_data['references']['modified'],
-                     block_size=json_data['block_size'],
-                     block_orphaned=json_data['block_orphaned'],
-                     block_type=json_data['block_type'])
+        return Block.deserialize(json_data)
 
     @property
     def project_id(self):

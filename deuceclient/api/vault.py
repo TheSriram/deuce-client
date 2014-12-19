@@ -29,25 +29,34 @@ class Vault(object):
                            vault_id=vault_id)
         }
 
-    def to_json(self):
-        return json.dumps({
+    def serialize(self):
+        return {
             'project_id': self.project_id,
             'vault_id': self.vault_id,
-            'blocks': self.blocks.to_json(),
-            'storage_blocks': self.storageblocks.to_json(),
-            'files': self.files.to_json()
-        })
+            'blocks': self.blocks.serialize(),
+            'storage_blocks': self.storageblocks.serialize(),
+            'files': self.files.serialize()
+        }
+
+    @staticmethod
+    def deserialize(serialized_data):
+        vault = Vault(serialized_data['project_id'],
+                      serialized_data['vault_id'])
+        vault.__properties['blocks'] = Blocks.deserialize(
+            serialized_data['blocks'])
+        vault.__properties['storageblocks'] = StorageBlocks.deserialize(
+            serialized_data['storage_blocks'])
+        vault.__properties['files'] = Files.deserialize(
+            serialized_data['files'])
+        return vault
+
+    def to_json(self):
+        return json.dumps(self.serialize())
 
     @staticmethod
     def from_json(serialized_data):
         json_data = json.loads(serialized_data)
-
-        vault = Vault(json_data['project_id'],
-                      json_data['vault_id'])
-        vault.blocks.from_json(json_data['blocks'])
-        vault.storageblocks.from_json(json_data['storage_blocks'])
-        vault.files.from_json(json_data['files'])
-        return vault
+        return Vault.deserialize(json_data)
 
     @property
     def vault_id(self):
