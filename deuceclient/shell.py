@@ -146,21 +146,26 @@ def vault_list(log, arguments):
     # We need to authenticate to get the project id
     auth_engine.AuthToken
 
-    project = api.Project(auth_engine.AuthTenantId)
+    try:
+        project = api.Project(auth_engine.AuthTenantId)
 
-    vault_marker = None
-    while deuceclient.ListVaults(project, vault_marker):
-        vault_marker = project.marker
-        if vault_marker is None:
-            break
+        vault_marker = None
+        while deuceclient.ListVaults(project, vault_marker):
+            vault_marker = project.marker
+            if vault_marker is None:
+                break
 
-    if len(project):
-        print('Vaults:')
-        for vault_id in project:
-            print('\t{0:}'.format(vault_id))
-        return 0
-    else:
-        print('Failed to find any Vaults')
+        if len(project):
+            print('Vaults:')
+            for vault_id in project:
+                print('\t{0:}'.format(vault_id))
+            return 0
+        else:
+            print('No Vaults available for the User')
+            return 2
+
+    except Exception as ex:
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -174,7 +179,7 @@ def vault_create(log, arguments):
         deuceclient.CreateVault(arguments.vault_name)
         return 0
     except Exception as ex:
-        print('Error:\n${0}'.format(ex))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -184,11 +189,12 @@ def vault_exists(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    result = deuceclient.VaultExists(arguments.vault_name)
-    if result:
+    try:
+        deuceclient.VaultExists(arguments.vault_name)
         print('Vault {0:} exists'.format(arguments.vault_name))
         return 0
-    else:
+    except:
+        # This can be improved once we improve the exceptions
         print('Vault {0:} does NOT exist'.format(arguments.vault_name))
         return 1
 
@@ -209,7 +215,7 @@ def vault_stats(log, arguments):
         return 0
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -226,7 +232,7 @@ def vault_delete(log, arguments):
         return 0
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -254,7 +260,7 @@ def block_list(log, arguments):
         return 0
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -284,7 +290,34 @@ def block_upload(log, arguments):
             return 1
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
+        return 1
+
+
+def block_delete(log, arguments):
+    """
+    Delete a block
+    """
+    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        block_id = arguments.block_id
+
+        block = api.Block(project_id=auth_engine.AuthTenantId,
+                          vault_id=arguments.vault_name,
+                          block_id=block_id)
+
+        if deuceclient.DeleteBlock(vault, block):
+            print('Deleted the block from deuce.')
+            return 0
+
+        else:
+            return 1
+
+    except Exception as ex:
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -306,7 +339,37 @@ def file_create(log, arguments):
         return 0
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
+        return 1
+
+
+def file_list(log, arguments):
+    """
+    List files in the vault
+    """
+    auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
+
+    try:
+        vault = deuceclient.GetVault(arguments.vault_name)
+
+        file_marker = None
+        while deuceclient.ListFiles(vault, file_marker):
+            file_marker = vault.files.marker
+            if file_marker is None:
+                break
+
+        if len(vault.files):
+            print('Files:')
+            for file_id in vault.files:
+                print('\t{0:}'.format(file_id))
+            return 0
+
+        else:
+            print('No files in the Vault')
+            return 2
+
+    except Exception as ex:
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -327,7 +390,7 @@ def file_delete(log, arguments):
             return 1
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -386,7 +449,7 @@ def file_upload(log, arguments):
         return 0
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -406,7 +469,7 @@ def file_download(log, arguments):
         return 0
 
     except Exception as ex:
-        print('Error: {0}'.format(str(ex)))
+        print('Error: {0:}'.format(ex))
         return 1
 
 
@@ -503,6 +566,15 @@ def main():
                                      help="The block to be uploaded")
     block_upload_parser.set_defaults(func=block_upload)
 
+
+    block_delete_parser = block_subparsers.add_parser('delete')
+    block_delete_parser.add_argument('--block-id',
+                                     default=None,
+                                     required=True,
+                                     type=str,
+                                     help="Block ID of the block to be deleted")
+    block_delete_parser.set_defaults(func=block_delete)
+
     file_parser = sub_argument_parser.add_parser('files')
     file_parser.add_argument('--vault-name',
                              default=None,
@@ -513,6 +585,9 @@ def main():
 
     file_create_parser = file_subparsers.add_parser('create')
     file_create_parser.set_defaults(func=file_create)
+
+    file_list_parser = file_subparsers.add_parser('list')
+    file_list_parser.set_defaults(func=file_list)
 
     file_upload_parser = file_subparsers.add_parser('upload')
     file_upload_parser.add_argument('--file-id',

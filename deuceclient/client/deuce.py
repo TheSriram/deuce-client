@@ -514,6 +514,54 @@ class DeuceClient(Command):
                 'Failed to get Block Content for Block Id . '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule, marker=FileIdRuleNoneOkay)
+    def ListFiles(self, vault, marker=None):
+        """List files in the Vault
+
+        :param vault: vault to list the files from
+        :returns: a list of file ids in the vault
+        """
+        url = api_v1.get_files_path(vault.vault_id)
+        if marker is not None:
+            self.ReInit(self.sslenabled,
+                        '{0:}?marker={1:}'.format(path, marker))
+        else:
+            self.ReInit(self.sslenabled, url)
+
+        self.__update_headers()
+        self.__log_request_data(fn='List Files')
+        res = requests.get(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=True, fn='List Files')
+
+        if res.status_code == 200:
+            if 'x-next-batch' in res.headers:
+                parsed_url = urlparse(res.headers['x-next-batch'])
+
+                qs = parse_qs(parsed_url[4])
+                vault.files.marker = qs['marker'][0]
+            else:
+                vault.files.marker = None
+
+            return_list = []
+            for file_id in res.json():
+                return_list.append(file_id)
+
+                file_uri = api_v1.get_file_path(vault.vault_id, file_id)
+                self.ReInit(self.sslenabled, url)
+                file_url = self.Uri
+
+                vault.files[file_id] = api_file.File(project_id=self.project_id,
+                                                     vault_id=vault.vault_id,
+                                                     file_id=file_id,
+                                                     url=file_url)
+
+            return return_list
+
+        else:
+            raise RuntimeError(
+                'Failed to List Files in the Vault. '
+                'Error ({0:}): {1:}'.format(res.statue_code, res.text))
+
     @validate(vault=VaultInstanceRule)
     def CreateFile(self, vault):
         """Create a file
