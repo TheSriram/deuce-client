@@ -41,7 +41,7 @@ class StorageBlocks(dict):
         storageblocks.marker = serialized_data['marker']
         storageblocks.update({
             k: Block.deserialize(v)
-            for k, v in serialized_data['blocks']
+            for k, v in serialized_data['blocks'].items()
         })
         return storageblocks
 
@@ -94,3 +94,9 @@ class StorageBlocks(dict):
         # to get validation of each entry in the incoming dictionary
         for k, v in dict(*args, **kwargs).items():
             self[k] = v
+
+    def add(self, block):
+        if isinstance(block, Block):
+            self[block.storage_id] = block
+        else:
+            raise TypeError('block must be instance of deuceclient.api.Block')

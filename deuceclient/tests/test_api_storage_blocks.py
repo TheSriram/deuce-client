@@ -102,6 +102,26 @@ class StorageBlocksTest(TestCase):
         with self.assertRaises(TypeError):
             blocks[block.storage_id] = block
 
+    def test_add_block_alternate(self):
+        block = api.Block(self.project_id,
+                        self.vault_id,
+                        storage_id=self.storageblock,
+                        block_type='storage')
+
+        blocks = api.StorageBlocks(project_id=self.project_id,
+                                  vault_id=self.vault_id)
+        blocks.add(block)
+
+        self.assertEqual(block,
+                         blocks[block.storage_id])
+
+    def test_add_block_alternate_invalid_block_instance(self):
+        block = InvalidStorageBlock()
+        blocks = api.StorageBlocks(project_id=self.project_id,
+                                  vault_id=self.vault_id)
+        with self.assertRaises(TypeError):
+            blocks.add(block)
+
     def test_repr(self):
         blocks = api.StorageBlocks(project_id=self.project_id,
                                   vault_id=self.vault_id)
