@@ -524,7 +524,7 @@ class DeuceClient(Command):
         url = api_v1.get_files_path(vault.vault_id)
         if marker is not None:
             self.ReInit(self.sslenabled,
-                        '{0:}?marker={1:}'.format(path, marker))
+                        '{0:}?marker={1:}'.format(url, marker))
         else:
             self.ReInit(self.sslenabled, url)
 
@@ -550,17 +550,20 @@ class DeuceClient(Command):
                 self.ReInit(self.sslenabled, url)
                 file_url = self.Uri
 
-                vault.files[file_id] = api_file.File(project_id=self.project_id,
-                                                     vault_id=vault.vault_id,
-                                                     file_id=file_id,
-                                                     url=file_url)
+                kw = {
+                    'project_id': self.project_id,
+                    'vault_id': vault.vault_id,
+                    'file_id': file_id,
+                    'url': file_url
+                }
+                vault.files[file_id] = api_file.File(**kw)
 
             return return_list
 
         else:
             raise RuntimeError(
                 'Failed to List Files in the Vault. '
-                'Error ({0:}): {1:}'.format(res.statue_code, res.text))
+                'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault=VaultInstanceRule)
     def CreateFile(self, vault):

@@ -566,13 +566,13 @@ def main():
                                      help="The block to be uploaded")
     block_upload_parser.set_defaults(func=block_upload)
 
-
     block_delete_parser = block_subparsers.add_parser('delete')
     block_delete_parser.add_argument('--block-id',
                                      default=None,
                                      required=True,
                                      type=str,
-                                     help="Block ID of the block to be deleted")
+                                     help="Block ID of the block to be "
+                                     "deleted")
     block_delete_parser.set_defaults(func=block_delete)
 
     file_parser = sub_argument_parser.add_parser('files')
