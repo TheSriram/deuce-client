@@ -231,14 +231,18 @@ class DeuceClient(Command):
         self.__log_response_data(res, jsondata=False, fn='Vault Exists')
 
         if res.status_code == 204:
+            self.log.debug('Vault Exists')
             if isinstance(vault, api_vault.Vault):
                 vault.status = 'valid'
             return True
         elif res.status_code == 404:
+            self.log.debug('Vault Not Found')
             if isinstance(vault, api_vault.Vault):
                 vault.status = 'invalid'
             return False
         else:
+            self.log.debug('Error ({0:}) while checking Vault status - {1:}'
+                           .format(res.status_code, res.text))
             raise RuntimeError(
                 'Failed to determine if Vault exists. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))

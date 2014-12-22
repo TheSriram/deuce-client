@@ -190,13 +190,16 @@ def vault_exists(log, arguments):
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
     try:
-        deuceclient.VaultExists(arguments.vault_name)
-        print('Vault {0:} exists'.format(arguments.vault_name))
-        return 0
-    except:
-        # This can be improved once we improve the exceptions
-        print('Vault {0:} does NOT exist'.format(arguments.vault_name))
-        return 1
+        if deuceclient.VaultExists(arguments.vault_name):
+            print('Vault {0:} exists'.format(arguments.vault_name))
+            return 0
+        else:
+            print('Vault {0:} does NOT exist'.format(arguments.vault_name))
+            return 1
+    except Exception as ex:
+        print('Error determining if Vault {0:} exists: {1:}'
+              .format(arguments.vault_name, ex))
+        return 2
 
 
 def vault_stats(log, arguments):
