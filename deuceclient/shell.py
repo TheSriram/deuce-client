@@ -158,8 +158,10 @@ def vault_list(log, arguments):
         print('Vaults:')
         for vault_id in project:
             print('\t{0:}'.format(vault_id))
+        return 0
     else:
         print('Failed to find any Vaults')
+        return 1
 
 
 def vault_create(log, arguments):
@@ -168,7 +170,12 @@ def vault_create(log, arguments):
     """
     auth_engine, deuceclient, api_url = __api_operation_prep(log, arguments)
 
-    return not deuceclient.CreateVault(arguments.vault_name)
+    try:
+        deuceclient.CreateVault(arguments.vault_name)
+        return 0
+    except Exception as ex:
+        print('Error:\n${0}'.format(ex))
+        return 1
 
 
 def vault_exists(log, arguments):
@@ -180,8 +187,10 @@ def vault_exists(log, arguments):
     result = deuceclient.VaultExists(arguments.vault_name)
     if result:
         print('Vault {0:} exists'.format(arguments.vault_name))
+        return 0
     else:
         print('Vault {0:} does NOT exist'.format(arguments.vault_name))
+        return 1
 
 
 def vault_stats(log, arguments):
@@ -197,9 +206,11 @@ def vault_stats(log, arguments):
             for k in vault.statistics.keys():
                 print('{0:}:'.format(k), end='\t')
                 pprint.pprint(vault.statistics[k])
+        return 0
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def vault_delete(log, arguments):
@@ -212,9 +223,11 @@ def vault_delete(log, arguments):
         vault = deuceclient.GetVault(arguments.vault_name)
         deuceclient.DeleteVault(vault)
         print('Deleted Vault {0}'.format(arguments.vault_name))
+        return 0
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def block_list(log, arguments):
@@ -238,9 +251,11 @@ def block_list(log, arguments):
             marker = vault.blocks.marker
             if marker is None:
                 break
+        return 0
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def block_upload(log, arguments):
@@ -263,9 +278,14 @@ def block_upload(log, arguments):
 
         if deuceclient.UploadBlock(vault, block):
             print('Uploaded the block to deuce.')
+            return 0
+
+        else:
+            return 1
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def file_create(log, arguments):
@@ -283,9 +303,11 @@ def file_create(log, arguments):
         print('Created File')
         print('\tFile ID: {0}'.format(file_id))
         print('\tURL: {0}'.format(file_url))
+        return 0
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def file_delete(log, arguments):
@@ -300,9 +322,13 @@ def file_delete(log, arguments):
         if deuceclient.DeleteFile(vault, arguments.file_id):
             print('Delete filed {0:} from Vault {1:}'
                   .format(arguments.file_id, arguments.vault_name))
+            return 0
+        else:
+            return 1
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def file_upload(log, arguments):
@@ -357,9 +383,11 @@ def file_upload(log, arguments):
         print('Uploaded File')
         print('\tFile ID: {0}'.format(file_id))
         print('\tURL: {0}'.format(file_url))
+        return 0
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def file_download(log, arguments):
@@ -375,9 +403,11 @@ def file_download(log, arguments):
         filename = arguments.file_name
 
         deuceclient.DownloadFile(vault, file_id, filename)
+        return 0
 
     except Exception as ex:
         print('Error: {0}'.format(str(ex)))
+        return 1
 
 
 def main():
