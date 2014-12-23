@@ -17,6 +17,7 @@ import deuceclient.api.storageblocks as api_storageblocks
 import deuceclient.api.vault as api_vault
 import deuceclient.api.v1 as api_v1
 from deuceclient.common.command import Command
+from deuceclient.common import errors as errors
 from deuceclient.common.validation import *
 from deuceclient.common.validation_instance import *
 from deuceclient.utils.misc import set_qs_on_url
@@ -375,6 +376,11 @@ class DeuceClient(Command):
             # Any block we get back here cannot be orphaned
             block.block_orphaned = False
             return block
+        elif res.status_code == 410:
+            raise errors.MissingBlockError(
+                'The Storage Block associated with Metadata Block {0:} '
+                'is missing from storage. Re-uploading the associated '
+                'data will restore access to any files using the block.')
         else:
             raise RuntimeError(
                 'Failed to Head Block {0:} in Vault {1}:. '
