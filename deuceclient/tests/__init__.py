@@ -274,7 +274,7 @@ class ClientTestBase(TestCase):
         return self.vault.vault_id
 
 
-class VaultTestBase(TestCase):
+class VaultTestBase(ClientTestBase):
 
     def setUp(self):
         super(VaultTestBase, self).setUp()
