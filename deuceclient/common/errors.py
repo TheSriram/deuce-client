@@ -39,6 +39,12 @@ class InvalidStorageBlocks(InvalidBlocks):
     pass
 
 
+class MissingBlockError(InvalidBlocks):
+    """Deuce Client detected a missing block
+    """
+    pass
+
+
 class ParameterConstraintError(DeuceClientExceptions):
     """Parameter Constraint Error
     """
