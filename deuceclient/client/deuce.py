@@ -98,19 +98,36 @@ class DeuceClient(Command):
         return self.authenticator.AuthTenantId
 
     @validate(project=ProjectInstanceRule, marker=VaultIdRuleNoneOkay)
-    def ListVaults(self, project, marker=None):
+    def ListVaults(self, project, marker=None, limit=None):
         """List vaults for the user
+        :param marker: vaultid within the list to start at
+        :param limit: the maximum number of entries to retrieve
         :returns: deuceclient.api.Projects instance containing the vaults
         :raises: RuntimeError on failure
         """
-        path = api_v1.get_vault_base_path()
+        url = api_v1.get_vault_base_path()
 
-        if marker is not None:
-            self.ReInit(self.sslenabled,
-                        '{0:}?marker={1:}'.format(path, marker))
+        query_args = {}
+
+        if marker and limit:
+            query_args = {
+                'marker': marker,
+                'limit': limit,
+            }
+
+        elif marker:
+            query_args = {
+                'marker': marker
+            }
+        elif limit:
+            query_args = {
+                'limit': limit
+            }
         else:
-            self.ReInit(self.sslenabled, path)
+            pass
 
+        ret_url = set_qs_on_url(url, query_args)
+        self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='List Vaults')
         res = requests.get(self.Uri, headers=self.Headers)
@@ -311,7 +328,6 @@ class DeuceClient(Command):
             pass
 
         ret_url = set_qs_on_url(url, query_args)
-
         self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='Get Block List')
@@ -525,19 +541,37 @@ class DeuceClient(Command):
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault=VaultInstanceRule, marker=FileIdRuleNoneOkay)
-    def ListFiles(self, vault, marker=None):
+    def ListFiles(self, vault, marker=None, limit=None):
         """List files in the Vault
 
         :param vault: vault to list the files from
+        :param marker: fileid within the list to start at
+        :param limit: the maximum number of entries to retrieve
         :returns: a list of file ids in the vault
         """
         url = api_v1.get_files_path(vault.vault_id)
-        if marker is not None:
-            self.ReInit(self.sslenabled,
-                        '{0:}?marker={1:}'.format(url, marker))
-        else:
-            self.ReInit(self.sslenabled, url)
 
+        query_args = {}
+
+        if marker and limit:
+            query_args = {
+                'marker': marker,
+                'limit': limit,
+            }
+
+        elif marker:
+            query_args = {
+                'marker': marker
+            }
+        elif limit:
+            query_args = {
+                'limit': limit
+            }
+        else:
+            pass
+
+        ret_url = set_qs_on_url(url, query_args)
+        self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='List Files')
         res = requests.get(self.Uri, headers=self.Headers)
@@ -940,7 +974,6 @@ class DeuceClient(Command):
             pass
 
         ret_url = set_qs_on_url(url, query_args)
-
         self.ReInit(self.sslenabled, ret_url)
         self.__update_headers()
         self.__log_request_data(fn='Get Block Storage List')

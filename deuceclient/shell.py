@@ -248,19 +248,23 @@ def block_list(log, arguments):
     try:
         vault = deuceclient.GetVault(arguments.vault_name)
 
-        marker = arguments.marker
-        print('Block List:')
-        while True:
-            blocks = deuceclient.GetBlockList(vault,
-                                              marker=marker,
-                                              limit=arguments.limit)
-            for block_id in blocks:
-                print('\t{0}'.format(vault.blocks[block_id].block_id))
-
-            marker = vault.blocks.marker
-            if marker is None:
+        block_marker = arguments.marker
+        while deuceclient.GetBlockList(vault,
+                                       marker=block_marker,
+                                       limit=arguments.limit):
+            block_marker = vault.blocks.marker
+            if block_marker is None:
                 break
-        sys.exit(0)
+
+        if len(vault.blocks):
+            print('Block List:')
+            for key, block in vault.blocks.items():
+                print('\t{0}'.format(block.block_id))
+            sys.exit(0)
+
+        else:
+            print('No blocks in the Vault')
+            sys.exit(2)
 
     except Exception as ex:
         print('Error: {0:}'.format(ex))
@@ -286,7 +290,7 @@ def block_upload(log, arguments):
                           data=data)
 
         if deuceclient.UploadBlock(vault, block):
-            print('Uploaded the block to deuce.')
+            print('Uploaded the block {0:} to deuce.'.format(block_id))
             sys.exit(0)
 
         else:
@@ -313,7 +317,7 @@ def block_delete(log, arguments):
                           block_id=block_id)
 
         if deuceclient.DeleteBlock(vault, block):
-            print('Deleted the block from deuce.')
+            print('Deleted the block {0:} from deuce.'.format(block_id))
             sys.exit(0)
 
         else:
@@ -356,7 +360,9 @@ def file_list(log, arguments):
         vault = deuceclient.GetVault(arguments.vault_name)
 
         file_marker = None
-        while deuceclient.ListFiles(vault, file_marker):
+        while deuceclient.ListFiles(vault,
+                                    file_marker,
+                                    limit=arguments.limit):
             file_marker = vault.files.marker
             if file_marker is None:
                 break
@@ -477,6 +483,12 @@ def file_download(log, arguments):
 
 
 def main():
+    def parameter_add_vault_name(the_parser):
+        the_parser.add_argument('--vault-name',
+                                default=None,
+                                required=True,
+                                help="Vault Name")
+
     arg_parser = argparse.ArgumentParser(
         description="Cloud Backup Agent Status")
     arg_parser.add_argument('--user-config',
@@ -516,33 +528,30 @@ def main():
     sub_argument_parser = arg_parser.add_subparsers(title='subcommands')
 
     vault_parser = sub_argument_parser.add_parser('vault')
-    vault_parser.add_argument('--vault-name',
-                              default=None,
-                              required=True,
-                              help="Vault Name")
     vault_subparsers = vault_parser.add_subparsers(title='operations',
                                                    help='Vault Operations')
 
     vault_create_parser = vault_subparsers.add_parser('create')
+    parameter_add_vault_name(vault_create_parser)
     vault_create_parser.set_defaults(func=vault_create)
 
     vault_exists_parser = vault_subparsers.add_parser('exists')
+    parameter_add_vault_name(vault_exists_parser)
     vault_exists_parser.set_defaults(func=vault_exists)
 
     vault_stats_parser = vault_subparsers.add_parser('stats')
+    parameter_add_vault_name(vault_stats_parser)
     vault_stats_parser.set_defaults(func=vault_stats)
 
     vault_delete_parser = vault_subparsers.add_parser('delete')
+    parameter_add_vault_name(vault_delete_parser)
     vault_delete_parser.set_defaults(func=vault_delete)
 
     vault_list_parser = vault_subparsers.add_parser('list')
     vault_list_parser.set_defaults(func=vault_list)
 
     block_parser = sub_argument_parser.add_parser('blocks')
-    block_parser.add_argument('--vault-name',
-                              default=None,
-                              required=True,
-                              help="Vault Name")
+    parameter_add_vault_name(block_parser)
     block_subparsers = block_parser.add_subparsers(title='operations',
                                                    help='Block Operations')
 
@@ -579,10 +588,7 @@ def main():
     block_delete_parser.set_defaults(func=block_delete)
 
     file_parser = sub_argument_parser.add_parser('files')
-    file_parser.add_argument('--vault-name',
-                             default=None,
-                             required=True,
-                             help="Vault Name")
+    parameter_add_vault_name(file_parser)
     file_subparsers = file_parser.add_subparsers(title='operations',
                                                  help='File Operations')
 
@@ -590,6 +596,11 @@ def main():
     file_create_parser.set_defaults(func=file_create)
 
     file_list_parser = file_subparsers.add_parser('list')
+    file_list_parser.add_argument('--limit',
+                                  default=None,
+                                  required=False,
+                                  type=int,
+                                  help="Number of entries to return at most")
     file_list_parser.set_defaults(func=file_list)
 
     file_upload_parser = file_subparsers.add_parser('upload')
