@@ -52,6 +52,36 @@ class ClientDeuceFileGetFilesTests(ClientTestBase):
         self.assertEqual(file_list, data)
         self.assertIsNone(self.vault.files.marker)
 
+    def test_file_get_with_limit(self):
+
+        data = [create_file() for _ in range(10)]
+
+        httpretty.register_uri(httpretty.GET,
+                               get_files_url(self.apihost,
+                                             self.vault.vault_id),
+                               body=json.dumps(data),
+                               status=200)
+
+        file_list = self.client.ListFiles(self.vault, limit=10)
+        self.assertEqual(file_list, data)
+        self.assertIsNone(self.vault.files.marker)
+
+    def test_file_get_with_marker_and_limit(self):
+
+        data = [create_file() for _ in range(10)]
+
+        httpretty.register_uri(httpretty.GET,
+                               get_files_url(self.apihost,
+                                             self.vault.vault_id),
+                               body=json.dumps(data),
+                               status=200)
+
+        file_list = self.client.ListFiles(self.vault,
+                                          marker=data[0],
+                                          limit=10)
+        self.assertEqual(file_list, data)
+        self.assertIsNone(self.vault.files.marker)
+
     def test_file_get_with_marker_more_data(self):
 
         data = [create_file() for _ in range(10)]
