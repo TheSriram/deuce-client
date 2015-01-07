@@ -309,17 +309,16 @@ class BlockTest(TestCase):
         block = api.Block(self.project_id,
                         self.vault_id,
                         self.block[0],
+                        data=None,
                         block_size=block_size)
 
-        self.assertIsNotNone(block.block_size)
-        self.assertEqual(block.block_size,
-                         block_size)
+        self.assertEqual(block_size,
+                         len(block))
 
-        block.block_size = 300
+        block.set_block_size(300)
 
-        self.assertIsNotNone(block.block_size)
         self.assertNotEqual(block_size,
-                            block.ref_modified)
+                            len(block))
 
     def test_modify_block_orphaned(self):
         block_orphaned = False

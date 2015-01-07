@@ -73,7 +73,7 @@ class Block(object):
                 'count': self.ref_count,
                 'modified': self.ref_modified
             },
-            'block_size': self.block_size,
+            'block_size': self.__properties['block_size'],
             'block_orphaned': self.block_orphaned,
             'block_type': self.block_type
         }
@@ -147,16 +147,14 @@ class Block(object):
 
     def __len__(self):
         if self.data is None:
-            return 0
+            if self.__properties['block_size'] is None:
+                return 0
+            else:
+                return self.__properties['block_size']
         else:
             return len(self.data)
 
-    @property
-    def block_size(self):
-        return self.__properties['block_size']
-
-    @block_size.setter
-    def block_size(self, value):
+    def set_block_size(self, value):
         self.__properties['block_size'] = value
 
     @property

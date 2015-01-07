@@ -298,7 +298,7 @@ class VaultTestBase(ClientTestBase):
             self.assertEqual(a.storage_id, b.storage_id)
         self.assertEqual(a.ref_count, b.ref_count)
         self.assertEqual(a.ref_modified, b.ref_modified)
-        self.assertEqual(a.block_size, b.block_size)
+        self.assertEqual(len(a), len(b))
         self.assertEqual(a.block_orphaned, b.block_orphaned)
         self.assertEqual(a.block_type, b.block_type)
 

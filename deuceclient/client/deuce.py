@@ -383,8 +383,8 @@ class DeuceClient(Command):
             block.ref_count = int(res.headers['X-Block-Reference-Count'])\
                 if res.headers['X-Block-Reference-Count'] else 0
 
-            block.block_size = int(res.headers['X-Block-Size'])\
-                if res.headers['X-Block-Size'] else 0
+            block.set_block_size(int(res.headers['X-Block-Size']
+                if res.headers['X-Block-Size'] else 0))
 
             block.storage_id = None if res.headers['X-Storage-ID'] == \
                 'None' else res.headers['X-Storage-ID']
@@ -1039,8 +1039,8 @@ class DeuceClient(Command):
             block.block_id = None if res.headers['X-Block-ID'] == \
                 'None' else res.headers['X-Block-ID']
 
-            block.block_size = int(res.headers['X-Block-Size'])\
-                if res.headers['X-Block-Size'] else 0
+            block.set_block_size(int(res.headers['X-Block-Size'])
+                if res.headers['X-Block-Size'] else 0)
 
             block.block_orphaned = \
                 json.loads(res.headers['X-Block-Orphaned'].lower())
