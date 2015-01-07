@@ -493,5 +493,5 @@ class ClientDeuceBlockTests(ClientTestBase):
         self.assertEqual(block.ref_modified, check_data['ref-modified'])
         self.assertEqual(block.storage_id, check_data['storage-id'])
         self.assertEqual(block.block_id, block_id)
-        self.assertEqual(block.block_size, block_size)
+        self.assertEqual(len(block), block_size)
         self.assertFalse(block.block_orphaned)

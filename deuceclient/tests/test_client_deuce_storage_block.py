@@ -229,7 +229,7 @@ class ClientDeuceStorageBlockTests(ClientTestBase):
         self.assertEqual(block.ref_modified, check_data['ref-modified'])
         self.assertEqual(block.storage_id, storage_blockid)
         self.assertEqual(block.block_id, blockid)
-        self.assertEqual(block.block_size, check_data['block-size'])
+        self.assertEqual(len(block), check_data['block-size'])
         self.assertTrue(block.block_orphaned)
 
     @httpretty.activate
