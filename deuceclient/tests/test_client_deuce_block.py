@@ -427,6 +427,23 @@ class ClientDeuceBlockTests(ClientTestBase):
         with self.assertRaises(RuntimeError) as deletion_error:
             self.client.DownloadBlock(self.vault, block)
 
+    def test_block_download_missing(self):
+        block_id, block_data, block_size = create_block()
+        block = api.Block(project_id=self.vault.project_id,
+                          vault_id=self.vault.vault_id,
+                          block_id=block_id)
+
+        httpretty.register_uri(httpretty.GET,
+                               get_block_url(self.apihost,
+                                             self.vault.vault_id,
+                                             block.block_id),
+                               content_type='text/plain',
+                               body='mocking error',
+                               status=410)
+
+        with self.assertRaises(errors.MissingBlockError):
+            self.client.DownloadBlock(self.vault, block)
+
     def test_block_head_non_existent(self):
         block_id, block_data, block_size = create_block()
         block = api.Block(project_id=self.vault.project_id,
