@@ -34,5 +34,5 @@ Deuce Client uses Python 3.3+ and can be installed into a Python 3.3+ environmen
 
 .. code-block:: bash
 
-	# pip install -e git+github.com:rackerlabs/deuce-client.git#egg=master
+	# pip install deuce-client
 
