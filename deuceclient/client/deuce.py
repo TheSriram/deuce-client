@@ -535,6 +535,11 @@ class DeuceClient(Command):
         if res.status_code == 200:
             block.data = res.content
             return True
+        elif res.status_code == 410:
+            raise errors.MissingBlockError(
+                'The Storage Block associated with Metadata Block {0:} '
+                'is missing from storage. Re-uploading the associated '
+                'data will restore access to any files using the block.')
         else:
             raise RuntimeError(
                 'Failed to get Block Content for Block Id . '
