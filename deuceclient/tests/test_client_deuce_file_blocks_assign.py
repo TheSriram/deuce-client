@@ -40,6 +40,7 @@ class ClientDeuceFileTests(ClientTestBase):
             running_offset = running_offset + block_size
 
         data = ['status']
+        expected_result = set(data)
 
         httpretty.register_uri(httpretty.POST,
                                get_file_blocks_url(self.apihost,
@@ -48,7 +49,7 @@ class ClientDeuceFileTests(ClientTestBase):
                                body=json.dumps(data),
                                status=200)
 
-        self.assertEqual(data,
+        self.assertEqual(expected_result,
                          self.client.AssignBlocksToFile(self.vault,
                                                         file_id,
                                                         block_list))
@@ -68,6 +69,7 @@ class ClientDeuceFileTests(ClientTestBase):
             running_offset = running_offset + block_size
 
         data = ['status']
+        expected_result = set(data)
 
         httpretty.register_uri(httpretty.POST,
                                get_file_blocks_url(self.apihost,
@@ -76,9 +78,43 @@ class ClientDeuceFileTests(ClientTestBase):
                                body=json.dumps(data),
                                status=200)
 
-        self.assertEqual(data,
+        self.assertEqual(expected_result,
                          self.client.AssignBlocksToFile(self.vault,
                                                         file_id))
+
+    @httpretty.activate
+    def test_file_assign_blocks_efficiency(self):
+        file_id = create_file()
+        self.vault.files[file_id] = api.File(project_id=self.vault.project_id,
+                                             vault_id=self.vault.vault_id,
+                                             file_id=file_id)
+
+        block_list = []
+
+        running_offset = 0
+        for block_id, block_data, block_size in \
+                create_blocks(5):
+            self.vault.files[file_id].offsets[str(running_offset)] = block_id
+
+            block_list.append((block_id, running_offset))
+
+            running_offset = running_offset + block_size
+
+        data = [block_id[0] for block_id in block_list]
+        {data.append(block_id[0]) for block_id in block_list}
+        expected_result = {block_id[0] for block_id in block_list}
+
+        httpretty.register_uri(httpretty.POST,
+                               get_file_blocks_url(self.apihost,
+                                                   self.vault.vault_id,
+                                                   file_id),
+                               body=json.dumps(data),
+                               status=200)
+
+        self.assertEqual(expected_result,
+                         self.client.AssignBlocksToFile(self.vault,
+                                                        file_id,
+                                                        block_list))
 
     def test_file_assign_blocks_bad_vault(self):
         file_id = create_file()

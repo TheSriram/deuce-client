@@ -814,8 +814,8 @@ class DeuceClient(Command):
         self.__log_response_data(res, jsondata=True,
                                  fn='Assign Blocks To File')
         if res.status_code == 200:
-            block_list_to_upload = [block_id
-                                    for block_id in res.json()]
+            block_list_to_upload = {block_id
+                                    for block_id in res.json()}
             return block_list_to_upload
         else:
             raise RuntimeError(
