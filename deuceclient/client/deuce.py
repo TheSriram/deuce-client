@@ -459,14 +459,9 @@ class DeuceClient(Command):
         self.__log_request_data(fn='Upload Multiple Blocks - msgpack')
         res = requests.post(self.Uri, headers=headers, data=body)
         self.__log_response_data(res,
-                                 jsondata=True,
+                                 jsondata=False,
                                  fn='Upload Multiple Blocks - msgpack')
-        if res.status_code == 200:
-            for block_id, storage_block_id in res.json().items():
-                self.log.info('Vault {0}: Block {1} maps to storage block {2}'
-                              .format(vault.vault_id,
-                                      block_id,
-                                      storage_block_id))
+        if res.status_code == 201:
             return True
         else:
             raise RuntimeError(
