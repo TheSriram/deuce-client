@@ -490,7 +490,7 @@ class DeuceClient(Command):
             return True
         else:
             raise RuntimeError(
-                'Failed to delete Vault. '
+                'Failed to delete Block. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
     @validate(vault=VaultInstanceRule, block_ids=MetadataBlockIdIterableRule)
