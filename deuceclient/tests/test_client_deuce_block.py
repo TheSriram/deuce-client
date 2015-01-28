@@ -141,7 +141,7 @@ class ClientDeuceBlockTests(ClientTestBase):
         with self.assertRaises(RuntimeError) as stats_error:
             self.client.GetBlockList(self.vault)
 
-    def test_blocks_upload(self):
+    def test_blocks_upload_without_response(self):
         blocks = []
         for block_id, blockdata, block_size in [create_block()
                                                 for _ in range(5)]:
@@ -156,6 +156,29 @@ class ClientDeuceBlockTests(ClientTestBase):
                                get_blocks_url(self.apihost,
                                               self.vault.vault_id),
                                status=201)
+
+        self.assertTrue(self.client.UploadBlocks(self.vault,
+                                                 blocks,
+                                                 request_mapping=False))
+
+    def test_blocks_upload_with_response(self):
+        blocks = []
+        response_data = {}
+        for block_id, blockdata, block_size in [create_block()
+                                                for _ in range(5)]:
+            blocks.append(block_id)
+            a_block = api.Block(project_id=self.vault.project_id,
+                                vault_id=self.vault.vault_id,
+                                block_id=block_id,
+                                data=blockdata)
+            self.vault.blocks[block_id] = a_block
+            response_data[block_id] = create_storage_block(block_id)
+
+        httpretty.register_uri(httpretty.POST,
+                               get_blocks_url(self.apihost,
+                                              self.vault.vault_id),
+                               status=200,
+                               body=json.dumps(response_data))
 
         self.assertTrue(self.client.UploadBlocks(self.vault, blocks))
 
