@@ -292,6 +292,32 @@ class DeuceClient(Command):
                 'Failed to get Vault statistics. '
                 'Error ({0:}): {1:}'.format(res.status_code, res.text))
 
+    @validate(vault=VaultInstanceRule)
+    def VaultBlockStatusReset(self, vault):
+        """Reset the statuses of blocks belonging to a particular Vault
+
+        :param vault: vault to reset all blocks' statuses.
+
+        :returns: True on success
+        :raises: TypeError if vault is not a Vault object
+        :raises: RunTimeError on failure
+        """
+
+        url = api_v1.get_blocks_path(vault.vault_id)
+        self.ReInit(self.sslenabled, url)
+        self.__update_headers()
+        self.__log_request_data(fn='VaultBlockStatusReset')
+        res = requests.patch(self.Uri, headers=self.Headers)
+        self.__log_response_data(res, jsondata=False,
+                                 fn='Vault Block Status Reset')
+
+        if res.status_code == 204:
+            return True
+        else:
+            raise RuntimeError(
+                "Failed to Reset Vault's Block Statuses"
+                "Error ({0:}): {1:}".format(res.status_code, res.text))
+
     @validate(vault=VaultInstanceRule,
               marker=MetadataBlockIdRuleNoneOkay,
               limit=LimitRuleNoneOkay)

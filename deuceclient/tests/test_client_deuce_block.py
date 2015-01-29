@@ -28,6 +28,29 @@ class ClientDeuceBlockTests(ClientTestBase):
     def tearDown(self):
         super(ClientDeuceBlockTests, self).tearDown()
 
+    def test_patch_vault_block_status_non_existent_vault(self):
+        httpretty.register_uri(httpretty.PATCH,
+                               get_blocks_url(
+                                   self.apihost,
+                                   self.vault.vault_id),
+                               content_type='text/plain',
+                               body="mock failure",
+                               status=404)
+
+        with self.assertRaises(RuntimeError) as patch_error:
+            self.client.VaultBlockStatusReset(self.vault)
+
+    def test_patch_vault_block_status(self):
+        httpretty.register_uri(httpretty.PATCH,
+                               get_blocks_url(
+                                   self.apihost,
+                                   self.vault.vault_id),
+                               content_type='text/plain',
+                               status=204)
+
+        self.assertTrue(
+            self.client.VaultBlockStatusReset(self.vault))
+
     def test_block_list(self):
         data = [block[0] for block in create_blocks(block_count=1)]
         expected_data = json.dumps(data)
